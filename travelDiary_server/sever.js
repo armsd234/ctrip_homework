@@ -6,6 +6,9 @@ const session = require('express-session');
 
 const loginRoutes = require("./routes/LoginPage");
 
+const connectDB = require('./utils/db');
+
+connectDB();
 
 const app = express();
 // 定义端口
@@ -16,17 +19,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(
-  session({
-    secret: "secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 1000 * 60 * 60 , // 1 hours
-      secure: false, // 仅在 HTTPS 下传输
-      httpOnly: true, // 防止客户端 JavaScript 访问 cookie
-      sameSite: "lax" // 防止 CSRF 攻击
-    }
-  })
+    session({
+        secret: "secret",
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            maxAge: 1000 * 60 * 60, // 1 hours
+            secure: false, // 仅在 HTTPS 下传输
+            httpOnly: true, // 防止客户端 JavaScript 访问 cookie
+            sameSite: "lax" // 防止 CSRF 攻击
+        }
+    })
 );
 
 // 路由
@@ -35,5 +38,5 @@ app.use("/login", loginRoutes);
 
 // 启动服务器
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+    console.log(`Server is running on port ${port}`);
 });
