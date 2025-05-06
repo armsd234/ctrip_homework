@@ -1,0 +1,229 @@
+import { StyleSheet, View, ScrollView, Dimensions, Image, Pressable } from 'react-native';
+import { Text } from '@/components/Themed';
+import { Ionicons } from '@expo/vector-icons';
+import { TravelDiary, TravelDiaryMasonryProps } from './types';
+import { useMemo, useState, useEffect } from 'react';
+import { getTravelDiaries } from '@/services/travelDiaryService';
+
+// 根据屏幕宽度计算每列宽度
+const { width } = Dimensions.get('window');
+const CARD_MARGIN = 8;
+const COLUMN_WIDTH = (width - CARD_MARGIN * 5) / 2;
+
+/**
+ * 游记瀑布流组件
+ * 展示双列瀑布流布局的游记列表，支持下拉加载更多
+ */
+export default function TravelDiaryMasonry({ 
+  onPressItem 
+}: TravelDiaryMasonryProps) {
+  const [diaries, setDiaries] = useState<TravelDiary[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  // 加载数据
+  const loadData = async (pageNum: number) => {
+    setLoading(true);
+    try {
+      const newDiaries = await getTravelDiaries(pageNum, pageSize);
+      if (pageNum === 1) {
+        setDiaries(newDiaries);
+      } else {
+        setDiaries(prev => [...prev, ...newDiaries]);
+      }
+    } catch (error) {
+      console.error('加载数据失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 初始加载
+  useEffect(() => {
+    loadData(1);
+  }, []);
+
+  // 加载更多
+  const handleLoadMore = () => {
+    if (!loading) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      loadData(nextPage);
+    }
+  };
+
+  // 将数据分为左右两列
+  const { leftColumn, rightColumn } = useMemo(() => {
+    const left: TravelDiary[] = [];
+    const right: TravelDiary[] = [];
+    
+    // 计算每列当前高度
+    let leftHeight = 0;
+    let rightHeight = 0;
+    
+    diaries.forEach((diary) => {
+      // 根据当前列高度决定放入哪一列
+      if (leftHeight <= rightHeight) {
+        left.push(diary);
+        // 模拟计算卡片高度
+        leftHeight += 250 + Math.random() * 100;
+      } else {
+        right.push(diary);
+        rightHeight += 250 + Math.random() * 100;
+      }
+    });
+    
+    return { leftColumn: left, rightColumn: right };
+  }, [diaries]);
+
+  // 渲染单个游记卡片
+  const renderItem = (item: TravelDiary) => (
+    <Pressable 
+      style={styles.card}
+      onPress={() => onPressItem?.(item)}
+    >
+      <Image 
+        source={{ uri: item.coverImage }} 
+        style={styles.coverImage} 
+      />
+      <View style={styles.cardContent}>
+        <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
+        <View style={styles.userInfo}>
+          <Image 
+            source={{ uri: item.user.avatar }} 
+            style={styles.avatar} 
+          />
+          <Text style={styles.nickname}>{item.user.nickname}</Text>
+        </View>
+        <View style={styles.stats}>
+          <View style={styles.statItem}>
+            <Ionicons name="heart-outline" size={16} color="#666" />
+            <Text style={styles.statText}>{item.likes}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Ionicons name="chatbubble-outline" size={16} color="#666" />
+            <Text style={styles.statText}>{item.comments}</Text>
+          </View>
+        </View>
+      </View>
+    </Pressable>
+  );
+
+  return (
+    <ScrollView
+      style={styles.container}
+      onScroll={({ nativeEvent }) => {
+        const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+        const paddingToBottom = 20;
+        // 判断是否滚动到底部
+        if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
+          handleLoadMore();
+        }
+      }}
+      scrollEventThrottle={400}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.columns}>
+        <View style={styles.column}>
+          {leftColumn.map((item) => (
+            <View key={item.id}>
+              {renderItem(item)}
+            </View>
+          ))}
+        </View>
+        <View style={styles.column}>
+          {rightColumn.map((item) => (
+            <View key={item.id}>
+              {renderItem(item)}
+            </View>
+          ))}
+        </View>
+      </View>
+      {loading && (
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>加载中...</Text>
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  columns: {
+    flexDirection: 'row',
+    padding: CARD_MARGIN / 2,
+  },
+  column: {
+    flex: 1,
+    marginHorizontal: CARD_MARGIN / 2,
+  },
+  card: {
+    marginBottom: CARD_MARGIN,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  coverImage: {
+    width: '100%',
+    height: 150,
+    resizeMode: 'cover',
+  },
+  cardContent: {
+    padding: 12,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#333',
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  avatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  nickname: {
+    fontSize: 14,
+    color: '#666',
+  },
+  stats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  statText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 4,
+  },
+  footer: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#999',
+  },
+}); 

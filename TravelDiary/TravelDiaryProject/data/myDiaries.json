@@ -1,0 +1,148 @@
+{
+  "diaries": [
+    {
+      "id": 1,
+      "title": "春日西湖漫步",
+      "coverImage": "https://picsum.photos/400/300?random=1",
+      "user": {
+        "id": 1,
+        "nickname": "旅行者",
+        "avatar": "https://picsum.photos/100/100?random=1"
+      },
+      "likes": 128,
+      "comments": 32,
+      "views": 1560,
+      "location": "杭州西湖",
+      "createTime": "2024-03-20T10:30:00Z",
+      "status": "approved",
+      "rejectReason": null,
+      "content": "三月的西湖，春意盎然。漫步在苏堤上，微风拂面，柳絮纷飞。湖面波光粼粼，远处的雷峰塔倒映在水中，构成了一幅绝美的画卷。"
+    },
+    {
+      "id": 2,
+      "title": "故宫博物院深度游",
+      "coverImage": "https://picsum.photos/400/300?random=2",
+      "user": {
+        "id": 1,
+        "nickname": "旅行者",
+        "avatar": "https://picsum.photos/100/100?random=1"
+      },
+      "likes": 256,
+      "comments": 45,
+      "views": 2890,
+      "location": "北京故宫",
+      "createTime": "2024-03-18T15:20:00Z",
+      "status": "pending",
+      "rejectReason": null,
+      "content": "走进故宫，仿佛穿越时空。金碧辉煌的宫殿，精美的雕刻，每一处都诉说着历史的沧桑。太和殿前的广场上，游人如织，但依然能感受到那份庄严肃穆。"
+    },
+    {
+      "id": 3,
+      "title": "夜游外滩",
+      "coverImage": "https://picsum.photos/400/300?random=3",
+      "user": {
+        "id": 1,
+        "nickname": "旅行者",
+        "avatar": "https://picsum.photos/100/100?random=1"
+      },
+      "likes": 89,
+      "comments": 12,
+      "views": 780,
+      "location": "上海外滩",
+      "createTime": "2024-03-15T20:15:00Z",
+      "status": "rejected",
+      "rejectReason": "图片质量不符合要求，请重新上传清晰的照片",
+      "content": "夜幕降临，外滩的灯光璀璨夺目。黄浦江两岸，现代与古典的建筑交相辉映。江面上游船穿梭，倒映着两岸的霓虹，构成了一幅流动的画卷。"
+    },
+    {
+      "id": 4,
+      "title": "鼓浪屿文艺之旅",
+      "coverImage": "https://picsum.photos/400/300?random=4",
+      "user": {
+        "id": 1,
+        "nickname": "旅行者",
+        "avatar": "https://picsum.photos/100/100?random=1"
+      },
+      "likes": 312,
+      "comments": 67,
+      "views": 3450,
+      "location": "厦门鼓浪屿",
+      "createTime": "2024-03-10T09:45:00Z",
+      "status": "approved",
+      "rejectReason": null,
+      "content": "鼓浪屿的每一条小巷都充满了文艺气息。古老的建筑，精致的咖啡馆，还有随处可见的三角梅，让这座小岛充满了浪漫与诗意。"
+    },
+    {
+      "id": 5,
+      "title": "张家界玻璃栈道体验",
+      "coverImage": "https://picsum.photos/400/300?random=5",
+      "user": {
+        "id": 1,
+        "nickname": "旅行者",
+        "avatar": "https://picsum.photos/100/100?random=1"
+      },
+      "likes": 178,
+      "comments": 23,
+      "views": 1230,
+      "location": "张家界",
+      "createTime": "2024-03-05T14:30:00Z",
+      "status": "rejected",
+      "rejectReason": "内容描述过于简单，请补充更多细节和感受",
+      "content": "站在玻璃栈道上，脚下是万丈深渊。云雾缭绕中，奇峰异石若隐若现，让人不禁感叹大自然的鬼斧神工。"
+    },
+    {
+      "id": 6,
+      "title": "丽江古城漫步",
+      "coverImage": "https://picsum.photos/400/300?random=6",
+      "user": {
+        "id": 1,
+        "nickname": "旅行者",
+        "avatar": "https://picsum.photos/100/100?random=1"
+      },
+      "likes": 245,
+      "comments": 34,
+      "views": 1980,
+      "location": "丽江古城",
+      "createTime": "2024-03-01T11:20:00Z",
+      "status": "pending",
+      "rejectReason": null,
+      "content": "丽江古城的石板路上，游人如织。纳西族的传统建筑，小桥流水，还有远处玉龙雪山的倩影，构成了一幅美丽的画卷。"
+    },
+    {
+      "id": 7,
+      "title": "三亚海滩度假",
+      "coverImage": "https://picsum.photos/400/300?random=7",
+      "user": {
+        "id": 1,
+        "nickname": "旅行者",
+        "avatar": "https://picsum.photos/100/100?random=1"
+      },
+      "likes": 432,
+      "comments": 89,
+      "views": 4560,
+      "location": "三亚",
+      "createTime": "2024-02-25T16:40:00Z",
+      "status": "approved",
+      "rejectReason": null,
+      "content": "三亚的海滩，阳光明媚，海水清澈。躺在沙滩椅上，听着海浪的声音，享受着椰林树影下的清凉，这就是最完美的度假时光。"
+    },
+    {
+      "id": 8,
+      "title": "西安兵马俑探秘",
+      "coverImage": "https://picsum.photos/400/300?random=8",
+      "user": {
+        "id": 1,
+        "nickname": "旅行者",
+        "avatar": "https://picsum.photos/100/100?random=1"
+      },
+      "likes": 167,
+      "comments": 28,
+      "views": 1340,
+      "location": "西安",
+      "createTime": "2024-02-20T13:15:00Z",
+      "status": "rejected",
+      "rejectReason": "图片中包含不适当内容，请重新编辑后提交",
+      "content": "走进兵马俑博物馆，仿佛穿越回秦朝。数千个陶俑，形态各异，栩栩如生。每一个细节都展现了古代工匠的精湛技艺。"
+    }
+  ]
+} 

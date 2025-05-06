@@ -1,10 +1,54 @@
-import { StyleSheet } from 'react-native';
-import { Text, View } from '@/components/Themed';
+import { StyleSheet, View, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { TravelDiary } from '@/components/TravelDiaryMasonry/types';
+import myDiaries from '@/data/myDiaries.json';
+import StatusFilter from '@/components/StatusFilter';
+import DiaryCard from '@/components/DiaryCard';
 
-export default function TabTwoScreen() {
+// 模拟当前登录用户
+const CURRENT_USER_ID = 1;
+
+export default function MyDiaryScreen() {
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [diaries] = useState<TravelDiary[]>(myDiaries.diaries as TravelDiary[]);
+  const router = useRouter();
+
+  // 根据状态筛选游记
+  const filteredDiaries = diaries.filter(diary => 
+    selectedStatus === 'all' || diary.status === selectedStatus
+  );
+
+  const handlePressDiary = (diary: TravelDiary) => {
+    router.push(`/diary/${diary.id}`);
+  };
+
+  const handleEditDiary = (diary: TravelDiary) => {
+    console.log('编辑游记:', diary.id);
+  };
+
+  const handleDeleteDiary = (diary: TravelDiary) => {
+    console.log('删除游记:', diary.id);
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>我的游记</Text>
+      <StatusFilter 
+        selectedStatus={selectedStatus}
+        onStatusChange={setSelectedStatus}
+      />
+      <ScrollView style={styles.listContainer}>
+        {filteredDiaries.map(diary => (
+          <View key={diary.id}>
+            <DiaryCard
+              diary={diary}
+              onPress={handlePressDiary}
+              onEdit={handleEditDiary}
+              onDelete={handleDeleteDiary}
+            />
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -12,16 +56,10 @@ export default function TabTwoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#f5f5f5',
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
+  listContainer: {
+    flex: 1,
+    padding: 12,
   },
 });

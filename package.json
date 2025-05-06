@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "react-native-masonry-list": "^2.16.2"
+  }
+}

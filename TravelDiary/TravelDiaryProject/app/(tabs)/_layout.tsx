@@ -1,43 +1,59 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+import { Tabs } from 'expo-router';
+import { StyleSheet, View, Text } from 'react-native';
 
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
+// 加载中组件
+function LoadingScreen() {
+  return (
+    <View style={styles.loadingContainer}>
+      <Text>加载中...</Text>
+    </View>
+  );
 }
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: '游记列表',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="mydiary"
-        options={{
-          title: '我的游记',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-        }}
-      />
-    </Tabs>
+    <Suspense fallback={<LoadingScreen />}>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: styles.tabBar,
+        }}>
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: '游记列表',
+            tabBarIcon: ({color}) => (
+              <FontAwesome style={styles.icon} name="compass" color={color} />
+            )
+          }}
+        />
+        <Tabs.Screen
+          name="mydiary"
+          options={{
+            title: '我的游记',
+            tabBarIcon: ({color}) => (
+              <FontAwesome style={styles.icon} name="book" color={color} />
+            )
+          }}
+        />
+      </Tabs>
+    </Suspense>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: 'white',
+    height: 52,
+  },
+  icon: {
+    fontSize: 26,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
