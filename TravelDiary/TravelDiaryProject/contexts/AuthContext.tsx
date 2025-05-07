@@ -31,9 +31,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const login = async (username: string, password: string) => {
+  const login = async (email: string, password: string) => {
     try {
-      await authService.login({ username, password });
+      await authService.login({ email, password });
       setIsAuthenticated(true);
       router.replace('/(tabs)');
     } catch (error) {
@@ -41,10 +41,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (username: string, email: string, password: string) => {
+  const register = async ( email: string,) => {
     try {
-      await authService.register({ username, email, password });
-      await login(username, password);
+      await authService.register({ email });
     } catch (error) {
       throw error;
     }
@@ -54,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await authService.logout();
       setIsAuthenticated(false);
-      router.replace('/auth/login');
+      router.replace('/authscreen');
     } catch (error) {
       console.error('Logout failed:', error);
     }
