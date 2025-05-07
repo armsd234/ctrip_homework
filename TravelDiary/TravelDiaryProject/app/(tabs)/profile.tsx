@@ -9,22 +9,15 @@ const PROFILE_SECTION_BG = '#4A4E69';
 const ACCENT_COLOR = '#F25F5C'; 
 
 const ProfileScreen = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated} = useAuth();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isAuthenticated) {
       router.replace('/authscreen');
     }
-  }, [isLoading, isAuthenticated]);
+  }, [isAuthenticated]);
 
-  if (isLoading) {
-    return (
-      <View style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text>加载中...</Text>
-      </View>
-    );
-  }
-
+  
   if (!isAuthenticated) {
     return null;
   }

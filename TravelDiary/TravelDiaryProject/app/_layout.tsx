@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useRef } from 'react';
 import 'react-native-reanimated';
 import { isAuthenticated } from '../services/auth';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -40,39 +41,19 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
+  );
 }
 
 function RootLayoutNav() {
   const router = useRouter();
   const segments = useSegments();
-  const isCheckingAuth = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
-    const checkAuth = async () => {
-      if (isCheckingAuth.current) return;
-      try {
-        isCheckingAuth.current = true;
-        const currentPath = segments.length > 0 ? segments[0] : '';
-        const isAuthPage = ['login', 'register'].includes(currentPath as string);
-        const authenticated = await isAuthenticated();
-
-        if (isMounted) {
-          if (authenticated && isAuthPage) {
-            router.replace('/(tabs)');
-          } else {
-            router.replace('/login');
-          }
-        }
-      } catch (error) {
-        console.error('认证检查出错:', error);
-      } finally {
-        isCheckingAuth.current = false;
-      }
-    };
-
-    // checkAuth();
 
     return () => {
       isMounted = false;

@@ -12,7 +12,7 @@ import {
   ViewStyle,} from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import styles from '../styles/authscreen.styles';
-import { authService } from '../services/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
 
 // --- Types ---
@@ -31,7 +31,7 @@ const AuthScreen: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [resendTimer, setResendTimer] = useState<number>(60);
   const [isTimerActive, setIsTimerActive] = useState<boolean>(false);
-
+  const { login, register, verifyCode, sendVerificationCode } = useAuth()
  
 
   // Timer effect for resend button
@@ -71,7 +71,7 @@ const AuthScreen: React.FC = () => {
 
     setIsLoading(true);
     try {
-      await authService.login({ email, password });
+      await login(email, password );
       Alert.alert('登录成功', '欢迎回来！');
       router.replace('/(tabs)');
     } catch (error: any) {
@@ -97,9 +97,9 @@ const AuthScreen: React.FC = () => {
     }
     setIsLoading(true);
     try {
-      const response = await authService.register({email});
+      const response = await register(email);
       if (response.success) {
-        authService.sendVerificationCode(email);
+        sendVerificationCode(email);
         setCurrentView('verify');
       }else{
         setError(response.data.message || '邮箱已存在');
@@ -127,7 +127,7 @@ const AuthScreen: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const response = await authService.verifyCode(email, verificationCode, password);
+      const response = await verifyCode(email, verificationCode, password);
       if (response.success) {
         Alert.alert('注册成功', '邮箱验证通过，你的账号已注册');
         setCurrentView('login');
@@ -146,7 +146,7 @@ const AuthScreen: React.FC = () => {
     setIsLoading(true);
     setError('');
     try {
-      const response = await authService.sendVerificationCode(email);
+      const response = await sendVerificationCode(email);
       if (response.success) {
         Alert.alert('验证码已重新发送', '请查收你的邮箱');
         setResendTimer(60);
