@@ -38,6 +38,15 @@ export default function TabLayout() {
             )
           }}
         />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: '我',
+            tabBarIcon: ({color}) => (
+              <FontAwesome style={styles.icon} name="user" color={color} />
+            )
+          }}
+        />
       </Tabs>
     </Suspense>
   );
