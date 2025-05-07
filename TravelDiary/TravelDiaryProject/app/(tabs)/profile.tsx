@@ -1,14 +1,33 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, Dimensions, StatusBar, SafeAreaView} from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import styles from '../../styles/profile.styles';
+import { useAuth } from '../../contexts/AuthContext';
+import { router } from 'expo-router';
 
 const PROFILE_SECTION_BG = '#4A4E69'; 
 const ACCENT_COLOR = '#F25F5C'; 
 
 const ProfileScreen = () => {
-    
+  const { isAuthenticated, isLoading } = useAuth();
 
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace('/authscreen');
+    }
+  }, [isLoading, isAuthenticated]);
+
+  if (isLoading) {
+    return (
+      <View style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text>加载中...</Text>
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   // ProfileHeader component - Fixed at the top
   const ProfileHeader = () => (

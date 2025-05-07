@@ -1,12 +1,8 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const AutoIncrement = require('mongoose-sequence')(mongoose);
 
+const UserSchema = new Schema({
 
-
-const userSchema = new Schema({
-
-    username: { type: String, required: true }, // 用户名字段
     password: { type: String, required: true }, // 密码字段
     nickname: { type: String, required: true }, // 昵称字段
     email: { type: String, required: true },     // 邮箱字段
@@ -25,7 +21,8 @@ const userSchema = new Schema({
     likeds: { type: Number, default: 0 }, // 收到的赞数量字段，默认为 0
 });
 
+const User = mongoose.model('User', UserSchema);
+
 module.exports = {
     User,
-
 };

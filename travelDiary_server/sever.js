@@ -8,8 +8,6 @@ const loginRoutes = require("./routes/LoginPage");
 
 const connectDB = require('./utils/db');
 
-connectDB();
-
 const app = express();
 // 定义端口
 const port = 3000;
@@ -33,10 +31,12 @@ app.use(
 );
 
 // 路由
-app.use("/login", loginRoutes);
+app.use("/auth", loginRoutes);
 
-
-// 启动服务器
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+connectDB().then(() => {
+    app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+    });
+}).catch((err) => {
+    console.error('Failed to start server due to database connection error:', err);
 });
