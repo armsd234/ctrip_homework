@@ -1,8 +1,19 @@
 // 单个游记数据类型
+export interface Tag {
+  name: string;
+  image: string;
+  suggestion: string;
+  url: string;
+}
 export interface TravelDiary {
   id: number;
   title: string;  //标题
-  coverImage: string; //封面图片
+  coverImage?: string[]|string; //封面图片
+  tags?:Tag[];
+  When?:string;
+  Who?:string;
+  Days?:string;
+  Money?:string;
   user: {
     id: number;
     nickname: string;

@@ -3,8 +3,35 @@
     {
       "id": 1,
       "title": "巴厘岛梦幻之旅",
+      "When": "2月",
+      "Days": "7天",
+      "Money": "5.0千",
+      "Who": "家人",
+      "tags": [
+        {
+          "name": "巴厘岛",
+          "image": "https://picsum.photos/400/300?random=' + (index + 10)",
+          "suggestion": "建议游玩时间3-5天",
+          "url": "https://you.ctrip.com/place/bali438.html"
+        },
+        {
+          "name": "佩妮达岛",
+          "image": "https://picsum.photos/400/300?random=' + (index + 11)",
+          "suggestion": "建议游玩时间3-5天",
+          "url": "https://you.ctrip.com/sight/bali438/64465.html?scene=online"
+        },
+        {
+          "name": "巴厘岛",
+          "image": "https://picsum.photos/400/300?random=' + (index + 12)",
+          "suggestion": "",
+          "url": "https://you.ctrip.com/place/bali438.html"
+        }
+      ],
       "content": "巴厘岛是一个充满神秘和美丽的地方，这里有壮观的自然风光、丰富的文化遗产和独特的民俗风情。巴厘岛的沙滩洁白细腻，海水清澈见底，是度假和潜水的好去处。",
-      "coverImage": "https://picsum.photos/400/300?random=1",
+      "coverImage": [
+        "https://picsum.photos/400/300?random=1",
+        "https://picsum.photos/400/300?random=4"
+      ],
       "user": {
         "id": 1,
         "nickname": "旅行达人",
@@ -19,7 +46,17 @@
     {
       "id": 2,
       "title": "东京美食探索",
-      "coverImage": "https://picsum.photos/400/300?random=2",
+      "coverImage": [
+        "https://picsum.photos/400/300?random=2"
+      ],
+      "tags": [
+        {
+          "name": "东京",
+          "image": "https://picsum.photos/400/300?random=' + (index + 10)",
+          "suggestion": "建议游玩时间3-5天",
+          "url": "https://you.ctrip.com/place/bali438.html"
+        }
+      ],
       "user": {
         "id": 2,
         "nickname": "美食家",
@@ -34,7 +71,9 @@
     {
       "id": 3,
       "title": "巴黎浪漫之旅",
-      "coverImage": "https://picsum.photos/400/300?random=3",
+      "coverImage": [
+        "https://picsum.photos/400/300?random=3"
+      ],
       "user": {
         "id": 3,
         "nickname": "巴黎恋人",
@@ -452,4 +491,4 @@
       "createTime": "2024-02-20T12:45:00Z"
     }
   ]
-} 
+}

@@ -84,7 +84,7 @@ export default function TravelDiaryMasonry({
       onPress={() => onPressItem?.(item)}
     >
       <Image 
-        source={{ uri: item.coverImage }} 
+        source={Array.isArray(item.coverImage)?{ uri: item.coverImage[0] }:{ uri: item.coverImage }} 
         style={styles.coverImage} 
       />
       <View style={styles.cardContent}>
