@@ -3,6 +3,9 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
+const bcrypt = require('bcryptjs');
+const { User } = require('./model');
+const config = require('./config');
 
 const authRoutes = require('./routes/auth');
 const travelNoteRoutes = require('./routes/travel-notes');
@@ -21,12 +24,42 @@ app.use(morgan('dev'));
 // 静态文件服务
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// 初始化管理员和审核人员账号
+async function initializeAccounts() {
+    try {
+        // 删除所有现有的管理员和审核人员账号
+        await User.deleteMany({ role: { $in: ['admin', 'reviewer'] } });
+        console.log('已删除所有现有的管理员和审核人员账号');
+
+        // 创建管理员账号
+        const adminHashedPassword = await bcrypt.hash(config.admin.password, 10);
+        await User.create({
+            ...config.admin,
+            password: adminHashedPassword
+        });
+        console.log('管理员账号创建成功');
+
+        // 创建审核人员账号
+        const reviewerHashedPassword = await bcrypt.hash(config.reviewer.password, 10);
+        await User.create({
+            ...config.reviewer,
+            password: reviewerHashedPassword
+        });
+        console.log('审核人员账号创建成功');
+    } catch (error) {
+        console.error('初始化账号失败:', error);
+    }
+}
+
 // 连接数据库
 mongoose.connect('mongodb://localhost:27017/travel_diary', {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
-    .then(() => console.log('MongoDB connected'))
+    .then(async () => {
+        console.log('MongoDB connected');
+        await initializeAccounts();
+    })
     .catch(err => console.error('MongoDB connection error:', err));
 
 // 路由

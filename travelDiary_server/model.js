@@ -19,6 +19,7 @@ const UserSchema = new Schema({
     
     posts: { type: Number, default: 0 }, // 发布的文章数量字段，默认为 0
     likeds: { type: Number, default: 0 }, // 收到的赞数量字段，默认为 0
+    role: { type: String, enum: ['user', 'admin', 'reviewer'], default: 'user' }, // 角色字段，默认为 'user'
 });
 
 const User = mongoose.model('User', UserSchema);
