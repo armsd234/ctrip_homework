@@ -2,12 +2,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const morgan = require('morgan');
+const path = require('path');
 
 const authRoutes = require('./routes/auth');
 const travelNoteRoutes = require('./routes/travel-notes');
 const adminRoutes = require('./routes/admin');
 const userRoutes = require('./routes/users');
 const commentRoutes = require('./routes/comments');
+const uploadRoutes = require('./routes/upload');
 
 const app = express();
 
@@ -15,6 +17,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
+
+// 静态文件服务
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 连接数据库
 mongoose.connect('mongodb://localhost:27017/travel_diary', {
@@ -30,6 +35,7 @@ app.use('/api/travel-notes', travelNoteRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // 错误处理中间件
 app.use((err, req, res, next) => {
