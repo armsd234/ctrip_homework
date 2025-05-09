@@ -1,7 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://localhost:3000'; // 请替换为您的实际API地址
+const API_URL = 'http://localhost:5000'; // 请替换为您的实际API地址
 
 // 定义用户注册信息类型
 export interface RegisterData {
@@ -67,12 +67,12 @@ api.interceptors.response.use(
 
 // 注册请求
 export const register = async (data: RegisterData) => {
-  return api.post<UserInfo>('/auth/register', data);
+  return api.post<UserInfo>('/api/auth/register', data);
 };
 
 // 登录请求
 export const login = async (data: LoginData) => {
-  const response = await api.post<UserInfo>('/auth/login', data);
+  const response = await api.post<UserInfo>('/api/auth/login', data);
   if (response.data.token) {
     await AsyncStorage.setItem('userToken', response.data.token);
     await AsyncStorage.setItem('userData', JSON.stringify(response.data.userInfo));
@@ -105,7 +105,7 @@ export const isAuthenticated = async (): Promise<boolean> => {
 
 // 获取用户信息
 export const getUserInfo = async () => {
-  return api.get('/me');
+  return api.get('/api/me');
 };
 
 export interface LoginCredentials {
@@ -116,7 +116,7 @@ export interface LoginCredentials {
 export const authService = {
   async login(credentials: LoginCredentials) {
     try {
-      const response = await axios.post<ApiResponse<UserInfo>>(`${API_URL}/auth/login`, credentials);
+      const response = await axios.post<ApiResponse<UserInfo>>(`${API_URL}/api/auth/login`, credentials);
       console.log('Login response:', response.data);
       if (response.data.data?.token) {
         await AsyncStorage.setItem('userToken', response.data.data.token);
@@ -130,7 +130,7 @@ export const authService = {
 
   async register(data: RegisterData) {
     try {
-      const response = await axios.post<ApiResponse>(`${API_URL}/auth/register`, data);
+      const response = await axios.post<ApiResponse>(`${API_URL}/api/auth/register`, data);
       return response.data;
     } catch (error) {
       throw error;
@@ -162,7 +162,7 @@ export const authService = {
 
   async sendVerificationCode(email: string) {
     try {
-      const response = await axios.post<ApiResponse>(`${API_URL}/auth/send-verification`, { email });
+      const response = await axios.post<ApiResponse>(`${API_URL}/api/auth/send-verification`, { email });
       return response.data;
     } catch (error) {
       throw error;
@@ -171,7 +171,7 @@ export const authService = {
 
   async verifyCode(email: string, code: string, password: string) {
     try {
-      const response = await axios.post<ApiResponse>(`${API_URL}/auth/verify-code`, { email, code, password});
+      const response = await axios.post<ApiResponse>(`${API_URL}/api/auth/verify-code`, { email, code, password});
       return response.data;
     } catch (error) {
       throw error;

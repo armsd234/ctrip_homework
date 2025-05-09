@@ -11,16 +11,16 @@ const ACCENT_COLOR = '#F25F5C';
 const ProfileScreen = () => {
   const { isAuthenticated} = useAuth();
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace('/authscreen');
-    }
-  }, [isAuthenticated]);
+  // useEffect(() => {
+  //   if (!isAuthenticated) {
+  //     router.replace('/authscreen');
+  //   }
+  // }, [isAuthenticated]);
 
   
-  if (!isAuthenticated) {
-    return null;
-  }
+  // if (!isAuthenticated) {
+  //   return null;
+  // }
 
   // ProfileHeader component - Fixed at the top
   const ProfileHeader = () => (

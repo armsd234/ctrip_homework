@@ -3,10 +3,10 @@ const Schema = mongoose.Schema;
 
 // 用户
 const UserSchema = new Schema({
-
+    username: { type: String, required: true }, // 用户名字段
     password: { type: String, required: true }, // 密码字段
     nickname: { type: String, required: true }, // 昵称字段
-    email: { type: String, required: true },     // 邮箱字段
+    email: { type: String },     // 邮箱字段
 
     avatar: { type: String, default: 'default_avatar.jpg' }, // 头像字段，默认为 'default.jpg'
     gender: { type: String, enum: ['male', 'female', 'other'], default: 'other' }, // 性别字段，默认为 'other'

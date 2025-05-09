@@ -1,0 +1,57 @@
+.layout {
+  min-height: 100vh;
+}
+
+.logo {
+  height: 64px;
+  line-height: 64px;
+  text-align: center;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  background: #001529;
+}
+
+.header {
+  padding: 0 24px;
+  background: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+}
+
+.trigger {
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.trigger:hover {
+  color: #1890ff;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 0 12px;
+}
+
+.username {
+  margin-left: 8px;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.content {
+  margin: 24px;
+  padding: 24px;
+  background: #fff;
+  min-height: 280px;
+  border-radius: 2px;
+} 

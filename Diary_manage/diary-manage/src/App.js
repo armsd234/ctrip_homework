@@ -1,25 +1,42 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import {  useSelector } from 'react-redux';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import MainLayout from './layouts/MainLayout';
 
-function App() {
+const PrivateRoute = ({ children }) => {
+  const { user, loading } = useSelector((state) => state.auth);
+  const location = useLocation();
+
+  if (loading) {
+    return <div>加载中...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <MainLayout>{children}</MainLayout>;
+};
+
+const App = () => {
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Routes>
+
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="/dashboard"
+        element={
+          <PrivateRoute>
+            <Dashboard />
+          </PrivateRoute>
+        }
+      />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   );
-}
+};
 
 export default App;

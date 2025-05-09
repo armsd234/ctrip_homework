@@ -12,7 +12,7 @@ const travelNoteRoutes = require('./routes/travel-notes');
 const adminRoutes = require('./routes/admin');
 const userRoutes = require('./routes/users');
 const commentRoutes = require('./routes/comments');
-const uploadRoutes = require('./routes/upload');
+const imageRoutes = require('./routes/images');
 
 const app = express();
 
@@ -31,6 +31,9 @@ async function initializeAccounts() {
         await User.deleteMany({ role: { $in: ['admin', 'reviewer'] } });
         console.log('已删除所有现有的管理员和审核人员账号');
 
+        await User.deleteMany({ username: 'user@example.com' });
+        console.log('已删除默认的普通用户账号');
+
         // 创建管理员账号
         const adminHashedPassword = await bcrypt.hash(config.admin.password, 10);
         await User.create({
@@ -46,6 +49,15 @@ async function initializeAccounts() {
             password: reviewerHashedPassword
         });
         console.log('审核人员账号创建成功');
+
+        // 创建普通用户账号
+        const userHashedPassword = await bcrypt.hash(config.user.password, 10);
+        await User.create({
+            ...config.user,
+            password: userHashedPassword
+        });
+        console.log('普通用户账号创建成功');
+
     } catch (error) {
         console.error('初始化账号失败:', error);
     }
@@ -68,7 +80,8 @@ app.use('/api/travel-notes', travelNoteRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/comments', commentRoutes);
-app.use('/api/upload', uploadRoutes);
+app.use('/api/images', imageRoutes);
+
 
 // 错误处理中间件
 app.use((err, req, res, next) => {

@@ -4,6 +4,8 @@ const path = require('path');
 const { auth } = require('../middleware/auth');
 const upload = require('../utils/upload');
 
+
+
 // 上传单个图片
 router.post('/image', auth, upload.single('image'), (req, res) => {
     try {
