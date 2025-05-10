@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { TravelDiary, TravelDiaryMasonryProps } from './types';
 import { useMemo, useState, useEffect } from 'react';
 import { getTravelDiaries } from '@/services/travelDiaryService';
+import HomeBanner from '../HomeBanner';
 
 // 根据屏幕宽度计算每列宽度
 const { width } = Dimensions.get('window');
@@ -14,54 +15,58 @@ const COLUMN_WIDTH = (width - CARD_MARGIN * 5) / 2;
  * 游记瀑布流组件
  * 展示双列瀑布流布局的游记列表，支持下拉加载更多
  */
-export default function TravelDiaryMasonry({ 
-  onPressItem 
+export default function TravelDiaryMasonry({
+  diaries = [],
+  loading = false,
+  onPressItem,
+  onLoadMore,
+  searching = false
 }: TravelDiaryMasonryProps) {
-  const [diaries, setDiaries] = useState<TravelDiary[]>([]);
-  const [loading, setLoading] = useState(false);
+  // const [diaries, setDiaries] = useState<TravelDiary[]>([]);
+  // const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
   // 加载数据
-  const loadData = async (pageNum: number) => {
-    setLoading(true);
-    try {
-      const newDiaries = await getTravelDiaries(pageNum, pageSize);
-      if (pageNum === 1) {
-        setDiaries(newDiaries);
-      } else {
-        setDiaries(prev => [...prev, ...newDiaries]);
-      }
-    } catch (error) {
-      console.error('加载数据失败:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const loadData = async (pageNum: number) => {
+  //   setLoading(true);
+  //   try {
+  //     const newDiaries = await getTravelDiaries(pageNum, pageSize);
+  //     if (pageNum === 1) {
+  //       setDiaries(newDiaries);
+  //     } else {
+  //       setDiaries(prev => [...prev, ...newDiaries]);
+  //     }
+  //   } catch (error) {
+  //     console.error('加载数据失败:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // 初始加载
-  useEffect(() => {
-    loadData(1);
-  }, []);
+  // useEffect(() => {
+  //   loadData(1);
+  // }, []);
 
   // 加载更多
-  const handleLoadMore = () => {
-    if (!loading) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      loadData(nextPage);
-    }
-  };
+  // const handleLoadMore = () => {
+  //   if (!loading) {
+  //     const nextPage = page + 1;
+  //     setPage(nextPage);
+  //     loadData(nextPage);
+  //   }
+  // };
 
   // 将数据分为左右两列
   const { leftColumn, rightColumn } = useMemo(() => {
     const left: TravelDiary[] = [];
     const right: TravelDiary[] = [];
-    
+
     // 计算每列当前高度
     let leftHeight = 0;
     let rightHeight = 0;
-    
+
     diaries.forEach((diary) => {
       // 根据当前列高度决定放入哪一列
       if (leftHeight <= rightHeight) {
@@ -73,37 +78,28 @@ export default function TravelDiaryMasonry({
         rightHeight += 250 + Math.random() * 100;
       }
     });
-    
+
     return { leftColumn: left, rightColumn: right };
   }, [diaries]);
 
   // 渲染单个游记卡片
   const renderItem = (item: TravelDiary) => (
-    <Pressable 
-      style={styles.card}
-      onPress={() => onPressItem?.(item)}
-    >
-      <Image 
-        source={Array.isArray(item.coverImage)?{ uri: item.coverImage[0] }:{ uri: item.coverImage }} 
-        style={styles.coverImage} 
+    <Pressable style={styles.card} onPress={() => onPressItem?.(item)} >
+      <Image
+        source={Array.isArray(item.coverImage) ? { uri: item.coverImage[0] } : { uri: item.coverImage }}
+        style={styles.coverImage}
       />
       <View style={styles.cardContent}>
         <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
         <View style={styles.userInfo}>
-          <Image 
-            source={{ uri: item.user.avatar }} 
-            style={styles.avatar} 
+          <Image
+            source={{ uri: item.user.avatar }}
+            style={styles.avatar}
           />
-          <Text style={styles.nickname}>{item.user.nickname}</Text>
-        </View>
-        <View style={styles.stats}>
+          <Text style={styles.nickname} numberOfLines={1}>{item.user.nickname}</Text>
           <View style={styles.statItem}>
-            <Ionicons name="heart-outline" size={16} color="#666" />
-            <Text style={styles.statText}>{item.likes}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Ionicons name="chatbubble-outline" size={16} color="#666" />
-            <Text style={styles.statText}>{item.comments}</Text>
+            <Ionicons name="eye-outline" size={16} color="#666" />
+            <Text style={styles.statText}>{item.likes > 9999 ? (item.likes / 10000).toFixed(1) + `万` : item.likes}</Text>
           </View>
         </View>
       </View>
@@ -118,12 +114,17 @@ export default function TravelDiaryMasonry({
         const paddingToBottom = 20;
         // 判断是否滚动到底部
         if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
-          handleLoadMore();
+          onLoadMore?.();
         }
       }}
       scrollEventThrottle={400}
       showsVerticalScrollIndicator={false}
     >
+      {!searching &&
+        <View style={styles.banner}>
+          <HomeBanner />
+        </View>}
+
       <View style={styles.columns}>
         <View style={styles.column}>
           {leftColumn.map((item) => (
@@ -152,6 +153,9 @@ export default function TravelDiaryMasonry({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  banner: {
+    margin: CARD_MARGIN,
   },
   columns: {
     flexDirection: 'row',
@@ -192,7 +196,7 @@ const styles = StyleSheet.create({
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    // marginBottom: 8,
   },
   avatar: {
     width: 24,
@@ -201,17 +205,18 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   nickname: {
-    fontSize: 14,
+    width: 70,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    // whiteSpace: 'nowrap',
+    fontSize: 12,
+    lineHeight: 24,
     color: '#666',
-  },
-  stats: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   statItem: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 16,
+    right: 0,
+    marginLeft: 'auto'
   },
   statText: {
     fontSize: 12,
