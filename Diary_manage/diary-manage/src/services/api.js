@@ -31,10 +31,14 @@ api.interceptors.response.use(
     }
 );
 
+// 图片获取 API
+export const getImage = (filename) => api.post(`/images/imagebyname`, {filename});
+
 // 认证相关 API
 export const login = (data) => api.post('/auth/login', data);
 export const logout = () => api.post('/auth/logout');
 export const getCurrentUser = () => api.get('/auth/me');
+
 
 // 游记相关 API
 export const getDiaryList = (params) => api.get('/diaries', { params });

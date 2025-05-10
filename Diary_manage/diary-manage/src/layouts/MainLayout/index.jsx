@@ -1,22 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Button, Avatar, Dropdown } from 'antd';
 import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
     DashboardOutlined,
-    FileTextOutlined,
-    UserOutlined,
     LogoutOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 import styles from './index.module.css';
+import { UserOutlined } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
 
 const MainLayout = ({ children }) => {
     const [collapsed, setCollapsed] = useState(false);
+    const [avatarIcon, setAvatarIcon] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
     const dispatch = useDispatch();
@@ -31,35 +31,46 @@ const MainLayout = ({ children }) => {
         }
     };
 
-    const userMenu = (
-        <Menu>
-            <Menu.Item key="profile" icon={<UserOutlined />}>
-                个人信息
-            </Menu.Item>
-            <Menu.Divider />
-            <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout}>
-                退出登录
-            </Menu.Item>
-        </Menu>
-    );
+    const userMenuItems = [
+        {
+            key: 'logout',
+            icon: <LogoutOutlined />,
+            label: '退出登录',
+            onClick: handleLogout,
+        },
+    ];
 
     const menuItems = [
         {
             key: '/dashboard',
             icon: <DashboardOutlined />,
             label: '审核列表',
-        },
-        {
-            key: '/reports',
-            icon: <FileTextOutlined />,
-            label: '统计报表',
-        },
+        }
     ];
+
+    useEffect(() => {
+        const fetchAvatarIcon = async () => {
+            try {
+                if (user?.avatar) {
+                    // 使用正确的API路径
+                    const imageUrl = `http://localhost:5000/api/images/image?filename=${user.avatar}`;
+                    setAvatarIcon(<Avatar src={imageUrl} />);
+                } else {
+                    setAvatarIcon(<Avatar icon={<UserOutlined />} />);
+                }
+            } catch (error) {
+                console.error('获取头像图标失败:', error);
+                setAvatarIcon(<Avatar icon={<UserOutlined />} />);
+            }
+        };
+
+        fetchAvatarIcon();
+    }, []);
 
     return (
         <Layout className={styles.layout}>
             <Sider trigger={null} collapsible collapsed={collapsed}>
-                <div className={styles.logo}>审核系统</div>
+                <div className={styles.logo}>游记审核</div>
                 <Menu
                     theme="dark"
                     mode="inline"
@@ -77,9 +88,9 @@ const MainLayout = ({ children }) => {
                         className={styles.trigger}
                     />
                     <div className={styles.headerRight}>
-                        <Dropdown overlay={userMenu} placement="bottomRight">
+                        <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
                             <div className={styles.userInfo}>
-                                <Avatar icon={<UserOutlined />} />
+                                {avatarIcon}
                                 <span className={styles.username}>{user?.username}</span>
                             </div>
                         </Dropdown>
@@ -93,4 +104,4 @@ const MainLayout = ({ children }) => {
     );
 };
 
-export default MainLayout; 
+export default MainLayout;

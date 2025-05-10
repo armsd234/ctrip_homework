@@ -1,12 +1,23 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 // 确保上传目录存在
 const createUploadDir = (dir) => {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
     }
+};
+
+// 生成唯一文件名
+const generateUniqueFilename = (originalname) => {
+    // 生成32位随机字符串
+    const randomString = crypto.randomBytes(16).toString('hex');
+    // 获取原始文件扩展名
+    const ext = path.extname(originalname);
+    // 组合新文件名：时间戳-随机字符串.扩展名
+    return `${Date.now()}-${randomString}${ext}`;
 };
 
 // 配置文件存储
@@ -25,16 +36,14 @@ const storage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        // 生成文件名：时间戳 + 随机数 + 原始扩展名
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
+        cb(null, generateUniqueFilename(file.originalname));
     }
 });
 
 // 文件过滤器
 const fileFilter = (req, file, cb) => {
     // 允许的文件类型
-    const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif','image/webp','image/jpg','image/webm'];
     const allowedVideoTypes = ['video/mp4', 'video/webm'];
 
     if (file.mimetype.startsWith('image/') && allowedImageTypes.includes(file.mimetype)) {

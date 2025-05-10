@@ -184,7 +184,7 @@ router.post("/register", async (req, res) => {
 // 用户登录
 router.post('/login', async (req, res) => {
     try {
-        //console.log("req.body:", req.body);
+        console.log("req.body:", req.body);
         const { email, username, password } = req.body;
         let user;
         if (email) {
@@ -195,11 +195,11 @@ router.post('/login', async (req, res) => {
             // 查找用户
             user = await User.findOne({ username });
         }
-        console.log("user:", user);
+        //console.log("user:", user);
         if (!user) {
             return res.status(401).json({ message: '用户名或密码错误' });
         }
-        console.log("user:", user);
+        //console.log("user:", user);
         // 验证密码
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
@@ -222,6 +222,18 @@ router.post('/login', async (req, res) => {
         res.status(500).json({ message: '服务器错误' });
     }
 });
+
+
+// /auth/logout
+router.post('/logout', auth, async (req, res) => {
+    try {
+        // 清除token
+        res.clearCookie('token');
+        res.json({ message: '退出成功' });
+    } catch (error) {
+        res.status(500).json({ message: '服务器错误' });
+    }
+})
 
 // 获取当前用户信息
 router.get('/me', auth, async (req, res) => {

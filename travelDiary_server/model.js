@@ -16,7 +16,10 @@ const UserSchema = new Schema({
     status: { type: String, enum: ['online', 'offline', 'busy'], default: 'online' }, // 状态字段，默认为 'online'
 
     backgroundImage: { type: String, default: 'default_bg.jpg' }, // 背景图片字段，默认为 'default_bg.jpg'
-    
+    //关注列表
+    follows: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // 关注的用户列表字段，默认为空数组
+    followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // 粉丝列表字段，默认为空数组
+    // 统计字段
     posts: { type: Number, default: 0 }, // 发布的文章数量字段，默认为 0
     likeds: { type: Number, default: 0 }, // 收到的赞数量字段，默认为 0
     role: { type: String, enum: ['user', 'admin', 'reviewer'], default: 'user' }, // 角色字段，默认为 'user'
@@ -30,6 +33,10 @@ const TravelNoteSchema = new mongoose.Schema({
     content: { type: String, required: true },
     images: [{ type: String }], // 存储图片URL数组
     video: { type: String }, // 存储视频URL
+    location: { type: String }, // 存储位置信息
+    tags: [{ type: String }], // 标签
+    category: { type: String, enum: ['travel', 'culture', 'food', 'life', 'other'], default: 'other' }, // 分类
+    isPublic: { type: Boolean, default: true }, // 是否公开
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     status: { 
       type: String, 
