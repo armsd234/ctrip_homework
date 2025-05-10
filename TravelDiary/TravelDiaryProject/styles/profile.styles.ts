@@ -58,6 +58,11 @@ const styles = StyleSheet.create({
       paddingBottom: 20, // This padding creates space between the dark content and the white section below
       // Note: The paddingTop for this wrapper is applied via ScrollView's contentContainerStyle (headerHeight)
     },
+
+    selfbackgroundImage: {
+      width: '100%', // Full width of the screen
+      opacity: 0.5, // Adjust opacity as needed
+    },
   
     // UserInfoSection - Inside scrollableTopContentWrapper
     userInfoSection: {
@@ -140,6 +145,8 @@ const styles = StyleSheet.create({
     },
     genderIconContainer: {
       backgroundColor: 'rgba(255,255,255,0.15)',
+      
+      
       width: 28,
       height: 28,
       borderRadius: 14,

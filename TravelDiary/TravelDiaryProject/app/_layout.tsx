@@ -2,9 +2,8 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useRef } from 'react';
+import { useEffect} from 'react';
 import 'react-native-reanimated';
-import { isAuthenticated } from '../services/auth';
 import { AuthProvider } from '@/contexts/AuthContext';
 
 export {
@@ -64,9 +63,21 @@ function RootLayoutNav() {
     <Stack screenOptions={{ 
       headerShown: false
      }}>
-      
-      <Stack.Screen name="login" />
-      <Stack.Screen name="register" />
+       <Stack.Screen
+        name="editinfo" // 文件名 (不带扩展名)
+        options={{
+          animation: 'slide_from_right', // Android (Material)
+          // animation: 'slide_from_left', // iOS (Card)
+          // animation: 'default', // Platform default
+          animationDuration: 1000 // 设置动画时长为 1000 毫秒，可按需调整
+        }}
+      />
+      <Stack.Screen 
+        name="authscreen"
+        options={{ 
+          animation: 'slide_from_bottom',
+          animationDuration: 1000 // 设置动画时长为 1000 毫秒，可按需调整
+        }} />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="diary/[id]" />
       <Stack.Screen name="diary-list/[id]" />

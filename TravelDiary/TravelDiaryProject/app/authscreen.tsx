@@ -13,7 +13,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import styles from '../styles/authscreen.styles';
 import { useAuth } from '@/contexts/AuthContext';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 // --- Types ---
 type AuthView = 'login' | 'register' | 'verify';
@@ -31,8 +31,9 @@ const AuthScreen: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [resendTimer, setResendTimer] = useState<number>(60);
   const [isTimerActive, setIsTimerActive] = useState<boolean>(false);
-  const { login, register, verifyCode, sendVerificationCode } = useAuth()
- 
+  const { login, register, verifyCode, sendVerificationCode, checkToken, isAuthenticated, user } = useAuth();
+  const params = useLocalSearchParams();
+  const fromPage = params.from as string | undefined;
 
   // Timer effect for resend button
   useEffect(() => {
@@ -47,6 +48,17 @@ const AuthScreen: React.FC = () => {
     return () => clearInterval(timer);
   }, [isTimerActive, resendTimer]);
 
+  // useEffect(() => {
+  //   checkToken();
+  //   if(isAuthenticated){
+  //     if (fromPage && fromPage.startsWith('/(tabs)')) {
+  //       router.replace(fromPage as any);
+  //     } else {
+  //       router.replace('/(tabs)');
+  //     }
+  //   }
+  // },[isAuthenticated])
+
   // --- Validation Functions ---
   const validateEmail = (email: string): boolean => {
     const re = /\S+@\S+\.\S+/;
@@ -57,10 +69,15 @@ const AuthScreen: React.FC = () => {
     return password.length >= 6;
   };
 
+  const validateString = (value: string): boolean => {
+    const regex = /^[a-zA-Z0-9\*\-\_@%\+~]+$/;
+    return regex.test(value);
+  }
+
   // --- Auth Logic Functions ---
   const handleLogin = async (): Promise<void> => {
     setError('');
-    if (!validateEmail(email)) {
+    if (!validateEmail(email) && !validateString(email)) {
       setError('请输入有效的邮箱地址');
       return;
     }
@@ -68,12 +85,22 @@ const AuthScreen: React.FC = () => {
       setError('请输入密码');
       return;
     }
+    if (!validateString(password)) {
+      setError('密码错误');
+      return;
+    }
 
     setIsLoading(true);
     try {
-      await login(email, password );
+      await login(email, password);
       Alert.alert('登录成功', '欢迎回来！');
-      router.replace('/(tabs)');
+      
+      // 根据来源页面进行跳转
+      if (fromPage && fromPage.startsWith('/(tabs)')) {
+        router.replace(fromPage as any);
+      } else {
+        router.replace('/(tabs)');
+      }
     } catch (error: any) {
       setError(error.response?.data?.message || '登录失败，请重试');
     } finally {
@@ -83,12 +110,16 @@ const AuthScreen: React.FC = () => {
 
   const handleRegister = async (): Promise<void> => {
     setError('');
-    if (!validateEmail(email)) {
+    if (!validateEmail(email)&&!validateString(email)) {
       setError('请输入有效的邮箱地址');
       return;
     }
     if (!validatePassword(password)) {
       setError('密码至少需要6位');
+      return;
+    }
+    if(!validateString(password)){
+      setError('密码只能由字母、数字、*、-、_、@、%、+、~组成');
       return;
     }
     if (password !== confirmPassword) {

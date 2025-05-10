@@ -25,7 +25,7 @@ router.get('/me/travel-notes', auth, async (req, res) => {
 // 更新用户信息
 router.put('/me', auth, async (req, res) => {
     try {
-        const { nickname, avatar } = req.body;
+        const { nickname, avatar, signature, gender, birthday, location } = req.body;
         const updates = {};
 
         if (nickname) {
@@ -45,6 +45,22 @@ router.put('/me', auth, async (req, res) => {
             updates.avatar = avatar;
         }
 
+        if (signature !== undefined) {
+            updates.signature = signature;
+        }
+
+        if (gender) {
+            updates.gender = gender;
+        }
+
+        if (birthday) {
+            updates.birthday = birthday;
+        }
+
+        if (location) {
+            updates.location = location;
+        }
+
         const user = await User.findByIdAndUpdate(
             req.user._id,
             { $set: updates },
@@ -53,6 +69,7 @@ router.put('/me', auth, async (req, res) => {
 
         res.json(user);
     } catch (error) {
+        console.error('更新用户信息错误:', error);
         res.status(500).json({ message: '服务器错误' });
     }
 });

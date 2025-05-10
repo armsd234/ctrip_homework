@@ -4,23 +4,31 @@ import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import styles from '../../styles/profile.styles';
 import { useAuth } from '../../contexts/AuthContext';
 import { router } from 'expo-router';
+import Clipboard from '@react-native-clipboard/clipboard';
+import { ImageBackground } from 'react-native';
 
 const PROFILE_SECTION_BG = '#4A4E69'; 
-const ACCENT_COLOR = '#F25F5C'; 
 
 const ProfileScreen = () => {
-  const { isAuthenticated} = useAuth();
-
-  // useEffect(() => {
-  //   if (!isAuthenticated) {
-  //     router.replace('/authscreen');
-  //   }
-  // }, [isAuthenticated]);
-
+  const { isAuthenticated, checkToken, user } = useAuth();
+  const [isReady, setIsReady] = useState(false);
   
-  // if (!isAuthenticated) {
-  //   return null;
-  // }
+  useEffect(() => {
+    const checkAuth = async () => {
+      await checkToken();
+      setIsReady(true);
+    };
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    if (isReady && !isAuthenticated) {
+      router.push({
+        pathname: '/authscreen',
+        params: { from: '/(tabs)/profile' }
+      });
+    }
+  }, [isReady, isAuthenticated]);
 
   // ProfileHeader component - Fixed at the top
   const ProfileHeader = () => (
@@ -43,42 +51,63 @@ const ProfileScreen = () => {
     <View style={styles.userInfoSection}>
       <View style={styles.avatarContainer}>
         <View style={styles.avatarOutline}>
-            <View style={styles.avatarInnerPlaceholder} />
+        {/* <View style={styles.avatarInnerPlaceholder} /> */}
+          <Image source={{ uri: `http://localhost:5000/api/images/image?filename=${user?.user.avatar}`  }} style={styles.avatarInnerPlaceholder}  />
         </View>
+
         <TouchableOpacity style={styles.addAvatarButton}>
           <Ionicons name="add" size={18} color="white" />
         </TouchableOpacity>
       </View>
+      
       <View style={styles.userDetails}>
-        <Text style={styles.userName}>昵称62A60E63</Text>
+        <Text style={styles.userName}>{user?.user.nickname}</Text>
         <View style={styles.userIdContainer}>
-          <Text style={styles.userId}>ID: 5418842087</Text>
-          <FontAwesome5 name="clone" size={12} color="#A9A9A9" style={{ marginLeft: 5 }} />
+          <Text style={styles.userId}>ID:{user?.user._id}</Text>
+          <TouchableOpacity onPress={() => { if (user?.user._id) Clipboard.setString(user?.user._id); }}>
+            <FontAwesome5 name="clone" size={12} color="#A9A9A9" style={{ marginLeft: 5 }} />
+          </TouchableOpacity>
         </View>
       </View>
+
     </View>
   );
 
   const BioAndStats = () => (
     <View style={styles.bioStatsContainer}>
-      <Text style={styles.bioText}>点击这里, 填写简介</Text>
+      <Text style={styles.bioText}>{user?.user.signature}</Text>
       <TouchableOpacity style={styles.genderIconContainer}>
-        <Ionicons name="male-outline" size={16} color="#A9A9A9" />
+        {
+          user?.user.gender === 'male' ? (
+            <Ionicons name="male-outline" size={16} color="#A9A9A9"  />
+          ) : (
+            <Ionicons name="female-outline" size={16} color="#2c91ef" />
+          )
+        }
       </TouchableOpacity>
       <View style={styles.betweenContainer}>
         <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-            <Text style={styles.statNumber}>5</Text>
-            <Text style={styles.statLabel}>获赞</Text>
+              <Text style={styles.statNumber}>{user?.user.followers}</Text>
+              <Text style={styles.statLabel}>关注</Text>
             </View>
             <View style={styles.statItem}>
-            <Text style={styles.statNumber}>1</Text>
-            <Text style={styles.statLabel}>收藏</Text>
+              <Text style={styles.statNumber}>{user?.user.followings}</Text>
+              <Text style={styles.statLabel}>粉丝</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{(user?.user?.favoriteds || 0) + (user?.user?.likeds || 0)}</Text>
+              <Text style={styles.statLabel}>获赞与收藏</Text>
             </View>
         </View>
         <View style={styles.actionsContainer}>
-            <TouchableOpacity style={styles.editProfileButton}>
-            <Text style={styles.editProfileText}>编辑资料</Text>
+            <TouchableOpacity style={styles.editProfileButton} onPress={
+              () => {
+                  console.log('Navigating to Edit Profile');
+                  router.push('/editinfo'); // Adjust the path as needed
+              }
+            }>
+              <Text style={styles.editProfileText}>编辑资料</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.settingsButton}>
             <Ionicons name="settings-outline" size={22} color="white" />
@@ -125,10 +154,11 @@ const ProfileScreen = () => {
       <ScrollView style={styles.scrollView } 
         contentContainerStyle={[{ paddingTop: 0, paddingBottom: 52 },styles.scrollViewContentContainer]}
         showsVerticalScrollIndicator={false}>
-          <View style={styles.scrollableTopContentWrapper}>
-          <UserInfoSection />
-          <BioAndStats />
+        <View style={styles.scrollableTopContentWrapper}>
           
+            <UserInfoSection />
+            <BioAndStats />
+        
         </View>
         
         <View style={styles.contentSection}>

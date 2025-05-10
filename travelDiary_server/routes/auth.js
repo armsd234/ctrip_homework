@@ -212,11 +212,13 @@ router.post('/login', async (req, res) => {
         // 将用户对象转换为普通对象并移除密码字段
         const userResponse = user.toObject();
         delete userResponse.password;
+        
 
-        res.json({
+        res.json({"data": {
             token,
             user: userResponse
-        });
+        }});
+        
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ message: '服务器错误' });
@@ -239,7 +241,10 @@ router.post('/logout', auth, async (req, res) => {
 router.get('/me', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select('-password');
-        res.json(user);
+        res.json({
+            data: {
+                user: user.toObject()
+            }});
     } catch (error) {
         res.status(500).json({ message: '服务器错误' });
     }

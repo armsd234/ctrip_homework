@@ -72,7 +72,6 @@ router.post('/image', auth, upload.single('image'), (req, res) => {
         if (!req.file) {
             return res.status(400).json({ message: '请选择要上传的图片' });
         }
-
         // 只返回文件名
         res.json({
             message: '图片上传成功',

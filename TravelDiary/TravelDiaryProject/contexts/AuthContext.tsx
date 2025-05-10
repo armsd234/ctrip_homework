@@ -1,27 +1,29 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authService } from '../services/auth';
+import { authService,UserInfo } from '../services/auth';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: any | null;
-  login: (email: string, password: string) => Promise<any>;
+  user: UserInfo | null;
+  login: (email: string, password: string) => Promise<UserInfo | null>;
   logout: () => Promise<void>;
   register: (email: string) => Promise<any>;
   verifyCode: (email: string, code: string, password: string) => Promise<any>;
   sendVerificationCode: (email: string) => Promise<any>;
+  checkToken: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<any | null>(null);
+  const [user, setUser] = useState<UserInfo | null>(null);
 
   const login = async (email: string, password: string) => {
     try {
       const response = await authService.login({ email, password });
       setIsAuthenticated(true);
-      setUser(response.data?.userInfo || null);
+      console.log('登录：',response);
+      setUser(response || null);
       return response;
     } catch (error) {
       throw error;
@@ -65,6 +67,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const checkToken = async () => {
+    try {
+      const flag = await authService.isAuthenticated();
+      
+      if (flag) {
+        setIsAuthenticated(flag);
+        
+        const userInfo = await authService.getUserInfo();
+        setUser(userInfo || null);
+        console.log('userInfo',userInfo);
+         
+      }else{
+        setUser(null);
+      }
+    } catch (error) {
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       isAuthenticated,
@@ -73,7 +95,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logout,
       register,
       verifyCode,
-      sendVerificationCode
+      sendVerificationCode,
+      checkToken,
     }}>
       {children}
     </AuthContext.Provider>

@@ -24,7 +24,7 @@ const generateUniqueFilename = (originalname) => {
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         let uploadDir = 'uploads/';
-
+        console.log('file:',file);
         // 根据文件类型选择不同的目录
         if (file.mimetype.startsWith('image/')) {
             uploadDir += 'images/';
@@ -45,6 +45,7 @@ const fileFilter = (req, file, cb) => {
     // 允许的文件类型
     const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif','image/webp','image/jpg','image/webm'];
     const allowedVideoTypes = ['video/mp4', 'video/webm'];
+    console.log('file:',file);
 
     if (file.mimetype.startsWith('image/') && allowedImageTypes.includes(file.mimetype)) {
         cb(null, true);
