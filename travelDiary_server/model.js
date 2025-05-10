@@ -8,7 +8,6 @@ const UserSchema = new Schema({
   nickname: { type: String, required: true }, // 昵称字段
   email: { type: String },     // 邮箱字段
 
-
   avatar: { type: String, default: 'default_avatar.jpg' }, // 头像字段，默认为 'default.jpg'
   gender: { type: String, enum: ['male', 'female', 'other'], default: 'other' }, // 性别字段，默认为 'other'
   birthday: { type: Date }, // 生日字段，默认为当前日期
@@ -17,19 +16,29 @@ const UserSchema = new Schema({
   status: { type: String, enum: ['online', 'offline', 'busy'], default: 'online' }, // 状态字段，默认为 'online'
 
   backgroundImage: { type: String, default: 'default_bg.jpg' }, // 背景图片字段，默认为 'default_bg.jpg'
-  //关注列表
-  follows: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // 关注的用户列表字段，默认为空数组
-  followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // 粉丝列表字段，默认为空数组
+  location: { type: String }, // 位置字段
   // 统计字段
   posts: { type: Number, default: 0 }, // 发布的文章数量字段，默认为 0
-  likeds: { type: Number, default: 0 }, // 收到的赞数量字段，默认为 0
+  likeds: { type: Number, default: 0 }, // 被赞数量字段，默认为 0
+  followers: { type: Number, default: 0 }, // 粉丝数量字段，默认为 0
+  followings: { type: Number, default: 0 }, // 关注的用户数量字段，默认为 0
+  favoriteds: { type: Number, default: 0 }, // 被收藏的文章数量字段，默认为 0
+
   role: { type: String, enum: ['user', 'admin', 'reviewer'], default: 'user' }, // 角色字段，默认为 'user'
 });
-
 const User = mongoose.model('User', UserSchema);
+
+//关注
+const FollowSchema = new mongoose.Schema({
+  followerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // 粉丝ID字段，引用User模型
+  followingId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // 被关注的用户ID字段，引用User模型
+  createdAt: { type: Date, default: Date.now } // 创建时间字段，默认为当前时间
+})
+const Follow = mongoose.model('Follow', FollowSchema);
 
 // 标签
 const TagSchema = new mongoose.Schema({
+  tid: { type: Number}, 
   name: { type: String, required: true }, // 标签名字段
   image: { type: String, required: true }, // 标签图片字段
   suggestion: { type: String }, // 建议字段
@@ -49,29 +58,8 @@ const TravelNoteSchema = new mongoose.Schema({
   days: { type: String },     // 天数字段
   money: { type: String },     // 金额字段
   who: { type: String },     // 谁字段
-
-  // "tags": [
-  //     {
-  //       "name": "巴厘岛",
-  //       "image": "https://picsum.photos/400/300?random=' + (index + 10)",
-  //       "suggestion": "建议游玩时间3-5天",
-  //       "url": "https://you.ctrip.com/place/bali438.html"
-  //     },
-  //     {
-  //       "name": "佩妮达岛",
-  //       "image": "https://picsum.photos/400/300?random=' + (index + 11)",
-  //       "suggestion": "建议游玩时间3-5天",
-  //       "url": "https://you.ctrip.com/sight/bali438/64465.html?scene=online"
-  //     },
-  //     {
-  //       "name": "巴厘岛",
-  //       "image": "https://picsum.photos/400/300?random=' + (index + 12)",
-  //       "suggestion": "",
-  //       "url": "https://you.ctrip.com/place/bali438.html"
-  //     }
-  //   ],
+  
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
-
 
   category: { type: String, enum: ['travel', 'culture', 'food', 'life', 'other'], default: 'other' }, // 分类
   isPublic: { type: Boolean, default: true }, // 是否公开
@@ -83,7 +71,12 @@ const TravelNoteSchema = new mongoose.Schema({
   },
   rejectionReason: { type: String }, // 审核拒绝原因
   views: { type: Number, default: 0 }, // 浏览量
-  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // 点赞用户
+  commentCount: { type: Number, default: 0 }, // 评论数
+  
+  likesCount: { type: Number, default: 0 }, // 点赞数
+
+  favoriteCount: { type: Number, default: 0 }, // 收藏数
+  
   isDeleted: { type: Boolean, default: false }, // 逻辑删除标记
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
@@ -103,7 +96,7 @@ const ReviewLog = mongoose.model('ReviewLog', ReviewLogSchema);
 // 评论
 const CommentSchema = new mongoose.Schema({
   content: { type: String, required: true },
-  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   noteId: { type: mongoose.Schema.Types.ObjectId, ref: 'TravelNote', required: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
@@ -119,6 +112,14 @@ const FavoriteSchema = new mongoose.Schema({
 });
 const Favorite = mongoose.model('Favorite', FavoriteSchema);
 
+//点赞
+const LikeSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  noteId: { type: mongoose.Schema.Types.ObjectId, ref: 'TravelNote', required: true },
+  createdAt: { type: Date, default: Date.now }
+})
+const Like = mongoose.model('Like', LikeSchema);
+
 module.exports = {
   User,
   TravelNote,
@@ -126,4 +127,6 @@ module.exports = {
   Comment,
   Favorite,
   Tag,
+  Like,
+  Follow,
 };
