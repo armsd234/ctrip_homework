@@ -27,7 +27,7 @@
           "url": "https://you.ctrip.com/place/bali438.html"
         }
       ],
-      "content": "巴厘岛是一个充满神秘和美丽的地方，这里有壮观的自然风光、丰富的文化遗产和独特的民俗风情。巴厘岛的沙滩洁白细腻，海水清澈见底，是度假和潜水的好去处。",
+      "content": "a巴厘岛是一个充满神秘和美丽的地方，这里有壮观的自然风光、丰富的文化遗产和独特的民俗风情。巴厘岛的沙滩洁白细腻，海水清澈见底，是度假和潜水的好去处。",
       "coverImage": [
         "https://picsum.photos/400/300?random=1",
         "https://picsum.photos/400/300?random=4"
@@ -37,15 +37,65 @@
         "nickname": "旅行达人",
         "avatar": "https://picsum.photos/100/100?random=1"
       },
-      "likes": 1234,
+      "likes": 12,
+      "collects":23,
       "comments": 56,
       "views": 7890,
       "location": "巴厘岛",
-      "createTime": "2024-03-20T10:00:00Z"
+      "createTime": "2024-03-20T10:00:00Z",
+      "commentsData": [
+        {
+          "id": 101,
+          "content": "这篇京都游记让我想起了去年的旅行！",
+          "createdAt": "2023-05-16T08:15:00Z",
+          "user": {
+            "id": "user101",
+            "nickname": "樱花追梦人",
+            "avatar": "https://picsum.photos/100/100?random=1"
+          },
+          "likes": 15,
+          "replies": [
+            {
+              "id": "101-1",
+              "content": "是啊，京都的樱花季真的很美!",
+              "createdAt": "2023-05-16T10:30:00Z",
+              "user": {
+                "id": "user102",
+                "nickname": "京都通",
+                "avatar": "https://picsum.photos/100/100?random=1"
+              },
+              "likes": 5
+            },
+            {
+              "id": "101-2",
+              "content": "推荐你们去哲学之道走走，人少景美",
+              "createdAt": "2023-05-16T11:45:00Z",
+              "user": {
+                "id": "user103",
+                "nickname": "日本旅行达人",
+                "avatar": "https://picsum.photos/100/100?random=1"
+              },
+              "likes": 8
+            }
+          ]
+        },
+        {
+          "id": 102,
+          "content": "照片拍得真专业，用的什么相机？",
+          "createdAt": "2023-05-15T14:20:00Z",
+          "user": {
+            "id": "user104",
+            "nickname": "摄影爱好者",
+            "avatar": "https://picsum.photos/100/100?random=1"
+          },
+          "likes": 7
+        }
+      ]
     },
     {
       "id": 2,
       "title": "东京美食探索",
+      "content": "这里是度假的好去处。",
       "coverImage": [
         "https://picsum.photos/400/300?random=2"
       ],
@@ -71,6 +121,7 @@
     {
       "id": 3,
       "title": "巴黎浪漫之旅",
+      "content": "这里是度假的好去处。",
       "coverImage": [
         "https://picsum.photos/400/300?random=3"
       ],
@@ -88,6 +139,7 @@
     {
       "id": 4,
       "title": "马尔代夫潜水记",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=4",
       "user": {
         "id": 4,
@@ -103,6 +155,7 @@
     {
       "id": 5,
       "title": "纽约城市漫步",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=5",
       "user": {
         "id": 5,
@@ -118,6 +171,7 @@
     {
       "id": 6,
       "title": "悉尼歌剧院：建筑与艺术的完美结合",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=6",
       "user": {
         "id": 6,
@@ -133,6 +187,7 @@
     {
       "id": 7,
       "title": "罗马假日：古罗马遗迹与现代生活的碰撞",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=7",
       "user": {
         "id": 7,
@@ -148,6 +203,7 @@
     {
       "id": 8,
       "title": "京都红叶季：古寺与枫叶的绝美邂逅",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=8",
       "user": {
         "id": 8,
@@ -163,6 +219,7 @@
     {
       "id": 9,
       "title": "冰岛极光之旅：追逐北极光的奇幻体验",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=9",
       "user": {
         "id": 9,
@@ -178,6 +235,7 @@
     {
       "id": 10,
       "title": "迪拜购物节：奢华与购物的完美结合",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=10",
       "user": {
         "id": 10,
@@ -193,6 +251,7 @@
     {
       "id": 11,
       "title": "布拉格广场：童话般的城市漫步",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=11",
       "user": {
         "id": 11,
@@ -208,6 +267,7 @@
     {
       "id": 12,
       "title": "曼谷夜市：泰式美食与文化的完美体验",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=12",
       "user": {
         "id": 12,
@@ -223,6 +283,7 @@
     {
       "id": 13,
       "title": "威尼斯水城：贡多拉上的浪漫之旅",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=13",
       "user": {
         "id": 13,
@@ -238,6 +299,7 @@
     {
       "id": 14,
       "title": "首尔美食地图：从街头小吃到米其林餐厅",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=14",
       "user": {
         "id": 14,
@@ -253,6 +315,7 @@
     {
       "id": 15,
       "title": "开普敦：非洲大陆最南端的壮丽风光",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=15",
       "user": {
         "id": 15,
@@ -268,6 +331,7 @@
     {
       "id": 16,
       "title": "新加坡滨海湾：现代都市的璀璨夜景",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=16",
       "user": {
         "id": 16,
@@ -283,6 +347,7 @@
     {
       "id": 17,
       "title": "温哥华：加拿大西海岸的自然与都市",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=17",
       "user": {
         "id": 17,
@@ -298,6 +363,7 @@
     {
       "id": 18,
       "title": "布达佩斯：多瑙河畔的明珠",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=18",
       "user": {
         "id": 18,
@@ -313,6 +379,7 @@
     {
       "id": 19,
       "title": "悉尼歌剧院：建筑与艺术的完美结合",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=19",
       "user": {
         "id": 19,
@@ -328,6 +395,7 @@
     {
       "id": 20,
       "title": "阿姆斯特丹：运河与自行车的城市",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=20",
       "user": {
         "id": 20,
@@ -343,6 +411,7 @@
     {
       "id": 21,
       "title": "圣托里尼：爱琴海上的蓝白世界",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=21",
       "user": {
         "id": 21,
@@ -358,6 +427,7 @@
     {
       "id": 22,
       "title": "里约热内卢：狂欢节与基督像",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=22",
       "user": {
         "id": 22,
@@ -373,6 +443,7 @@
     {
       "id": 23,
       "title": "迪拜购物节：奢华与购物的完美结合",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=23",
       "user": {
         "id": 23,
@@ -388,6 +459,7 @@
     {
       "id": 24,
       "title": "布拉格广场：童话般的城市漫步",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=24",
       "user": {
         "id": 24,
@@ -403,6 +475,7 @@
     {
       "id": 25,
       "title": "曼谷夜市：泰式美食与文化的完美体验",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=25",
       "user": {
         "id": 25,
@@ -418,6 +491,7 @@
     {
       "id": 26,
       "title": "威尼斯水城：贡多拉上的浪漫之旅",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=26",
       "user": {
         "id": 26,
@@ -433,6 +507,7 @@
     {
       "id": 27,
       "title": "首尔美食地图：从街头小吃到米其林餐厅",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=27",
       "user": {
         "id": 27,
@@ -448,6 +523,7 @@
     {
       "id": 28,
       "title": "开普敦：非洲大陆最南端的壮丽风光",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=28",
       "user": {
         "id": 28,
@@ -463,6 +539,7 @@
     {
       "id": 29,
       "title": "新加坡滨海湾：现代都市的璀璨夜景",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=29",
       "user": {
         "id": 29,
@@ -478,6 +555,7 @@
     {
       "id": 30,
       "title": "温哥华：加拿大西海岸的自然与都市",
+      "content": "这里是度假的好去处。",
       "coverImage": "https://picsum.photos/400/300?random=30",
       "user": {
         "id": 30,
