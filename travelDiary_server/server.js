@@ -4,7 +4,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const { User } = require('./model');
+const { User, Tag } = require('./model');
 const config = require('./config');
 
 const authRoutes = require('./routes/auth');
@@ -63,6 +63,26 @@ async function initializeAccounts() {
     }
 }
 
+//初始化tag
+async function initializeTags() {
+    try {
+        // 删除所有现有的标签
+        await Tag.deleteMany({});
+        console.log('已删除所有现有的标签');
+        // 创建标签
+        for (const tag of config.tags) {
+            try {
+                await Tag.create(tag);
+                console.log(`标签 ${tag.name} 创建成功`);
+            } catch (error) {
+                console.error(`创建标签 ${tag.name} 失败:`, error);
+            }
+        }
+    } catch (error) {
+        console.error('初始化标签失败:', error);
+    }
+}
+
 // 连接数据库
 mongoose.connect('mongodb://localhost:27017/travel_diary', {
     useNewUrlParser: true,
@@ -71,6 +91,7 @@ mongoose.connect('mongodb://localhost:27017/travel_diary', {
     .then(async () => {
         console.log('MongoDB connected');
         await initializeAccounts();
+        await initializeTags();
     })
     .catch(err => console.error('MongoDB connection error:', err));
 
@@ -92,4 +113,4 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-}); 
+});
