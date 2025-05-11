@@ -90,7 +90,8 @@ const styles = StyleSheet.create({
     },
     listItemValue: {
         fontSize: 16,
-        color: '#333',  
+        color: '#333',
+        flex: 1,
     },
     listItemPlaceholder: {
         fontSize: 16,
@@ -105,6 +106,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#eee', 
         marginHorizontal: 16, 
     },
+    errorText: {
+        color: '#E74C3C',
+        marginBottom: 15,
+        textAlign: 'left',
+        fontSize: 14,
+      },
     saveButton: {
         backgroundColor: '#2c91ef', // 蓝色背景
         width: '80%', // 宽度
@@ -131,44 +138,84 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'flex-end',
         backgroundColor: 'rgba(0,0,0,0.5)',
-      },
-      modalContainer: {
+    },
+    modalContainer: {
         backgroundColor: 'white',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         padding: 20,
         maxHeight: '70%',
-      },
-      modalHeader: {
+    },
+    modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 16,
-      },
-      modalTitle: {
-        fontSize: 20,
+    },
+    modalTitle: {
+        fontSize: 18,
         fontWeight: 'bold',
         color: '#333',
-      },
-      modalContent: {
+    },
+    modalCancelText: {
+        fontSize: 16,
+        color: '#666',
+    },
+    modalConfirmText: {
+        fontSize: 16,
+        color: '#2c91ef',
+        fontWeight: 'bold',
+    },
+    modalContent: {
         paddingBottom: 20,
-      },
-      modalSectionTitle: {
+    },
+    modalSectionTitle: {
         fontSize: 16,
         fontWeight: '600',
         color: '#333',
         marginTop: 12,
         marginBottom: 8,
-      },
-      modalItem: {
+    },
+    modalItem: {
         flexDirection: 'row',
         alignItems: 'center',
         marginVertical: 6,
-      },
-      modalText: {
+    },
+    modalText: {
         fontSize: 14,
         color: '#555',
         marginLeft: 8,
-      },
+    },
+    modalOption: {
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: '#eee',
+    },
+    selectedOption: {
+        backgroundColor: '#f0f8ff',
+    },
+    modalOptionText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    selectedText: {
+        color: '#2c91ef',
+        fontWeight: 'bold',
+    },
+    locationInput: {
+        fontSize: 16,
+        color: '#333',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: '#eee',
+    },
+    signatureInput: {
+        minHeight: 24,
+        maxHeight: 96, // 4行文字的高度
+        paddingTop: 8,
+        paddingBottom: 8,
+    },
 });
 export default styles;

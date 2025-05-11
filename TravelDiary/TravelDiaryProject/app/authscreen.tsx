@@ -265,9 +265,6 @@ const AuthScreen: React.FC = () => {
   const renderRegisterForm = () => (
     <>
       <Text style={styles.title}>创建新账号</Text>
-
-      
-
       <View style={styles.inputContainer}>
         <MaterialIcons name="email" size={20} color={textColor} style={styles.icon} />
         <TextInput
@@ -310,6 +307,7 @@ const AuthScreen: React.FC = () => {
             {error ? <Text style={styles.errorText}>{error}</Text> : null}  
             
       </View>
+      
       <TouchableOpacity
          style={[styles.button, isLoading && styles.buttonDisabled] as StyleProp<ViewStyle>}
         onPress={handleRegister}

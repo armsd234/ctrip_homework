@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { TravelNote, Favorite } = require('../model');
 const { auth } = require('../middleware/auth');
+const { User } = require('../model');
 
 // 获取用户自己的游记列表
 router.get('/me/travel-notes', auth, async (req, res) => {
@@ -21,6 +22,13 @@ router.get('/me/travel-notes', auth, async (req, res) => {
         res.status(500).json({ message: '服务器错误' });
     }
 });
+
+//检查昵称是否重复
+router.get('/check-nickname', async (req, res) => {
+    const { nickname } = req.query;
+    const user = await User.findOne({ nickname });
+    res.json({ exists: !!user });
+})
 
 // 更新用户信息
 router.put('/me', auth, async (req, res) => {

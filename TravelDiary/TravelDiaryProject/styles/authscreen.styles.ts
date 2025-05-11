@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     },
     button: {
       width: '100%',
-      backgroundColor: accentColor,
+      backgroundColor: '#2c91ef', // 蓝色背景
       padding: 15,
       borderRadius: 25,
       alignItems: 'center',
@@ -84,6 +84,7 @@ const styles = StyleSheet.create({
       backgroundColor: buttonDisabledColor,
     },
     buttonText: {
+      
       color: '#fff',
       fontSize: 18,
       fontWeight: 'bold',

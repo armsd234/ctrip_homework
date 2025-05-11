@@ -19,6 +19,7 @@ interface ImageUploadProps {
     style?: any;
     imageStyle?: any;
     disabled?: boolean;
+    iscameraIcon?: boolean;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -27,6 +28,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     style,
     imageStyle,
     disabled = false,
+    iscameraIcon = true,
 }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
@@ -172,10 +174,16 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                         <ActivityIndicator size="large" color="#fff" />
                     </View>
                 )}
-                {!disabled && !isLoading && (
-                    <View style={styles.editOverlay}>
+                {!disabled && !isLoading && iscameraIcon && (
+                    <View style={styles.editOverlay} >
                         <Ionicons name="camera" size={24} color="#fff" />
                     </View>
+                )}
+
+                {!disabled && !isLoading && !iscameraIcon && (
+                    <TouchableOpacity style={styles.addAvatarButton} onPress={handlePress} disabled={disabled || isLoading}>
+                        <Ionicons name="add" size={18} color="white" />
+                    </TouchableOpacity>
                 )}
             </TouchableOpacity>
 
@@ -271,6 +279,19 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#666',
     },
+    addAvatarButton: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        backgroundColor: '#FFC107', // Yellowish color
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'white' // White border
+      },
 });
 
 export default ImageUpload;

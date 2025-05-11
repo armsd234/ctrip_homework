@@ -6,6 +6,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { router } from 'expo-router';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { ImageBackground } from 'react-native';
+import ImageUpload from '@/components/ImageUpload';
+import { api } from '@/services/api';
 
 const PROFILE_SECTION_BG = '#4A4E69'; 
 
@@ -46,18 +48,33 @@ const ProfileScreen = () => {
     </View>
   );
 
+  const updateavatar = async (uri: string) => {
+    try {
+      const response = await api.put('/api/users/me', {
+          avatar:  uri,
+      });
+      if (response.data) {
+          await checkToken(); 
+          alert('头像上传成功');
+      }
+    } catch (error: any) {
+        console.error('保存失败:', error);
+        alert(error.response?.data?.message || '保存失败，请重试');
+    }
+  }
+
   // UserInfoSection and below will be inside the ScrollView
   const UserInfoSection = () => (
     <View style={styles.userInfoSection}>
       <View style={styles.avatarContainer}>
-        <View style={styles.avatarOutline}>
-        {/* <View style={styles.avatarInnerPlaceholder} /> */}
-          <Image source={{ uri: `http://localhost:5000/api/images/image?filename=${user?.user.avatar}`  }} style={styles.avatarInnerPlaceholder}  />
-        </View>
-
-        <TouchableOpacity style={styles.addAvatarButton}>
-          <Ionicons name="add" size={18} color="white" />
-        </TouchableOpacity>
+        <ImageUpload
+              value={`http://localhost:5000/api/images/image?filename=${user?.user.avatar}`}
+              onChange={(filename) => {updateavatar(filename);}}
+              style={styles.avatarContainer}
+              imageStyle={styles.avatarInnerPlaceholder}
+              iscameraIcon={false}
+              />
+        
       </View>
       
       <View style={styles.userDetails}>
@@ -109,9 +126,7 @@ const ProfileScreen = () => {
             }>
               <Text style={styles.editProfileText}>编辑资料</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsButton}>
-            <Ionicons name="settings-outline" size={22} color="white" />
-            </TouchableOpacity>
+            
         </View>
       </View>
     </View>
