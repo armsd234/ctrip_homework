@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "antd": "^5.25.0",
-    "react-native-masonry-list": "^2.16.2"
+    "react-native-masonry-list": "^2.16.2",
+    "react-native-toast-message": "^2.3.0"
   }
 }

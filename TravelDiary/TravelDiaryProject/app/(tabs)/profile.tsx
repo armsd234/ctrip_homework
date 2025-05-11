@@ -69,7 +69,7 @@ const ProfileScreen = () => {
     <View style={styles.userInfoSection}>
       <View style={styles.avatarContainer}>
         <ImageUpload
-              value={`http://localhost:5000/api/images/image?filename=${user?.user.avatar}`}
+              value={`http://localhost:5001/api/images/image?filename=${user?.user.avatar}`}
               onChange={(filename) => {updateavatar(filename);}}
               style={styles.avatarContainer}
               imageStyle={styles.avatarInnerPlaceholder}

@@ -53,7 +53,7 @@ const MainLayout = ({ children }) => {
             try {
                 if (user?.avatar) {
                     // 使用正确的API路径
-                    const imageUrl = `http://localhost:5000/api/images/image?filename=${user.avatar}`;
+                    const imageUrl = `http://localhost:5001/api/images/image?filename=${user.avatar}`;
                     setAvatarIcon(<Avatar src={imageUrl} />);
                 } else {
                     setAvatarIcon(<Avatar icon={<UserOutlined />} />);

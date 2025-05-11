@@ -1,7 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://localhost:5000'; // 请替换为您的实际API地址
+const API_URL = 'http://localhost:5001'; // 请替换为您的实际API地址
 
 export interface UserInfo {
     token: string;
