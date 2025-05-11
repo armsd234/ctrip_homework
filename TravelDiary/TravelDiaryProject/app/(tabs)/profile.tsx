@@ -8,12 +8,14 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import { ImageBackground } from 'react-native';
 import ImageUpload from '@/components/ImageUpload';
 import { api } from '@/services/api';
+import {SideMenu} from '@/components/SiderMemu';
 
 const PROFILE_SECTION_BG = '#4A4E69'; 
 
 const ProfileScreen = () => {
   const { isAuthenticated, checkToken, user } = useAuth();
   const [isReady, setIsReady] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   
   useEffect(() => {
     const checkAuth = async () => {
@@ -35,13 +37,12 @@ const ProfileScreen = () => {
   // ProfileHeader component - Fixed at the top
   const ProfileHeader = () => (
     <View style={styles.profileHeaderContainer}>
-      <TouchableOpacity style={styles.headerIcon}>
+      <TouchableOpacity style={styles.headerIcon} onPress={() => setShowMenu(true)}>
         <Ionicons name="menu" size={28} color="white" />
       </TouchableOpacity>
       <View style={styles.headerRightIcons}>
         <TouchableOpacity style={styles.setBackgroundButton}>
-          <MaterialIcons name="photo-library" size={16} color="white" style={{ marginRight: 5 }}/>
-          <Text style={styles.setBackgroundText}>设置背景</Text>
+          <MaterialIcons name="share" size={16} color="white" style={{ marginRight: 5 }}/>
         </TouchableOpacity>
         
       </View>
@@ -163,8 +164,8 @@ const ProfileScreen = () => {
   
   return (
     <SafeAreaView style={styles.safeArea}>
+      
       <StatusBar barStyle="light-content" backgroundColor={PROFILE_SECTION_BG} />
-
       <ProfileHeader />
       <ScrollView style={styles.scrollView } 
         contentContainerStyle={[{ paddingTop: 0, paddingBottom: 52 },styles.scrollViewContentContainer]}
@@ -181,7 +182,9 @@ const ProfileScreen = () => {
           <Content />
         </View>
       </ScrollView>
+      <SideMenu visible={showMenu} onClose={() => setShowMenu(false)} />
     </SafeAreaView>
+    
   );
 };
 

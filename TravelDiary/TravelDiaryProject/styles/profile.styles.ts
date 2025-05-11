@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
       paddingVertical: 10, 
       backgroundColor: PROFILE_SECTION_BG, 
       width: '100%', 
-      zIndex: 100, 
+      zIndex: 50, 
       
     },
     headerIcon: {
