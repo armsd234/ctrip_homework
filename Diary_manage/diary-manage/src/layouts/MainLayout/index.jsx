@@ -51,9 +51,10 @@ const MainLayout = ({ children }) => {
     useEffect(() => {
         const fetchAvatarIcon = async () => {
             try {
-                if (user?.avatar) {
+                console.log('User:', user);
+                if (user?.user.avatar) {
                     // 使用正确的API路径
-                    const imageUrl = `http://localhost:5001/api/images/image?filename=${user.avatar}`;
+                    const imageUrl = `http://localhost:5001/api/images/image?filename=${user.user.avatar}`;
                     setAvatarIcon(<Avatar src={imageUrl} />);
                 } else {
                     setAvatarIcon(<Avatar icon={<UserOutlined />} />);
@@ -65,7 +66,7 @@ const MainLayout = ({ children }) => {
         };
 
         fetchAvatarIcon();
-    }, []);
+    }, [user]);
 
     return (
         <Layout className={styles.layout}>

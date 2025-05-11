@@ -12,11 +12,20 @@ module.exports = {
         role: 'reviewer'
     },
 
-    user: {
-        username: 'user@example.com',
+    user1: {
+        username: 'user1@example.com',
         password: '123456',
-        nickname: '普通用户',
-        email: 'user@example.com',
+        nickname: '普通用户1',
+        email: 'user1@example.com',
+        role: 'user',
+        avatar: 'default_avatar.jpg'
+    },
+
+    user2: {
+        username: 'user2@example.com',
+        password: '123456',
+        nickname: '普通用户2',
+        email: 'user2@example.com',
         role: 'user',
         avatar: 'default_avatar.jpg'
     },

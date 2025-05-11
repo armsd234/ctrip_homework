@@ -7,8 +7,8 @@ export const login = createAsyncThunk(
         try {
             const response = await loginApi(credentials);
             localStorage.setItem('token', response.token);
-            console.log('Login API response:', response);
-            return response.user ;
+            // console.log('Login API response.data:', response.data);
+            return response.data ;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || '登录失败');
         }
@@ -33,7 +33,7 @@ export const fetchCurrentUser = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const response = await getCurrentUser();
-            return response.user;
+            return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || '获取用户信息失败');
         }
@@ -63,6 +63,7 @@ const authSlice = createSlice({
             })
             .addCase(login.fulfilled, (state, action) => {
                 state.loading = false;
+                console.log('Login fulfilled:', action);
                 state.user = action.payload;
             })
             .addCase(login.rejected, (state, action) => {

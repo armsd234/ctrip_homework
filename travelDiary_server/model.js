@@ -9,7 +9,7 @@ const UserSchema = new Schema({
   email: { type: String },     // 邮箱字段
 
   avatar: { type: String, default: 'default_avatar.jpg' }, // 头像字段，默认为 'default.jpg'
-  gender: { type: String, enum: ['male', 'female', 'other'], default: 'other' }, // 性别字段，默认为 'other'
+  gender: { type: String, enum: ['male', 'female'], default: 'male' }, // 性别字段，默认为 'other'
   birthday: { type: Date }, // 生日字段，默认为当前日期
 
   signature: { type: String, default: '这个人很懒，什么都没有留下。' }, // 个性签名字段，默认为 '这个人很懒，什么都没有留下。'
@@ -50,14 +50,14 @@ const Tag = mongoose.model('Tag', TagSchema);
 const TravelNoteSchema = new mongoose.Schema({
   title: { type: String, required: true },
   content: { type: String, required: true },
-  images: [{ type: String }], // 存储图片URL数组
-  video: { type: String }, // 存储视频URL
-  location: { type: String }, // 存储位置信息
+  images: [{ type: String }, { default: ['food.jpg','hot_spot.jpg','culture.jpg'] }], // 存储图片URL数组
+  video: [{ type: String },{ default: ['抖音2025511-200054.mp4'] }], // 存储视频URL
+  location: { type: String , default: '中国-南京'}, // 存储位置信息
 
-  when: { type: String },     // 时间字段
-  days: { type: String },     // 天数字段
-  money: { type: String },     // 金额字段
-  who: { type: String },     // 谁字段
+  when: { type: String , default: '0'},     // 时间字段
+  days: { type: String , default: '0'},     // 天数字段
+  money: { type: String ,default: '0' },     // 金额字段
+  who: { type: String ,default: '0'},     // 谁字段
   
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
 
@@ -98,6 +98,14 @@ const CommentSchema = new mongoose.Schema({
   content: { type: String, required: true },
   authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   noteId: { type: mongoose.Schema.Types.ObjectId, ref: 'TravelNote', required: true },
+  
+  //回复
+  replies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }], // 子评论ID数组，引用Comment模型
+  replyCount: { type: Number, default: 0 }, // 回复数
+  parentCommentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }, // 父评论ID，引用Comment模型
+
+  //点赞
+  likesCount: { type: Number, default: 0 }, // 点赞数
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   isDeleted: { type: Boolean, default: false }

@@ -8,7 +8,7 @@ import MainLayout from './layouts/MainLayout';
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useSelector((state) => state.auth);
   const location = useLocation();
-
+  console.log('User ', user);
   if (loading) {
     return <div>加载中...</div>;
   }
