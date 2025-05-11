@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect} from 'react';
 import 'react-native-reanimated';
 import { AuthProvider } from '@/contexts/AuthContext';
+// import Toast from 'react-native-toast-message';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -43,6 +44,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <RootLayoutNav />
+      {/* <Toast /> */}
     </AuthProvider>
   );
 }
@@ -63,24 +65,12 @@ function RootLayoutNav() {
     <Stack screenOptions={{ 
       headerShown: false
      }}>
-       <Stack.Screen
-        name="editinfo" // 文件名 (不带扩展名)
-        options={{
-          animation: 'slide_from_right', // Android (Material)
-          // animation: 'slide_from_left', // iOS (Card)
-          // animation: 'default', // Platform default
-          animationDuration: 1000 // 设置动画时长为 1000 毫秒，可按需调整
-        }}
-      />
-      <Stack.Screen 
-        name="authscreen"
-        options={{ 
-          animation: 'slide_from_bottom',
-          animationDuration: 1000 // 设置动画时长为 1000 毫秒，可按需调整
-        }} />
+      <Stack.Screen name="editinfo" />
+      <Stack.Screen name="authscreen" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="diary/[id]" />
       <Stack.Screen name="diary-list/[id]" />
+      {/* <Stack.Screen name="editInfo" /> */}
     </Stack>
   );
 }

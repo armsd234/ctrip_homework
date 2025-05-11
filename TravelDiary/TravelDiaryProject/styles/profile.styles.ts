@@ -8,7 +8,7 @@ const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
     safeArea: {
       flex: 1,
-      backgroundColor: MAIN_BG, 
+      backgroundColor: PROFILE_SECTION_BG, 
     },
     // Profile Header styles - fixed at top
     profileHeaderContainer: {
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
     // ContentSection - White background section, inside ScrollView
     contentSection: {
       position: 'sticky',
-      top: 61, 
+      top: 4, 
       backgroundColor: MAIN_BG, // White background
       borderTopLeftRadius: 15,
       borderTopRightRadius: 15,

@@ -1,5 +1,10 @@
 import { StyleSheet,Platform } from 'react-native';
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: 'white',
+        // marginBottom: 60
+      },
     container: {
         flex: 1, 
         backgroundColor: '#f8f8f8', 

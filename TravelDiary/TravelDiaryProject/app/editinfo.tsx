@@ -18,7 +18,7 @@ import { useAuth } from '../contexts/AuthContext';
 import styles from '../styles/editinfo.styles';
 import ImageUpload from '../components/ImageUpload';
 import { api } from '../services/api';
-import Clipboard from '@react-native-clipboard/clipboard';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface ProfileData {
@@ -46,7 +46,7 @@ const formatDate = (date: Date | string | undefined): string => {
     }
 };
 
-const EditProfileScreen: React.FC = () => {
+export default function EditProfileScreen() {
     const { user, checkToken } = useAuth();
     const [modalVisible, setModalVisible] = useState(false);
     const [isEditingName, setIsEditingName] = useState(false);
@@ -91,7 +91,7 @@ const EditProfileScreen: React.FC = () => {
     console.log('EditProfileScreen profileData',profileData);
     
     const handleBackPress = () => {
-        router.replace('/profile'); 
+        router.back();
     };
 
     const handleSavePress = async () => {
@@ -243,9 +243,6 @@ const EditProfileScreen: React.FC = () => {
                   <View style={styles.listItemTextContainer}>
                     <Text style={styles.listItemValue}>{value}</Text>
                   </View>
-                  <TouchableOpacity onPress={() => { if (user?.user._id) Clipboard.setString(user?.user._id); }}>
-                    <FontAwesome5 name="clone" size={12} color="#A9A9A9" style={{ marginLeft: 5 }} />
-                  </TouchableOpacity>
                 </View>
               </View>
             ) : (
@@ -322,6 +319,7 @@ const EditProfileScreen: React.FC = () => {
     
 
     return (
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#fff" translucent={false} />
             
@@ -403,6 +401,7 @@ const EditProfileScreen: React.FC = () => {
                 </View>
             </Modal>
         </View>
+        </SafeAreaView>
     );
 };
-export default EditProfileScreen;
+
