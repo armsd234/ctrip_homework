@@ -32,32 +32,54 @@ export default function VideoUploader() {
     
     setUploading(true);
     const formData = new FormData();
-    formData.append('video', {
-      uri: video.uri,
-      type: 'video/mp4',
-      name: `video_${Date.now()}.mp4`,
-    } as any);
-    console.log('formData', formData.get('video'));
+    // 关键：把本地文件转成Blob
+  const response = await fetch(video.uri);
+  const blob = await response.blob();
+  formData.append('video', blob, `video_${Date.now()}.mp4`);
+
+  try {
+    await api.post('/api/images/video', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: (progressEvent) => {
+        const percent = Math.round(
+          progressEvent.total ? (progressEvent.loaded / progressEvent.total) * 100 : 0
+        );
+        setProgress(percent);
+      },
+    });
+  } catch (error) {
+    console.error('上传失败:', error);
+  } finally {
+    setUploading(false);
+  }
+    // formData.append('video', {
+    //   uri: video.uri,
+    //   type: 'video/mp4',
+    //   name: `video_${Date.now()}.mp4`,
+    // } as any);
+    // console.log('formData', formData.get('video'));
     
 
-    try {
-      await api.post('/api/images/video', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        onUploadProgress: (progressEvent) => {
-          const percent = Math.round(
-            progressEvent.total ? (progressEvent.loaded / progressEvent.total) * 100 : 0
-          );
-          setProgress(percent);
-        },
-      });
-    //   alert('上传成功！');
-    } catch (error) {
-      console.error('上传失败:', error);
-    } finally {
-      setUploading(false);
-    }
+    // try {
+    //   await api.post('/api/images/video', formData, {
+    //     headers: {
+    //       'Content-Type': 'multipart/form-data',
+    //     },
+    //     onUploadProgress: (progressEvent) => {
+    //       const percent = Math.round(
+    //         progressEvent.total ? (progressEvent.loaded / progressEvent.total) * 100 : 0
+    //       );
+    //       setProgress(percent);
+    //     },
+    //   });
+    // //   alert('上传成功！');
+    // } catch (error) {
+    //   console.error('上传失败:', error);
+    // } finally {
+    //   setUploading(false);
+    // }
   };
 
   return (

@@ -125,6 +125,7 @@ router.get('/image', (req, res) => {
 // 上传视频
 router.post('/video', auth, upload.single('video'), (req, res) => {
     try {
+        console.log('请求的文件:', req.file);
         if (!req.file) {
             return res.status(400).json({ message: '请选择要上传的视频' });
         }

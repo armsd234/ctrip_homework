@@ -30,20 +30,7 @@ const Dashboard = () => {
         setLoading(true);
         try {
             const { current, pageSize } = params.page ? params : { current: 1, pageSize: 10 };
-            const cacheKey = `diaryList_${current}_${pageSize}_${searchText}_${status}`;
-            const cache = localStorage.getItem(cacheKey);
-            if (cache) {
-                const response = JSON.parse(cache);
-                setData(response.data);
-                setPagination(prev => ({
-                    ...prev,
-                    total: response.total,
-                    ...(params.page ? { current: params.page } : {}),
-                    ...(params.pageSize ? { pageSize: params.pageSize } : {})
-                }));
-                setLoading(false);
-                return;
-            }
+            
             const response = await getDiaryList({
                 page: current,
                 pageSize,
@@ -58,7 +45,7 @@ const Dashboard = () => {
                 ...(params.page ? { current: params.page } : {}),
                 ...(params.pageSize ? { pageSize: params.pageSize } : {})
             }));
-            localStorage.setItem(cacheKey, JSON.stringify(response));
+            
         } catch (error) {
             message.error('获取数据失败');
         }
