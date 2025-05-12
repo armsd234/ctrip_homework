@@ -1,0 +1,82 @@
+.cardWrapper {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 0;
+  max-width: 500px;
+}
+
+.imageBox {
+  width: 120px;
+  height: 120px;
+  background: #e0e0e0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.coverImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.noImg {
+  width: 100%;
+  height: 100%;
+  background: #ccc;
+  border-radius: 12px;
+}
+
+.contentBox {
+  margin-left: 32px;
+  flex: 1;
+}
+
+.title {
+  color: #223055;
+  font-weight: bold;
+  margin-top: 0px;
+  margin-bottom: 8px !important;
+}
+
+.previewText {
+  color: #3d4664;
+  font-size: 18px;
+  line-height: 1.6;
+  margin-bottom: 0;
+  word-break: break-all;
+  
+}
+
+.coverVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  cursor: pointer;
+  background: #e0e0e0;
+}
+
+.playButton {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: none;
+  transition: box-shadow 0.2s;
+}
+.playButton:hover {
+  box-shadow: 0 0 8px #1890ff;
+} 

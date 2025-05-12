@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Card, Input, Select, Space, Button, Modal, Form, message } from 'antd';
-import { SearchOutlined, CheckOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Card, Input, Select, Space, Button, Modal, Form, message, Image, Typography } from 'antd';
+import { SearchOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import { getDiaryList, approveDiary, rejectDiary, deleteDiary } from '../../services/api';
 import styles from './index.module.css';
+import DiaryCard from '../../components/diaryCard';
 
 const { Option } = Select;
+const { Paragraph } = Typography;
 
 const Dashboard = () => {
     const [loading, setLoading] = useState(false);
@@ -21,19 +23,34 @@ const Dashboard = () => {
     const [selectedDiary, setSelectedDiary] = useState(null);
     const [rejectForm] = Form.useForm();
     const { user } = useSelector((state) => state.auth);
+    const [detailModalVisible, setDetailModalVisible] = useState(false);
+    const [selectedDiaryDetail, setSelectedDiaryDetail] = useState(null);
 
     const fetchData = useCallback(async (params = {}) => {
         setLoading(true);
         try {
-            const { current, pageSize } = params.page ? params : pagination;
+            const { current, pageSize } = params.page ? params : { current: 1, pageSize: 10 };
+            const cacheKey = `diaryList_${current}_${pageSize}_${searchText}_${status}`;
+            const cache = localStorage.getItem(cacheKey);
+            if (cache) {
+                const response = JSON.parse(cache);
+                setData(response.data);
+                setPagination(prev => ({
+                    ...prev,
+                    total: response.total,
+                    ...(params.page ? { current: params.page } : {}),
+                    ...(params.pageSize ? { pageSize: params.pageSize } : {})
+                }));
+                setLoading(false);
+                return;
+            }
             const response = await getDiaryList({
                 page: current,
                 pageSize,
                 search: searchText,
-                status: status !== 'all' ? status : undefined,
+                status: status,
                 ...params,
             });
-            // console.log('Fetch Data Response:', response);
             setData(response.data);
             setPagination(prev => ({
                 ...prev,
@@ -41,6 +58,7 @@ const Dashboard = () => {
                 ...(params.page ? { current: params.page } : {}),
                 ...(params.pageSize ? { pageSize: params.pageSize } : {})
             }));
+            localStorage.setItem(cacheKey, JSON.stringify(response));
         } catch (error) {
             message.error('获取数据失败');
         }
@@ -60,7 +78,7 @@ const Dashboard = () => {
 
     const handleApprove = async (record) => {
         try {
-            await approveDiary(record.id);
+            await approveDiary(record._id);
             message.success('审核通过成功');
             fetchData();
         } catch (error) {
@@ -70,7 +88,7 @@ const Dashboard = () => {
 
     const handleReject = async (values) => {
         try {
-            await rejectDiary(selectedDiary.id, values.reason);
+            await rejectDiary(selectedDiary._id, values.reason);
             message.success('已拒绝该游记');
             setRejectModalVisible(false);
             rejectForm.resetFields();
@@ -86,7 +104,7 @@ const Dashboard = () => {
             content: '确定要删除这篇游记吗？此操作不可恢复。',
             onOk: async () => {
                 try {
-                    await deleteDiary(record.id);
+                    await deleteDiary(record._id);
                     message.success('删除成功');
                     fetchData();
                 } catch (error) {
@@ -96,26 +114,41 @@ const Dashboard = () => {
         });
     };
 
+    const handleViewDetail = (record) => {
+        setSelectedDiaryDetail(record);
+        setDetailModalVisible(true);
+    };
+
     const columns = [
         {
-            title: '标题',
-            dataIndex: 'title',
-            key: 'title',
+            title: '内容预览',
+            key: 'preview',
+            render: (_, record) => (
+                <DiaryCard
+                    title={record.title}
+                    image={record.images && record.images.length > 0 ? record.images[0] : ''}
+                    content={record.content}
+                    video={record.video}
+                />
+            ),
         },
         {
             title: '作者',
-            dataIndex: 'author',
+            dataIndex: ['author', 'nickname'],
             key: 'author',
+            width: 120,
         },
         {
             title: '状态',
             dataIndex: 'status',
             key: 'status',
+            width: 100,
             render: (status) => {
                 const statusMap = {
                     pending: { text: '待审核', color: 'orange' },
                     approved: { text: '已通过', color: 'green' },
                     rejected: { text: '未通过', color: 'red' },
+                    deleted: { text: '已删除', color: 'gray' },
                 };
                 return (
                     <span style={{ color: statusMap[status].color }}>
@@ -128,16 +161,26 @@ const Dashboard = () => {
             title: '发布时间',
             dataIndex: 'createdAt',
             key: 'createdAt',
+            width: 180,
         },
         {
             title: '操作',
             key: 'action',
+            fixed: 'right',
+            width: 200,
+
             render: (_, record) => (
                 <Space size="middle">
+                    <Button
+                        type="primary"
+                        icon={<EyeOutlined />}
+                        onClick={() => handleViewDetail(record)}
+                    >
+                        查看
+                    </Button>
                     {record.status === 'pending' && (
                         <>
                             <Button
-                                key="approve"
                                 type="primary"
                                 icon={<CheckOutlined />}
                                 onClick={() => handleApprove(record)}
@@ -145,7 +188,6 @@ const Dashboard = () => {
                                 通过
                             </Button>
                             <Button
-                                key="reject"
                                 danger
                                 icon={<CloseOutlined />}
                                 onClick={() => {
@@ -157,9 +199,8 @@ const Dashboard = () => {
                             </Button>
                         </>
                     )}
-                    {user?.role === 'admin' && (
+                    {user?.user.user.role === 'admin' && (
                         <Button
-                            key="delete"
                             danger
                             icon={<DeleteOutlined />}
                             onClick={() => handleDelete(record)}
@@ -193,17 +234,19 @@ const Dashboard = () => {
                             <Option key="pending" value="pending">待审核</Option>
                             <Option key="approved" value="approved">已通过</Option>
                             <Option key="rejected" value="rejected">未通过</Option>
+                            <Option key="deleted" value="deleted">已删除</Option>
                         </Select>
                     </Space>
                 </div>
 
                 <Table
                     columns={columns}
-                    dataSource={data.map(item => ({ ...item, key: item.id }))}
-                    rowKey="id"
+                    dataSource={data.map(item => ({ ...item, key: item._id }))}
+                    rowKey="_id"
                     pagination={pagination}
                     loading={loading}
                     onChange={handleTableChange}
+                    scroll={{ x: 1100 }}
                 />
             </Card>
 
@@ -234,6 +277,44 @@ const Dashboard = () => {
                         </Space>
                     </Form.Item>
                 </Form>
+            </Modal>
+
+            <Modal
+                title="游记详情"
+                open={detailModalVisible}
+                onCancel={() => setDetailModalVisible(false)}
+                width={800}
+                footer={null}
+            >
+                {selectedDiaryDetail && (
+                    <div className={styles.diaryDetail}>
+                        <h2>{selectedDiaryDetail.title}</h2>
+                        <div className={styles.authorInfo}>
+                            <span>作者：{selectedDiaryDetail.author?.nickname}</span>
+                            <span>发布时间：{selectedDiaryDetail.createdAt}</span>
+                        </div>
+                        <div className={styles.imageGallery}>
+                            {selectedDiaryDetail.images?.map((image, index) => (
+                                <Image
+                                    key={index}
+                                    src={image}
+                                    alt={`图片 ${index + 1}`}
+                                    width={200}
+                                    style={{ margin: '8px' }}
+                                />
+                            ))}
+                        </div>
+                        <div className={styles.content}>
+                            <Paragraph>{selectedDiaryDetail.content}</Paragraph>
+                        </div>
+                        {selectedDiaryDetail.status === 'rejected' && (
+                            <div className={styles.rejectionReason}>
+                                <h3>拒绝原因：</h3>
+                                <p>{selectedDiaryDetail.rejectionReason}</p>
+                            </div>
+                        )}
+                    </div>
+                )}
             </Modal>
         </div>
     );

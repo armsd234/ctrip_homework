@@ -4,13 +4,48 @@
 
 .toolbar {
   margin-bottom: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .table {
   background: #fff;
   padding: 24px;
   border-radius: 2px;
+}
+
+.diaryDetail {
+  padding: 20px;
+}
+
+.authorInfo {
+  margin: 16px 0;
+  color: #666;
+}
+
+.authorInfo span {
+  margin-right: 24px;
+}
+
+.imageGallery {
+  margin: 16px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.content {
+  margin: 16px 0;
+  line-height: 1.6;
+}
+
+.rejectionReason {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 4px;
+}
+
+.rejectionReason h3 {
+  color: #ff4d4f;
+  margin-bottom: 8px;
 } 

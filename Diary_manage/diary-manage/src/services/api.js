@@ -41,7 +41,7 @@ export const getCurrentUser = () => api.get('/auth/me');
 
 
 // 游记相关 API
-export const getDiaryList = (params) => api.get('/travel-notes', { params });
+export const getDiaryList = (params) => api.get('/travel-notes/review/notes', { params });
 export const getDiaryDetail = (id) => api.get(`/travel-notes/${id}`);
 export const approveDiary = (id) => api.post(`/travel-notes/${id}/approve`);
 export const rejectDiary = (id, reason) => api.post(`/travel-notes/${id}/reject`, { reason });

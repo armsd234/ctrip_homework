@@ -5,7 +5,7 @@ const { User } = require('../model');
 const auth = async (req, res, next) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
-        //console.log(token) // 打印token 看是否有token 有就继续 没有就返回n
+        // console.log('打印token 看是否有token',token) // 打印token 看是否有token 有就继续 没有就返回
         if (!token) {
             return res.status(401).json({ message: '未提供认证token' });
         }

@@ -86,7 +86,21 @@ async function initializeDatabase() {
             // 创建游记默认数据
             const travelNotes = await TravelNote.create([
                 { title: '我的第一次旅行', content: '这是我第一次旅行的经历...', author: users[0]._id, tags: [tags[0]._id], isPublic: true },
-                { title: '美食之旅', content: '品尝当地美食的记录...', author: users[1]._id, tags: [tags[1]._id], isPublic: true }
+                { title: '美食之旅', content: '品尝当地美食的记录...', author: users[1]._id, tags: [tags[1]._id], isPublic: true },
+                { title: '文化探索', content: '了解当地文化的经历...', author: users[2]._id, tags: [tags[2]._id], isPublic: true },
+                { title: '历史记忆', content: '记录历史上的重要事件...', author: users[0]._id, tags: [tags[3]._id], isPublic: true },
+                { title: '美食之旅', content: '品尝当地美食的记录...', author: users[0]._id, tags: [tags[1]._id], isPublic: true },
+                { title: '文化探索', content: '了解当地文化的经历...', author: users[1]._id, tags: [tags[2]._id], isPublic: true },
+                { title: '历史记忆', content: '记录历史上的重要事件...', author: users[2]._id, tags: [tags[3]._id], isPublic: true },
+                { title: '美食之旅', content: '品尝当地美食的记录...', author: users[2]._id, tags: [tags[1]._id], isPublic: true },
+                { title: '文化探索', content: '了解当地文化的经历...', author: users[0]._id, tags: [tags[2]._id], isPublic: true },
+                { title: '历史记忆', content: '记录历史上的重要事件...', author: users[1]._id, tags: [tags[3]._id], isPublic: true },
+                { title: '美食之旅', content: '品尝当地美食的记录...', author: users[1]._id, tags: [tags[1]._id], isPublic: true },
+                { title: '文化探索', content: '了解当地文化的经历...', author: users[2]._id, tags: [tags[2]._id], isPublic: true },
+                { title: '历史记忆', content: '记录历史上的重要事件...', author: users[0]._id, tags: [tags[3]._id], isPublic: true },
+                { title: '美食之旅', content: '品尝当地美食的记录...', author: users[0]._id, tags: [tags[1]._id], isPublic: true },
+                { title: '文化探索', content: '了解当地文化的经历...', author: users[1]._id, tags: [tags[2]._id], isPublic: true },
+                { title: '历史记忆', content: '记录历史上的重要事件...', author: users[2]._id, tags: [tags[3]._id], isPublic: true }
             ]);
             console.log('游记默认数据创建成功');
 

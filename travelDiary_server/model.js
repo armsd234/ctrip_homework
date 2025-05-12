@@ -38,7 +38,7 @@ const Follow = mongoose.model('Follow', FollowSchema);
 
 // 标签
 const TagSchema = new mongoose.Schema({
-  tid: { type: Number}, 
+  tid: { type: Number },
   name: { type: String, required: true }, // 标签名字段
   image: { type: String, required: true }, // 标签图片字段
   suggestion: { type: String }, // 建议字段
@@ -50,15 +50,15 @@ const Tag = mongoose.model('Tag', TagSchema);
 const TravelNoteSchema = new mongoose.Schema({
   title: { type: String, required: true },
   content: { type: String, required: true },
-  images: [{ type: String }, { default: ['food.jpg','hot_spot.jpg','culture.jpg'] }], // 存储图片URL数组
-  video: [{ type: String },{ default: ['抖音2025511-200054.mp4'] }], // 存储视频URL
-  location: { type: String , default: '中国-南京'}, // 存储位置信息
+  images: { type: [String], default: ['food.jpg', 'hot_spot.jpg', 'culture.jpg'] }, // 存储图片URL数组
+  video: { type: String, default: '抖音2025511-200054.mp4' }, // 存储视频URL
+  location: { type: String, default: '中国-南京' }, // 存储位置信息
 
-  when: { type: String , default: '0'},     // 时间字段
-  days: { type: String , default: '0'},     // 天数字段
-  money: { type: String ,default: '0' },     // 金额字段
-  who: { type: String ,default: '0'},     // 谁字段
-  
+  when: { type: String, default: '0' },     // 时间字段
+  days: { type: String, default: '0' },     // 天数字段
+  money: { type: String, default: '0' },     // 金额字段
+  who: { type: String, default: '0' },     // 谁字段
+
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
 
   category: { type: String, enum: ['travel', 'culture', 'food', 'life', 'other'], default: 'other' }, // 分类
@@ -66,17 +66,17 @@ const TravelNoteSchema = new mongoose.Schema({
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
+    enum: ['pending', 'approved', 'rejected', 'deleted'],
     default: 'pending'
   },
   rejectionReason: { type: String }, // 审核拒绝原因
   views: { type: Number, default: 0 }, // 浏览量
   commentCount: { type: Number, default: 0 }, // 评论数
-  
+
   likesCount: { type: Number, default: 0 }, // 点赞数
 
   favoriteCount: { type: Number, default: 0 }, // 收藏数
-  
+
   isDeleted: { type: Boolean, default: false }, // 逻辑删除标记
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
@@ -98,7 +98,7 @@ const CommentSchema = new mongoose.Schema({
   content: { type: String, required: true },
   authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   noteId: { type: mongoose.Schema.Types.ObjectId, ref: 'TravelNote', required: true },
-  
+
   //回复
   replies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }], // 子评论ID数组，引用Comment模型
   replyCount: { type: Number, default: 0 }, // 回复数

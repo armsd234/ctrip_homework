@@ -5,6 +5,7 @@ import {
     MenuUnfoldOutlined,
     DashboardOutlined,
     LogoutOutlined,
+    BookOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -44,19 +45,31 @@ const MainLayout = ({ children }) => {
         {
             key: '/dashboard',
             icon: <DashboardOutlined key="dashboard-icon" />,
-            label: '审核列表',
+            label: '首页',
+        },
+        {
+            key: '/dashboard',
+            icon: <BookOutlined key="dashboard-icon" />,
+            label: '游记管理',
+        },
+        {
+            key: '/dashboard',
+            icon: <UserOutlined key="dashboard-icon" />,
+            label: '用户管理',
         }
     ];
 
     useEffect(() => {
         const fetchAvatarIcon = async () => {
             try {
-                console.log('User:', user);
-                if (user?.user.avatar) {
+                console.log('mainlayout User:', user);
+                if (user?.user.user.avatar) {
                     // 使用正确的API路径
-                    const imageUrl = `http://localhost:5001/api/images/image?filename=${user.user.avatar}`;
+                    console.log('mainlayout fetchAvatarIcon:', user);
+                    const imageUrl = `http://localhost:5001/api/images/image?filename=${user.user.user.avatar}`;
                     setAvatarIcon(<Avatar key="user-avatar" src={imageUrl} />);
                 } else {
+                    console.log('mainlayout fetchAvatarIcon:', user);
                     setAvatarIcon(<Avatar key="default-avatar" icon={<UserOutlined key="default-user-icon" />} />);
                 }
             } catch (error) {
@@ -71,7 +84,7 @@ const MainLayout = ({ children }) => {
     return (
         <Layout className={styles.layout}>
             <Sider trigger={null} collapsible collapsed={collapsed}>
-                <div className={styles.logo}>游记审核</div>
+                <div className={styles.logo}>后台管理</div>
                 <Menu
                     theme="dark"
                     mode="inline"
@@ -92,7 +105,7 @@ const MainLayout = ({ children }) => {
                         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
                             <div className={styles.userInfo}>
                                 {avatarIcon}
-                                <span className={styles.username}>{user?.username}</span>
+                                <span className={styles.username}>{user?.user.user.username}</span>
                             </div>
                         </Dropdown>
                     </div>
