@@ -68,7 +68,7 @@ export default function DiaryListDetailScreen() {
     try {
       const result = await Share.share({
         message: `快来看看这篇游记：${diary.title} 👉 ${diary.location || '未知地点'}`,
-        url: 'https://yourapp.com/diary/' + diary.id, // 可选：网页链接或App页
+        url: 'http://127.0.0.1:8081/diary-list/' + diary.id, // 可选：网页链接或App页
         title: '分享游记',
       });
 
@@ -129,6 +129,7 @@ export default function DiaryListDetailScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <View style={styles.container}>
+        
         {/* 作者信息 */}
         <View style={styles.headerContainer}>
           <Pressable style={styles.backButton} onPress={() => router.back()}>

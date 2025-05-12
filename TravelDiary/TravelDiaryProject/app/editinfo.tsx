@@ -19,7 +19,7 @@ import { useAuth } from '../contexts/AuthContext';
 import styles from '../styles/editinfo.styles';
 import ImageUpload from '../components/ImageUpload';
 import { api } from '../services/api';
-import Clipboard from '@react-native-clipboard/clipboard';
+// import Clipboard from '@react-native-clipboard/clipboard';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
 import countriesDataRaw from '../data/countries+states+cities.json';
@@ -288,9 +288,9 @@ const EditProfileScreen: React.FC = () => {
                   <View style={styles.listItemTextContainer}>
                     <Text style={styles.listItemValue}>{value}</Text>
                   </View>
-                  <TouchableOpacity onPress={() => { if (user?.user._id) Clipboard.setString(user?.user._id); }}>
+                  {/* <TouchableOpacity onPress={() => { if (user?.user._id) Clipboard.setString(user?.user._id); }}>
                     <FontAwesome5 name="clone" size={12} color="#A9A9A9" style={{ marginLeft: 5 }} />
-                  </TouchableOpacity>
+                  </TouchableOpacity> */}
                 </View>
               </View>
             ) : (

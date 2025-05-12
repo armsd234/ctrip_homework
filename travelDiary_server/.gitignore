@@ -1,0 +1,8 @@
+upload/
+node_modules/
+*.log
+*.tmp
+*.bak
+*.swp
+.DS_Store
+package-lock.json

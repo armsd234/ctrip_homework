@@ -1,10 +1,12 @@
-import { StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, View, ScrollView, Button, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { TravelDiary } from '@/components/TravelDiaryMasonry/types';
 import myDiaries from '@/data/myDiaries.json';
 import StatusFilter from '@/components/StatusFilter';
 import DiaryCard from '@/components/DiaryCard';
+import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // 模拟当前登录用户
 const CURRENT_USER_ID = 1;
@@ -31,8 +33,18 @@ export default function MyDiaryScreen() {
     console.log('删除游记:', diary.id);
   };
 
+  // const handleSearchSubmit = () => {
+  //   router.push(`/publish`);
+  // };
+
   return (
+     <SafeAreaView style={styles.safeArea} edges={['top']}>
     <View style={styles.container}>
+      {/* <TouchableOpacity 
+          onPress={handleSearchSubmit}
+        >
+                    <Ionicons name="search" size={20} color="blue" />
+                    </TouchableOpacity> */}
       <StatusFilter 
         selectedStatus={selectedStatus}
         onStatusChange={setSelectedStatus}
@@ -50,10 +62,16 @@ export default function MyDiaryScreen() {
         ))}
       </ScrollView>
     </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: 'white',
+    // marginBottom: 60
+  },
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',

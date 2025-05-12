@@ -2,7 +2,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect} from 'react';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { AuthProvider } from '@/contexts/AuthContext';
 // import Toast from 'react-native-toast-message';
@@ -62,15 +62,18 @@ function RootLayoutNav() {
   }, [router, segments]);
 
   return (
-    <Stack screenOptions={{ 
+    <Stack screenOptions={{
       headerShown: false
-     }}>
-      <Stack.Screen name="editinfo" />
-      <Stack.Screen name="authscreen" />
+    }}>
+
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="diary/[id]" />
       <Stack.Screen name="diary-list/[id]" />
+      <Stack.Screen name="editinfo" />
+      <Stack.Screen name="authscreen" />
       {/* <Stack.Screen name="editInfo" /> */}
+      <Stack.Screen name="createImage" />
+      <Stack.Screen name="createVideo" />
     </Stack>
   );
 }
