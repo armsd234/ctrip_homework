@@ -53,6 +53,31 @@ export interface TravelDiary {
   commentsData?: CommentsData[];
 }
 
+// types.ts
+// export type TravelDiary = {
+//   id: string;
+//   title: string;
+//   user: {
+//     id: string;
+//     nickname: string;
+//     avatar: string;
+//   };
+//   likes: number;
+//   createdAt: string;
+// } & (
+//   | {
+//       type: 'image';
+//       images: string[]; // 图片数组
+//       coverImage: string; // 封面图
+//     }
+//   | {
+//       type: 'video';
+//       video: string; // 视频URL
+//       coverImage: string; // 视频封面
+//       duration?: number; // 视频时长(秒)
+//     }
+// );
+
 // 多个游记的瀑布流
 export interface TravelDiaryMasonryProps {
   diaries: TravelDiary[];  //游记数据列表

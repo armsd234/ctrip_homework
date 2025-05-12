@@ -159,14 +159,18 @@ router.get('/video', (req, res) => {
     }
 });
 
+const multer = require('multer');
+const { log } = require('console');
 // 错误处理中间件
 router.use((error, req, res, next) => {
+    console.log('其他错误:', error);
     if (error instanceof multer.MulterError) {
         if (error.code === 'LIMIT_FILE_SIZE') {
             return res.status(400).json({ message: '文件大小超出限制' });
         }
         return res.status(400).json({ message: error.message });
     }
+    console.log('其他错误:', error);
     res.status(500).json({ message: '文件上传失败' });
 });
 

@@ -36,6 +36,7 @@ const storage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
+        console.log('file:',file);
         cb(null, generateUniqueFilename(file.originalname));
     }
 });
@@ -44,7 +45,7 @@ const storage = multer.diskStorage({
 const fileFilter = (req, file, cb) => {
     // 允许的文件类型
     const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif','image/webp','image/jpg','image/webm'];
-    const allowedVideoTypes = ['video/mp4', 'video/webm'];
+    const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg','video/mpeg','video/avi','video/quicktime','video/quick'];
     console.log('file:',file);
 
     if (file.mimetype.startsWith('image/') && allowedImageTypes.includes(file.mimetype)) {
@@ -54,6 +55,7 @@ const fileFilter = (req, file, cb) => {
     } else {
         cb(new Error('不支持的文件类型'), false);
     }
+    console.log('file:',file);
 };
 
 // 创建上传中间件

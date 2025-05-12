@@ -35,7 +35,8 @@ export default function VideoUploader() {
     // 关键：把本地文件转成Blob
   const response = await fetch(video.uri);
   const blob = await response.blob();
-  formData.append('video', blob, `video_${Date.now()}.mp4`);
+  const fileType = video.uri.split('.').pop(); // 获取文件后缀
+  formData.append('video', blob, `video_${Date.now()}.${fileType}`);
 
   try {
     await api.post('/api/images/video', formData, {
