@@ -34,7 +34,7 @@ const MainLayout = ({ children }) => {
     const userMenuItems = [
         {
             key: 'logout',
-            icon: <LogoutOutlined />,
+            icon: <LogoutOutlined key="logout-icon" />,
             label: '退出登录',
             onClick: handleLogout,
         },
@@ -43,7 +43,7 @@ const MainLayout = ({ children }) => {
     const menuItems = [
         {
             key: '/dashboard',
-            icon: <DashboardOutlined />,
+            icon: <DashboardOutlined key="dashboard-icon" />,
             label: '审核列表',
         }
     ];
@@ -55,13 +55,13 @@ const MainLayout = ({ children }) => {
                 if (user?.user.avatar) {
                     // 使用正确的API路径
                     const imageUrl = `http://localhost:5001/api/images/image?filename=${user.user.avatar}`;
-                    setAvatarIcon(<Avatar src={imageUrl} />);
+                    setAvatarIcon(<Avatar key="user-avatar" src={imageUrl} />);
                 } else {
-                    setAvatarIcon(<Avatar icon={<UserOutlined />} />);
+                    setAvatarIcon(<Avatar key="default-avatar" icon={<UserOutlined key="default-user-icon" />} />);
                 }
             } catch (error) {
                 console.error('获取头像图标失败:', error);
-                setAvatarIcon(<Avatar icon={<UserOutlined />} />);
+                setAvatarIcon(<Avatar key="error-avatar" icon={<UserOutlined key="error-user-icon" />} />);
             }
         };
 

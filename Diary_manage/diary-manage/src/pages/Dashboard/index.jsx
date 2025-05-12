@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Card, Input, Select, Space, Button, Modal, Form, message } from 'antd';
 import { SearchOutlined, CheckOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
@@ -22,10 +22,10 @@ const Dashboard = () => {
     const [rejectForm] = Form.useForm();
     const { user } = useSelector((state) => state.auth);
 
-    const fetchData = async (params = {}) => {
+    const fetchData = useCallback(async (params = {}) => {
         setLoading(true);
         try {
-            const { current, pageSize } = pagination;
+            const { current, pageSize } = params.page ? params : pagination;
             const response = await getDiaryList({
                 page: current,
                 pageSize,
@@ -33,20 +33,23 @@ const Dashboard = () => {
                 status: status !== 'all' ? status : undefined,
                 ...params,
             });
+            // console.log('Fetch Data Response:', response);
             setData(response.data);
-            setPagination({
-                ...pagination,
+            setPagination(prev => ({
+                ...prev,
                 total: response.total,
-            });
+                ...(params.page ? { current: params.page } : {}),
+                ...(params.pageSize ? { pageSize: params.pageSize } : {})
+            }));
         } catch (error) {
             message.error('获取数据失败');
         }
         setLoading(false);
-    };
+    }, [searchText, status]);
 
     useEffect(() => {
         fetchData();
-    }, [searchText, status]);
+    }, [fetchData]);
 
     const handleTableChange = (newPagination) => {
         fetchData({
@@ -134,6 +137,7 @@ const Dashboard = () => {
                     {record.status === 'pending' && (
                         <>
                             <Button
+                                key="approve"
                                 type="primary"
                                 icon={<CheckOutlined />}
                                 onClick={() => handleApprove(record)}
@@ -141,6 +145,7 @@ const Dashboard = () => {
                                 通过
                             </Button>
                             <Button
+                                key="reject"
                                 danger
                                 icon={<CloseOutlined />}
                                 onClick={() => {
@@ -152,8 +157,9 @@ const Dashboard = () => {
                             </Button>
                         </>
                     )}
-                    {user.role === 'admin' && (
+                    {user?.role === 'admin' && (
                         <Button
+                            key="delete"
                             danger
                             icon={<DeleteOutlined />}
                             onClick={() => handleDelete(record)}
@@ -183,17 +189,17 @@ const Dashboard = () => {
                             onChange={setStatus}
                             style={{ width: 120 }}
                         >
-                            <Option value="all">全部状态</Option>
-                            <Option value="pending">待审核</Option>
-                            <Option value="approved">已通过</Option>
-                            <Option value="rejected">未通过</Option>
+                            <Option key="all" value="all">全部状态</Option>
+                            <Option key="pending" value="pending">待审核</Option>
+                            <Option key="approved" value="approved">已通过</Option>
+                            <Option key="rejected" value="rejected">未通过</Option>
                         </Select>
                     </Space>
                 </div>
 
                 <Table
                     columns={columns}
-                    dataSource={data}
+                    dataSource={data.map(item => ({ ...item, key: item.id }))}
                     rowKey="id"
                     pagination={pagination}
                     loading={loading}
@@ -203,7 +209,7 @@ const Dashboard = () => {
 
             <Modal
                 title="拒绝原因"
-                visible={rejectModalVisible}
+                open={rejectModalVisible}
                 onCancel={() => {
                     setRejectModalVisible(false);
                     rejectForm.resetFields();

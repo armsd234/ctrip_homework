@@ -11,6 +11,7 @@ import {
   Pressable,
   Modal,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -18,8 +19,34 @@ import { useAuth } from '../contexts/AuthContext';
 import styles from '../styles/editinfo.styles';
 import ImageUpload from '../components/ImageUpload';
 import { api } from '../services/api';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import Clipboard from '@react-native-clipboard/clipboard';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as Location from 'expo-location';
+import countriesDataRaw from '../data/countries+states+cities.json';
+const countriesData: Country[] = countriesDataRaw as Country[];
+
+// 类型定义
+interface City {
+  id: number;
+  name: string;
+  latitude: string;
+  longitude: string;
+}
+interface State {
+  id: number;
+  name: string;
+  state_code: string;
+  latitude: string;
+  longitude: string;
+  type: string;
+  cities: City[];
+}
+interface Country {
+  id: number;
+  name: string;
+  iso2: string;
+  states: State[];
+}
 
 interface ProfileData {
     name: string;
@@ -30,6 +57,25 @@ interface ProfileData {
     location: string;
     profileImage: string | number; 
 }
+
+const getCurrentLocationDetail = async () => {
+  const { status } = await Location.requestForegroundPermissionsAsync();
+  if (status !== 'granted') {
+    alert('需要位置权限');
+    return null;
+  }
+  const loc = await Location.getCurrentPositionAsync({});
+  const geo = await Location.reverseGeocodeAsync(loc.coords);
+  if (geo && geo.length > 0) {
+    // 结构化返回
+    return {
+      country: geo[0].country || '',
+      state: geo[0].region || '',
+      city: geo[0].city || ''
+    };
+  }
+  return null;
+};
 
 const formatDate = (date: Date | string | undefined): string => {
     if (!date) return '';
@@ -46,7 +92,7 @@ const formatDate = (date: Date | string | undefined): string => {
     }
 };
 
-export default function EditProfileScreen() {
+const EditProfileScreen: React.FC = () => {
     const { user, checkToken } = useAuth();
     const [modalVisible, setModalVisible] = useState(false);
     const [isEditingName, setIsEditingName] = useState(false);
@@ -65,7 +111,7 @@ export default function EditProfileScreen() {
         birthday: formatDate(user?.user.birthday),
         location: user?.user.location || '',
         profileImage: user?.user.avatar ?
-                      `http://localhost:5001/api/images/image?filename=${user.user.avatar}` :
+                      `http://localhost:5000/api/images/image?filename=${user.user.avatar}` :
                        require('../assets/images/favicon.png'),
     })
     useEffect(() => {
@@ -82,7 +128,7 @@ export default function EditProfileScreen() {
                 birthday: formatDate(user?.user.birthday),
                 location: user?.user.location || '',
                 profileImage: user?.user.avatar ?
-                              `http://localhost:5001/api/images/image?filename=${user.user.avatar}` :
+                              `http://localhost:5000/api/images/image?filename=${user.user.avatar}` :
                                require('../assets/images/favicon.png'),
             })
         }
@@ -91,7 +137,7 @@ export default function EditProfileScreen() {
     console.log('EditProfileScreen profileData',profileData);
     
     const handleBackPress = () => {
-        router.back();
+        router.replace('/profile'); 
     };
 
     const handleSavePress = async () => {
@@ -200,15 +246,14 @@ export default function EditProfileScreen() {
                 );
             case 'location':
                 return (
-                    <View style={styles.modalContent}>
-                        <TextInput
-                            style={styles.locationInput}
-                            value={selectedLocation}
-                            onChangeText={setSelectedLocation}
-                            placeholder="请输入地区"
-                            placeholderTextColor="#999"
-                        />
-                    </View>
+                    <AreaSelector
+                        onSelect={(location: string) => {
+                            setSelectedLocation(location);
+                            setProfileData(prev => ({ ...prev, location }));
+                            setModalVisible(false);
+                        }}
+                        onCancel={() => setModalVisible(false)}
+                    />
                 );
             default:
                 return <View style={styles.modalContent} />;
@@ -243,6 +288,9 @@ export default function EditProfileScreen() {
                   <View style={styles.listItemTextContainer}>
                     <Text style={styles.listItemValue}>{value}</Text>
                   </View>
+                  <TouchableOpacity onPress={() => { if (user?.user._id) Clipboard.setString(user?.user._id); }}>
+                    <FontAwesome5 name="clone" size={12} color="#A9A9A9" style={{ marginLeft: 5 }} />
+                  </TouchableOpacity>
                 </View>
               </View>
             ) : (
@@ -319,7 +367,6 @@ export default function EditProfileScreen() {
     
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#fff" translucent={false} />
             
@@ -338,7 +385,7 @@ export default function EditProfileScreen() {
                         onChange={(filename) => {
                             setProfileData(prev => ({
                                 ...prev,
-                                profileImage: `http://localhost:5001/api/images/image?filename=${filename}`
+                                profileImage: `http://localhost:5000/api/images/image?filename=${filename}`
                             }));
                             setimageName(filename);
                         }}
@@ -383,25 +430,138 @@ export default function EditProfileScreen() {
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContainer}>
-                        <View style={styles.modalHeader}>
-                            <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <Text style={styles.modalCancelText}>取消</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.modalTitle}>
-                                {currentField === 'gender' ? '选择性别' :
-                                 currentField === 'birthday' ? '选择生日' :
-                                 currentField === 'location' ? '选择地区' : ''}
-                            </Text>
-                            <TouchableOpacity onPress={handleModalConfirm}>
-                                <Text style={styles.modalConfirmText}>确定</Text>
-                            </TouchableOpacity>
-                        </View>
+                        {currentField !== 'location' && (
+                            <View style={styles.modalHeader}>
+                                <TouchableOpacity onPress={() => setModalVisible(false)}>
+                                    <Text style={styles.modalCancelText}>取消</Text>
+                                </TouchableOpacity>
+                                <Text style={styles.modalTitle}>
+                                    {currentField === 'gender' ? '选择性别' :
+                                     currentField === 'birthday' ? '选择生日' : ''}
+                                </Text>
+                                <TouchableOpacity onPress={handleModalConfirm}>
+                                    <Text style={styles.modalConfirmText}>确定</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
                         {renderModalContent()}
                     </View>
                 </View>
             </Modal>
         </View>
-        </SafeAreaView>
     );
 };
 
+interface AreaSelectorProps {
+  onSelect: (location: string) => void;
+  onCancel: () => void;
+}
+
+const AreaSelector: React.FC<AreaSelectorProps> = ({ onSelect, onCancel }) => {
+  const [step, setStep] = useState<'country' | 'state' | 'city'>('country');
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
+  const [selectedState, setSelectedState] = useState<State | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{country: string, state: string, city: string} | null>(null);
+  const [loadingLocation, setLoadingLocation] = useState(false);
+
+  useEffect(() => {
+    const fetchLocation = async () => {
+      setLoadingLocation(true);
+      const loc = await getCurrentLocationDetail();
+      setCurrentLocation(loc);
+      setLoadingLocation(false);
+    };
+    fetchLocation();
+  }, []);
+
+  // 国家选择
+  const handleCountrySelect = (country: Country) => {
+    setSelectedCountry(country);
+    setStep('state');
+  };
+
+  // 省/州选择
+  const handleStateSelect = (state: State) => {
+    setSelectedState(state);
+    setStep('city');
+  };
+
+  // 城市选择
+  const handleCitySelect = (city: City) => {
+    const location = `${selectedCountry?.name} ${selectedState?.name} ${city.name}`;
+    onSelect(location);
+  };
+
+  // 返回上一级
+  const handleBack = () => {
+    if (step === 'city') {
+      setStep('state');
+      setSelectedState(null);
+    } else if (step === 'state') {
+      setStep('country');
+      setSelectedCountry(null);
+    }
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      {/* 顶部栏 */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+        <TouchableOpacity onPress={onCancel}><Text>取消</Text></TouchableOpacity>
+        <Text style={{ flex: 1, textAlign: 'center', fontWeight: 'bold' }}>选择你的地区</Text>
+        {step !== 'country' && <TouchableOpacity onPress={handleBack}><Text>返回</Text></TouchableOpacity>}
+      </View>
+
+      {/* 定位到的位置 */}
+      <Text style={{ marginLeft: 16, color: '#888' }}>定位到的位置</Text>
+      <TouchableOpacity
+        style={{
+          margin: 16,
+          padding: 12,
+          backgroundColor: '#f5f5f5',
+          borderRadius: 8,
+          flexDirection: 'row',
+          alignItems: 'center'
+        }}
+        disabled={loadingLocation || !currentLocation}
+        onPress={() => {
+          if (currentLocation) {
+            // 直接用定位结果
+            onSelect(`${currentLocation.country} ${currentLocation.state} ${currentLocation.city}`);
+          }
+        }}
+      >
+        <Ionicons name="location" size={20} color="#007AFF" />
+        <Text style={{ marginLeft: 8 }}>
+          {loadingLocation
+            ? '正在定位...'
+            : currentLocation
+              ? `${currentLocation.country} ${currentLocation.state} ${currentLocation.city}`
+              : '定位失败'}
+        </Text>
+      </TouchableOpacity>
+
+      {/* 全部地区 */}
+      <Text style={{ marginLeft: 16, color: '#888' }}>全部</Text>
+      <ScrollView>
+        {step === 'country' && countriesData.map((country: Country) => (
+          <TouchableOpacity key={country.id} onPress={() => handleCountrySelect(country)} style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
+            <Text>{country.name}</Text>
+          </TouchableOpacity>
+        ))}
+        {step === 'state' && selectedCountry?.states.map((state: State) => (
+          <TouchableOpacity key={state.id} onPress={() => handleStateSelect(state)} style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
+            <Text>{state.name}</Text>
+          </TouchableOpacity>
+        ))}
+        {step === 'city' && selectedState?.cities.map((city: City) => (
+          <TouchableOpacity key={city.id} onPress={() => handleCitySelect(city)} style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
+            <Text>{city.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
+
+export default EditProfileScreen;

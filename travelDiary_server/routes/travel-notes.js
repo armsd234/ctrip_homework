@@ -6,12 +6,11 @@ const { auth, isAdmin, isReviewer } = require('../middleware/auth');
 // 获取游记列表(首页)
 router.get('/', async (req, res) => {
     try {
-        const { page = 1, limit = 10, search = '' } = req.query;
+        const { page = 1, limit = 10, search = '', isPublic = true } = req.query;
         const skip = (page - 1) * limit;
 
         const query = {
-            status: 'approved',
-            isDeleted: false
+            
         };
 
         if (search) {
@@ -29,6 +28,7 @@ router.get('/', async (req, res) => {
                 .limit(parseInt(limit)),
             TravelNote.countDocuments(query)
         ]);
+        // console.log("notes", notes);
 
         res.json({
             data: notes,
@@ -173,4 +173,4 @@ router.delete('/:id/like', auth, async (req, res) => {
     }
 });
 
-module.exports = router; 
+module.exports = router;

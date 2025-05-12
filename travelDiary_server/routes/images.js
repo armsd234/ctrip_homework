@@ -107,7 +107,7 @@ router.get('/image', (req, res) => {
 
         // 使用 path.resolve 获取绝对路径
         const filePath = path.resolve(__dirname, '../uploads/images', filename);
-        console.log('请求的文件路径:', filePath);
+        // console.log('请求的文件路径:', filePath);
 
         // 检查文件是否存在
         if (!fs.existsSync(filePath)) {
