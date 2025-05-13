@@ -9,6 +9,7 @@ import {
     Image,
     TouchableOpacity,
     SafeAreaView,
+    Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -21,6 +22,9 @@ export default function TravelPublishScreen() {
     const [coverImage, setCoverImage] = useState<string | null>(null);
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
+      const [videoFilenames, setVideoFilenames] = useState<string[]>([]);
+    
+
     const [location, setLocation] = useState('');
     const [date, setDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -55,7 +59,17 @@ export default function TravelPublishScreen() {
             <ScrollView>
 
                 <View>
-                    <VideoUpload />
+                    {/* <VideoUpload /> */}
+                    <VideoUpload 
+          onUploadSuccess={(filename) => {
+            setVideoFilenames(filename);
+            console.log('上传成功:', filename);
+            Alert.alert('提示', `视频已上传`);
+          }}
+          onUploadError={(error) => {
+            Alert.alert('上传失败', error.message);
+          }}
+          />
                 </View>
 
                 <View style={styles.container}>
