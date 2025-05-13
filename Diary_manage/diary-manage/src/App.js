@@ -5,7 +5,6 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MainLayout from './layouts/MainLayout';
 import Mainindex from './pages/Mainindex';
-import Permission from './pages/Permission';
 import { useDispatch } from 'react-redux';
 import { fetchCurrentUser } from './store/slices/authSlice';
 
@@ -83,14 +82,7 @@ const App = () => {
           </PrivateRoute>
         }
       />
-      <Route
-        path="/permission"
-        element={
-          <PrivateRoute>
-            <Permission />
-          </PrivateRoute>
-        }
-      />
+      
     </Routes>
 
   );

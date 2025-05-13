@@ -150,7 +150,7 @@ const Mainindex = () => {
             render: (_, __, index) => index + 1
         },
         {
-            title: '游记标题',
+            title: '游记',
             dataIndex: 'title',
             key: 'title',
             ellipsis: true,

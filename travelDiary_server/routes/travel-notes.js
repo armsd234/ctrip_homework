@@ -143,6 +143,22 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+//审核员获取单个游记详情
+router.get('/admin/:id', async (req, res) => {
+    try {
+        const note = await TravelNote.findById(req.params.id)
+            .populate('author', 'nickname avatar')
+            .populate('likes', 'nickname avatar');
+
+        if (!note || note.isDeleted) {
+            return res.status(404).json({ message: '游记不存在' });
+        }
+        res.json(note);
+    } catch (error) {
+        res.status(500).json({ message: '服务器错误' });
+    }
+});
+
 // 更新游记
 router.put('/:id', auth, async (req, res) => {
     try {

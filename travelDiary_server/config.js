@@ -2,7 +2,7 @@ module.exports = {
     admin: {
         username: 'admin@example.com',
         password: 'admin123',
-        nickname: '系统管理员',
+        nickname: '管理员',
         role: 'admin'
     },
     reviewer: {

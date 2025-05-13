@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Card, Input, Select, Space, Button, Modal, Form, message, Image, Typography, Carousel } from 'antd';
-import { SearchOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, EyeOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { SearchOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import { getDiaryList, approveDiary, rejectDiary, deleteDiary } from '../../services/api';
+import { fetchAndCacheMedia, fetchAndCacheVideo, cleanupObjectURLs } from '../../utils/mediaCache';
 import styles from './index.module.css';
 import DiaryCard from '../../components/diaryCard';
 import { Avatar } from 'antd';
@@ -40,6 +41,7 @@ const Dashboard = () => {
     const [detailModalVisible, setDetailModalVisible] = useState(false);
     const [selectedDiaryDetail, setSelectedDiaryDetail] = useState(null);
     const [carouselRef, setCarouselRef] = useState(null);
+    const [mediaUrls, setMediaUrls] = useState({});
 
     const fetchData = useCallback(async (params = {}) => {
         setLoading(true);
@@ -70,6 +72,12 @@ const Dashboard = () => {
     useEffect(() => {
         fetchData();
     }, [fetchData]);
+
+    useEffect(() => {
+        return () => {
+            cleanupObjectURLs();
+        };
+    }, []);
 
     const handleTableChange = (newPagination) => {
         fetchData({
@@ -116,9 +124,39 @@ const Dashboard = () => {
         });
     };
 
-    const handleViewDetail = (record) => {
+    const handleModalClose = () => {
+        cleanupObjectURLs();
+        setDetailModalVisible(false);
+        setMediaUrls({});
+    };
+
+    const loadMediaUrl = async (filename, isVideo = false) => {
+        if (!filename) return;
+
+        try {
+            const url = isVideo
+                ? await fetchAndCacheVideo(filename)
+                : await fetchAndCacheMedia(filename);
+
+            if (url) {
+                setMediaUrls(prev => ({ ...prev, [filename]: url }));
+            }
+        } catch (error) {
+            console.error('Error loading media:', error);
+            message.error('加载媒体文件失败');
+        }
+    };
+
+    const handleViewDetail = async (record) => {
         setSelectedDiaryDetail(record);
         setDetailModalVisible(true);
+
+        if (record.video) {
+            loadMediaUrl(record.video, true);
+        }
+        if (record.images && record.images.length > 0) {
+            record.images.forEach(image => loadMediaUrl(image));
+        }
     };
 
     const nextSlide = () => {
@@ -282,11 +320,11 @@ const Dashboard = () => {
             <Modal
                 title="游记详情"
                 open={detailModalVisible}
-                onCancel={() => setDetailModalVisible(false)}
+                onCancel={handleModalClose}
                 width={800}
-                footer={null}
                 style={{ top: 20 }}
                 bodyStyle={{ padding: 0 }}
+                footer={null}
             >
                 {selectedDiaryDetail && (
                     <div className={styles.diaryDetail}>
@@ -321,18 +359,24 @@ const Dashboard = () => {
                         <div className={styles.imageGallery}>
                             {selectedDiaryDetail.video ? (
                                 <div style={{ display: 'block' }}>
-                                    <video
-                                        src={`http://localhost:5001/api/images/video?filename=${selectedDiaryDetail.video}`}
-                                        controls
-                                        className={styles.coverVideo}
-                                        onClick={e => e.stopPropagation()}
-                                    />
+                                    {mediaUrls[selectedDiaryDetail.video] ? (
+                                        <video
+                                            key={mediaUrls[selectedDiaryDetail.video]}
+                                            src={mediaUrls[selectedDiaryDetail.video]}
+                                            controls
+                                            className={styles.coverVideo}
+                                            onClick={e => e.stopPropagation()}
+                                        />
+                                    ) : (
+                                        <div className={styles.loading}>加载中...</div>
+                                    )}
                                 </div>
                             ) : selectedDiaryDetail.images && selectedDiaryDetail.images.length > 0 ? (
                                 <div className={styles.carouselContainer}>
                                     <Button
                                         icon={<LeftOutlined />}
                                         onClick={prevSlide}
+                                        className={styles.carouselButton}
                                         style={{
                                             position: 'absolute',
                                             left: 10,
@@ -356,18 +400,23 @@ const Dashboard = () => {
                                     >
                                         {selectedDiaryDetail.images.map((image, index) => (
                                             <div key={index}>
-                                                <Image
-                                                    src={`http://localhost:5001/api/images/image?filename=${image}`}
-                                                    alt={`图片 ${index + 1}`}
-                                                    className={styles.carouselImage}
-                                                    preview={false}
-                                                />
+                                                {mediaUrls[image] ? (
+                                                    <Image
+                                                        src={mediaUrls[image]}
+                                                        alt={`图片 ${index + 1}`}
+                                                        className={styles.carouselImage}
+                                                        preview={false}
+                                                    />
+                                                ) : (
+                                                    <div className={styles.loading}>加载中...</div>
+                                                )}
                                             </div>
                                         ))}
                                     </Carousel>
                                     <Button
                                         icon={<RightOutlined />}
                                         onClick={nextSlide}
+                                        className={styles.carouselButton}
                                         style={{
                                             position: 'absolute',
                                             right: 10,
@@ -381,8 +430,7 @@ const Dashboard = () => {
                                             height: 40,
                                             display: 'flex',
                                             alignItems: 'center',
-                                            justifyContent: 'center',
-
+                                            justifyContent: 'center'
                                         }}
                                     />
                                 </div>

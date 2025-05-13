@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Button, Avatar, Dropdown } from 'antd';
 import {
-    MenuFoldOutlined,
-    MenuUnfoldOutlined,
     HomeOutlined,
     LogoutOutlined,
     FileTextOutlined,
-    LockOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -60,13 +57,6 @@ const MainLayout = ({ children }) => {
                 }
             ]
         },
-        {
-            key: '/permission',
-            icon: <LockOutlined key="permission-icon" />,
-            label: '权限管理',
-            
-        },
-        
         {
             key: '/logout',
             icon: <LogoutOutlined key="logout-submenu-icon" />,
@@ -130,7 +120,7 @@ const MainLayout = ({ children }) => {
                         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
                             <div className={styles.userInfo}>
                                 {avatarIcon}
-                                <span className={styles.username}>{user?.user.user.username}</span>
+                                <span className={styles.username}>{user?.user.user.nickname}</span>
                             </div>
                         </Dropdown>
                     </div>

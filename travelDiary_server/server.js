@@ -33,6 +33,33 @@ app.use(morgan('dev'));
 // 静态文件服务
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+async function initializeAdmin() {
+    try {
+        //清空管理员账号审核人员账号
+        await User.deleteMany({ role: { $in: ['admin', 'reviewer'] } });
+        console.log('管理员账号和审核人员账号已清空');
+
+        // 创建管理员账号
+        const adminHashedPassword = await bcrypt.hash(config.admin.password, 10);
+        await User.create({
+            ...config.admin,
+            password: adminHashedPassword
+        });
+        console.log('管理员账号创建成功');
+
+        // 创建审核人员账号
+        const reviewerHashedPassword = await bcrypt.hash(config.reviewer.password, 10);
+        await User.create({
+            ...config.reviewer,
+            password: reviewerHashedPassword
+        });
+        console.log('审核人员账号创建成功');
+        
+    } catch (error) {
+        console.error('初始化账号失败:', error);
+    }
+}
+
 // 初始化管理员和审核人员账号
 async function initializeDatabase() {
     try {
@@ -150,7 +177,8 @@ mongoose.connect('mongodb://localhost:27017/travel_diary', {
 })
     .then(async () => {
         console.log('MongoDB connected');
-        await initializeDatabase();
+        // await initializeDatabase();
+        await initializeAdmin();
     })
     .catch(err => console.error('MongoDB connection error:', err));
 
