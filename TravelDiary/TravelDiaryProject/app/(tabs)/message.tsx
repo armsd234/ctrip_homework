@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, 
-  Image, Text, TouchableOpacity, Dimensions, Pressable, Modal, KeyboardAvoidingView, TextInput, Platform, FlatList, Share } from 'react-native';
+import React, { useState, useRef, useCallback } from 'react';
+import { StyleSheet, View, Image, Text, TouchableOpacity, Dimensions, Pressable, Modal, KeyboardAvoidingView, TextInput, Platform, FlatList, Share } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import travelDiaries from '@/data/travelDiaries.json';
-import { TravelDiary } from '@/components/TravelDiaryMasonry/types';
+import travelDiaries from '@/data/videoDiaries.json';
 
 const { width, height } = Dimensions.get('window');
 type Comment = {
@@ -16,24 +14,57 @@ type Comment = {
   time: string;
 };
 
+// 用户信息接口
+interface User {
+  id: string;
+  nickname: string;
+  avatar: string;
+}
+
+interface VideoItem {
+  id: string;
+  uri: string;
+  title: string;
+  description: string;
+  likes: number;
+  comments: Comment[];
+  user: User;
+}
+
 const mockComments: Comment[] = [
   { id: '1', user: '用户A', content: '这个视频太棒了！', time: '10分钟前' },
   { id: '2', user: '用户B', content: '我也喜欢这个内容', time: '30分钟前' },
   { id: '3', user: '用户C', content: '感谢分享，学到了很多', time: '1小时前' },
 ];
 
-const videoSource = require('../../assets/videos/IMG_6128.mp4'); // 本地视频文件路径
-
 const VideoDetailScreen = () => {
-  const id = 1;
-  const diary = travelDiaries.diaries.find(d => d.id === Number(id)) as unknown as TravelDiary;
+  // 获取视频列表
+  const videoList: VideoItem[] = travelDiaries.diaries.map((diary: any) => ({
+    id: diary.id.toString(),
+    uri: diary.videoSource,
+    title: diary.title,
+    description: diary.description,
+    likes: 0, // Default value
+    comments: [], // Default value
+    user: {
+      id: diary.user.id || 'unknown',
+      nickname: diary.user.nickname,
+      avatar: diary.user.avatar,
+    },
+  }));
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const flatListRef = useRef<FlatList>(null);
 
-  const player = useVideoPlayer(videoSource, player => {
+  // 当前视频
+  const currentVideo = videoList[currentIndex];
+
+  // 播放当前视频
+  const video = require('../../assets/videos/IMG_6128.mp4');
+  const player = useVideoPlayer(video, player => {
     player.loop = true;
     player.play();
   });
 
-  // const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
   const [isLiked, setIsLiked] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [isCommentModalVisible, setIsCommentModalVisible] = useState(false);
@@ -53,31 +84,6 @@ const VideoDetailScreen = () => {
     }
   };
 
-  const handleShare = async () => {
-      try {
-        const result = await Share.share({
-          message: `快来看看这篇游记：${diary.title} 👉 ${diary.location || '未知地点'}`,
-          url: 'http://127.0.0.1:8081/diary-list/' + diary.id, // 可选：网页链接或App页
-          title: '分享游记',
-        });
-  
-        if (result.action === Share.sharedAction) {
-          if (result.activityType) {
-            // iOS: 用户选择的分享方式
-            console.log('Shared with activity type:', result.activityType);
-          } else {
-            // Android: 成功分享
-            console.log('Shared successfully!');
-          }
-        } else if (result.action === Share.dismissedAction) {
-          // 取消分享
-          console.log('Share dismissed');
-        }
-      } catch (error: any) {
-        console.error('Share error:', error.message);
-      }
-    };
-
   const renderCommentItem = ({ item }: { item: Comment }) => (
     <View style={styles.commentItem}>
       <Text style={styles.commentUser}>{item.user}</Text>
@@ -86,115 +92,147 @@ const VideoDetailScreen = () => {
     </View>
   );
 
-  return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+  const handleScroll = (event: any) => {
+    const contentOffsetY = event.nativeEvent.contentOffset.y;
+    const height = event.nativeEvent.layoutMeasurement.height;
+    const index = Math.floor(contentOffsetY / height);
+    setCurrentIndex(index);
+  };
 
-      <View style={styles.container}>
+  const renderVideoItem = ({ item }: { item: VideoItem }) => (
+    <View style={styles.container}>
+
+      {/* 全屏视频 */}
+      <VideoView
+        style={styles.video}
+        player={player}
+        allowsFullscreen
+        allowsPictureInPicture
+      />
+
+      {/* 底部标题和描述 */}
+      <View style={styles.infoContainer}>
         <View style={styles.headerContainer}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="chevron-back-outline" size={30} color="white" />
-          </Pressable>
           <View style={styles.authorContainer}>
-            <Image source={{ uri: diary.user.avatar }} style={styles.avatar} />
+            <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
             <Text style={styles.nickname}>rabbit</Text>
           </View>
-          <Pressable style={styles.statItem} onPress={handleShare}>
-            <Ionicons name="share-social-outline" style={styles.statIcon} />
-            <Text style={styles.statValue}>分享</Text>
-          </Pressable>
         </View>
-
-        {/* 全屏视频 */}
-        <VideoView
-          style={styles.video}
-          player={player}
-          allowsFullscreen
-          allowsPictureInPicture
-        />
-
-        {/* 底部标题和描述 */}
-        <View style={styles.infoContainer}>
-          <Text style={styles.title}>Big Buck Bunny</Text>
-          <Text style={styles.description}>A large and lovable rabbit deals with three tiny bullies...</Text>
-        </View>
-
-        {/* 右侧操作按钮 */}
-        <View style={styles.actionContainer}>
-          <Pressable style={styles.actionButton} onPress={() => setIsLiked(!isLiked)}>
-            <Ionicons
-              name={isLiked ? 'heart' : 'heart-outline'}
-              style={[styles.actionIcon, isLiked && { color: 'red' }]}
-            />
-            <Text style={styles.actionText}>34</Text>
-          </Pressable>
-
-          <Pressable style={styles.actionButton} onPress={() => setIsFavorited(!isFavorited)}>
-            <Ionicons
-              name={isFavorited ? 'star' : 'star-outline'}
-              style={[styles.actionIcon, isFavorited && { color: "#F0C645" }]}
-            />
-            <Text style={styles.actionText}>11</Text>
-          </Pressable>
-
-          <Pressable style={styles.actionButton} onPress={() => setIsCommentModalVisible(true)}>
-            <Ionicons
-              name='chatbubble-ellipses-outline'
-              style={styles.actionIcon}
-            />
-            <Text style={styles.actionText}>11</Text>
-          </Pressable>
-        </View>
-
-        {/* 评论弹窗 */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={isCommentModalVisible}
-          onRequestClose={() => setIsCommentModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>评论 ({comments.length})</Text>
-                <TouchableOpacity onPress={() => setIsCommentModalVisible(false)}>
-                  <Text style={styles.closeButton}>关闭</Text>
-                </TouchableOpacity>
-              </View>
-
-              <FlatList
-                data={comments}
-                renderItem={renderCommentItem}
-                keyExtractor={item => item.id}
-                contentContainerStyle={styles.commentList}
-                inverted
-              />
-
-              <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.commentInputContainer}
-              >
-                <TextInput
-                  style={styles.commentInput}
-                  placeholder="写下你的评论..."
-                  value={commentText}
-                  onChangeText={setCommentText}
-                  multiline
-                />
-                <TouchableOpacity
-                  style={styles.sendButton}
-                  onPress={handleAddComment}
-                  disabled={!commentText.trim()}
-                >
-                  <Text style={styles.sendButtonText}>发送</Text>
-                </TouchableOpacity>
-              </KeyboardAvoidingView>
-            </View>
-          </View>
-        </Modal>
+        <Text style={styles.title}>{item.title}</Text>
+        <Text style={styles.description}>{item.description}</Text>
       </View>
+
+
+
+      {/* 右侧操作按钮 */}
+      <View style={styles.actionContainer}>
+        <Pressable style={styles.actionButton} onPress={() => setIsLiked(!isLiked)}>
+          <Ionicons
+            name={isLiked ? 'heart' : 'heart-outline'}
+            style={[styles.actionIcon, isLiked && { color: 'red' }]}
+          />
+          <Text style={styles.actionText}>34</Text>
+        </Pressable>
+
+        <Pressable style={styles.actionButton} onPress={() => setIsFavorited(!isFavorited)}>
+          <Ionicons
+            name={isFavorited ? 'star' : 'star-outline'}
+            style={[styles.actionIcon, isFavorited && { color: "#F0C645" }]}
+          />
+          <Text style={styles.actionText}>11</Text>
+        </Pressable>
+
+        <Pressable style={styles.actionButton} onPress={() => setIsCommentModalVisible(true)}>
+          <Ionicons
+            name='chatbubble-ellipses-outline'
+            style={styles.actionIcon}
+          />
+          <Text style={styles.actionText}>11</Text>
+        </Pressable>
+      </View>
+
+      {/* 评论弹窗 */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isCommentModalVisible}
+        onRequestClose={() => setIsCommentModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>评论 ({comments.length})</Text>
+              <TouchableOpacity onPress={() => setIsCommentModalVisible(false)}>
+                <Text style={styles.closeButton}>关闭</Text>
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={comments}
+              renderItem={renderCommentItem}
+              keyExtractor={item => item.id}
+              contentContainerStyle={styles.commentList}
+              inverted
+            />
+
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={styles.commentInputContainer}
+            >
+              <TextInput
+                style={styles.commentInput}
+                placeholder="写下你的评论..."
+                value={commentText}
+                onChangeText={setCommentText}
+                multiline
+              />
+              <TouchableOpacity
+                style={styles.sendButton}
+                onPress={handleAddComment}
+                disabled={!commentText.trim()}
+              >
+                <Text style={styles.sendButtonText}>发送</Text>
+              </TouchableOpacity>
+            </KeyboardAvoidingView>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <FlatList
+        ref={flatListRef}
+        data={videoList}
+        renderItem={renderVideoItem}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+
+        // onScroll={handleScroll}
+        // scrollEnabled={false} // 禁用 FlatList 的滑动，通过外部控制
+        // pagingEnabled // 启用分页滚动
+
+        snapToInterval={height}
+        decelerationRate="fast"
+        // onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={{
+          itemVisiblePercentThreshold: 50,
+          minimumViewTime: 300,
+        }}
+        initialScrollIndex={currentIndex}
+        getItemLayout={(_, index) => ({
+          length: height,
+          offset: height * index,
+          index,
+        })}
+      />
     </SafeAreaView>
   );
 };
+
+export default VideoDetailScreen;
+
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -203,17 +241,16 @@ const styles = StyleSheet.create({
     // marginBottom: 60
   },
   container: {
-    flex: 1,
+    height: height,
+    width: width,
     backgroundColor: 'black',
+    paddingBottom: 200,
   },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    paddingBottom: 16,
     backgroundColor: 'black',
-  },
-  backButton: {
-    marginRight: 16,
   },
   authorContainer: {
     flex: 1,
@@ -252,9 +289,9 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 160,
     left: 10,
-    right: 10, // 为右侧按钮留出空间
+    right: 50, // 为右侧按钮留出空间
     padding: 15,
     backgroundColor: 'rgba(0,0,0,0.5)',
     borderRadius: 10,
@@ -272,7 +309,7 @@ const styles = StyleSheet.create({
   actionContainer: {
     position: 'absolute',
     right: 20,
-    bottom: 80,
+    bottom: 180,
     alignItems: 'center',
   },
   actionButton: {
@@ -361,5 +398,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-export default VideoDetailScreen;

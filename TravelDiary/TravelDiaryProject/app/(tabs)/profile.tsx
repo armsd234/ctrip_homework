@@ -606,11 +606,7 @@ const handleTabChange = (newTab: 'travels' | 'favorites' | 'likes') => {
       <ProfileHeader />
       <View 
         style={[styles.scrollView, { zIndex: 1 }]}
-        // contentContainerStyle={[styles.scrollViewContentContainer, { zIndex: 1 }]}
-        // showsVerticalScrollIndicator={false}
-        // keyboardShouldPersistTaps="handled"
-        // keyboardDismissMode="on-drag"
-        // ref={scrollViewRef}
+    
         >
         <View style={styles.scrollableTopContentWrapper}>
           <UserInfoSection 
@@ -624,7 +620,7 @@ const handleTabChange = (newTab: 'travels' | 'favorites' | 'likes') => {
         </View>
 
         <View style={styles.contentSection}>
-          <BigSearchBar />
+          {/* <BigSearchBar /> */}
           <ContentTabs />
           <Content 
             activeTab={activeTab}

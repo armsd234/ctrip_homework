@@ -130,12 +130,12 @@ export default function TabOneScreen() {
         <View style={styles.welcomeContainer}>
           <Text style={styles.welcomeText}>用一篇游记，看遍世界。</Text>
         </View>
-        <TouchableOpacity onPress={() => console.log('头像点击')}>
+        {/* <TouchableOpacity onPress={() => console.log('头像点击')}>
         <Image 
           source={{ uri: avatar }} 
           style={styles.avatar}
         />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       </View>
       
       <View style={styles.searchContainer}>

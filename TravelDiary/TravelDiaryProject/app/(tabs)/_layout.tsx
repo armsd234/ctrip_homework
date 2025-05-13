@@ -55,14 +55,15 @@ export default function TabLayout() {
             }}
           />
           <Tabs.Screen
-            name="mydiary"
+            name="message"
             options={{
-              title: '我的游记',
+              title: '热门',
               tabBarIcon: ({ color }) => (
-                <FontAwesome style={styles.icon} name="book" color={color} />
+                <FontAwesome style={styles.icon} name="camera" color={color} />
               )
             }}
           />
+          
           <Tabs.Screen
             name="create"
             options={{
@@ -74,11 +75,11 @@ export default function TabLayout() {
             }}
           />
           <Tabs.Screen
-            name="message"
+            name="mydiary"
             options={{
-              title: '消息',
+              title: '我的游记',
               tabBarIcon: ({ color }) => (
-                <FontAwesome style={styles.icon} name="envelope" color={color} />
+                <FontAwesome style={styles.icon} name="book" color={color} />
               )
             }}
           />

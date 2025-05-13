@@ -38,115 +38,78 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         setModalVisible(true);
     };
 
-    const handleImagePick = async (useCamera: boolean) => {
+    const requestPermission = async () => {
+        if (Platform.OS !== 'web') {
+          const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+          if (status !== 'granted') {
+            alert('需要相册权限才能上传图片');
+            return false;
+          }
+        }
+        return true;
+      };
+
+      const getMimeType = (uri: string): string => {
+          const extension = uri.split('.').pop()?.toLowerCase();
+          switch (extension) {
+            case 'jpg':
+            case 'jpeg':
+              return 'image/jpeg';
+            case 'png':
+              return 'image/png';
+            case 'gif':
+              return 'image/gif';
+            default:
+              return 'application/octet-stream';
+          }
+        };
+    
+      // 选择图片
+      const pickImages = async () => {
+        const hasPermission = await requestPermission();
+        if (!hasPermission) return;
+    
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: false,
+          allowsMultipleSelection: true,
+          selectionLimit: 1, // 限制选择数量
+          quality: 0.7,
+        });
+    
+        if (!result.canceled && result.assets) {
+          const newImages = result.assets[0];
+          upload(newImages);
+        }
+      };
+
+      const upload = async (imageAsset: ImagePicker.ImagePickerAsset) => {
         try {
-            setModalVisible(false);
-            
-            // 请求权限
-            const permissionType = useCamera ? 
-                ImagePicker.requestCameraPermissionsAsync() : 
-                ImagePicker.requestMediaLibraryPermissionsAsync();
-            
-            const { status } = await permissionType;
-            if (status !== 'granted') {
-                alert('需要访问权限才能上传图片');
-                return;
-            }
+          setIsLoading(true);
+          const formData = new FormData();
+          formData.append('image', {
+            uri: imageAsset.uri,
+            name: `image_${Date.now()}.jpg`, // 确保唯一文件名
+            type: getMimeType(imageAsset.uri), // 自动获取MIME类型
+          } as any);
 
-            // 选择图片
-            const result = await (useCamera ? 
-                ImagePicker.launchCameraAsync({
-                    allowsEditing: true,
-                    aspect: [1, 1],
-                    quality: 0.8,
-                }) :
-                ImagePicker.launchImageLibraryAsync({
-                    allowsEditing: true,
-                    aspect: [1, 1],
-                    quality: 0.8,
-                })
-            );
-
-            if (!result.canceled) {
-                console.log('Selected image:', result.assets[0]);
-                await uploadImage(result.assets[0]);
-            }
+          const response = await api.post('/api/images/image', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            //   'Accept': 'application/json',
+            },
+          });      
+    
+          if (response.data.filename && onChange) {
+            onChange(response.data.filename);
+        }
         } catch (error) {
-            console.error('选择图片失败:', error);
-            alert('选择图片失败，请重试');
-        }
-    };
-
-    const uploadImage = async (imageAsset: ImagePicker.ImagePickerAsset) => {
-        try {
-            setIsLoading(true);
-
-            // 创建 FormData
-            const formData = new FormData();
-            
-            // 处理 base64 图片数据
-            const base64Data = imageAsset.uri.split(',')[1];
-            const mimeType = imageAsset.mimeType || 'image/png';
-            
-            // 将 base64 转换为 Blob
-            const byteCharacters = atob(base64Data);
-            const byteArrays = [];
-            
-            for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-                const slice = byteCharacters.slice(offset, offset + 512);
-                const byteNumbers = new Array(slice.length);
-                
-                for (let i = 0; i < slice.length; i++) {
-                    byteNumbers[i] = slice.charCodeAt(i);
-                }
-                
-                const byteArray = new Uint8Array(byteNumbers);
-                byteArrays.push(byteArray);
-            }
-            
-            const blob = new Blob(byteArrays, { type: mimeType });
-            
-            // 创建文件对象
-            const file = new File([blob], 'image.png', { type: mimeType });
-            
-            // 添加到 FormData
-            formData.append('image', file);
-
-            console.log('准备上传图片:', {
-                type: mimeType,
-                size: file.size,
-                name: file.name
-            });
-
-            const response = await api.post('/api/images/image', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Accept': 'application/json',
-                },
-            });
-
-            console.log('上传响应:', response.data);
-
-            if (response.data.filename && onChange) {
-                onChange(response.data.filename);
-            }
-        } catch (error: any) {
-            console.error('上传图片失败:', {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status,
-                headers: error.response?.headers,
-                config: {
-                    url: error.config?.url,
-                    method: error.config?.method,
-                    headers: error.config?.headers,
-                }
-            });
-            alert(error.response?.data?.message || '上传图片失败，请重试');
+          console.error('上传失败:', error);
         } finally {
-            setIsLoading(false);
+          setIsLoading(false);
+          setModalVisible(false)
         }
-    };
+      };
 
     const getImageSource = () => {
         if (typeof value === 'string') {
@@ -201,14 +164,14 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                     <View style={styles.modalContent}>
                         <TouchableOpacity
                             style={styles.modalOption}
-                            onPress={() => handleImagePick(true)}
+                            onPress={() => pickImages()}
                         >
                             <Ionicons name="camera-outline" size={24} color="#333" />
                             <Text style={styles.modalOptionText}>拍照</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.modalOption}
-                            onPress={() => handleImagePick(false)}
+                            onPress={() => pickImages()}
                         >
                             <Ionicons name="images-outline" size={24} color="#333" />
                             <Text style={styles.modalOptionText}>从相册选择</Text>

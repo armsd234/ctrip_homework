@@ -1,0 +1,54 @@
+{
+    "diaries": [
+      {
+        "id": 1,
+        "title": "Big Buck Bunny",
+        "description": "A large and lovable rabbit deals with three tiny bullies...",
+        "videoSource": "'../../assets/videos/IMG_6128.mp4'",
+        "user": {
+          "avatar": "https://picsum.photos/100/100?random=1",
+          "nickname": "rabbit"
+        }
+      },
+      {
+        "id": 2,
+        "title": "Elephant Dream",
+        "description": "A story about two young elephants who dream of becoming artists...",
+        "videoSource": "'../../assets/videos/IMG_6128.mp4'",
+        "user": {
+          "avatar": "https://picsum.photos/100/100?random=2",
+          "nickname": "elephant"
+        }
+      },
+      {
+        "id": 3,
+        "title": "For Bigger Fun",
+        "description": "A fun and colorful video showcasing various toys and games...",
+        "videoSource": "'../../assets/videos/IMG_6128.mp4'",
+        "user": {
+          "avatar": "https://picsum.photos/100/100?random=3",
+          "nickname": "funlovers"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Sintel",
+        "description": "An epic adventure of a young girl named Sintel...",
+        "videoSource": "'../../assets/videos/IMG_6128.mp4'",
+        "user": {
+          "avatar": "https://picsum.photos/100/100?random=4",
+          "nickname": "adventurer"
+        }
+      },
+      {
+        "id": 5,
+        "title": "Tears of Steel",
+        "description": "A futuristic short film about a battle between humans and robots...",
+        "videoSource": "'../../assets/videos/IMG_6128.mp4'",
+        "user": {
+          "avatar": "https://picsum.photos/100/100?random=5",
+          "nickname": "futurist"
+        }
+      }
+    ]
+  }

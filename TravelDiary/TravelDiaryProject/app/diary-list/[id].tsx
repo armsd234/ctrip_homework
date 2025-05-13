@@ -39,7 +39,7 @@ export default function DiaryListDetailScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const [comment, setComment] = useState('');
-  ;
+  const [comments, setComments] = useState(diary.commentsData || []);
 
   if (!diary) {
     return (
@@ -89,16 +89,6 @@ export default function DiaryListDetailScreen() {
     }
   };
 
-  // const handleShare = async () => {
-  //   try {
-  //     await Share.share({
-  //       message: `快来看看这篇游记：${diary.title} 👉 https://yourapp.com/diary/${diary.id}`,
-  //     });
-  //   } catch (e) {
-  //     console.log('分享失败', e);
-  //   }
-  // };
-
   const handleScroll = (event: any) => {
     const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
     setCurrentImageIndex(index);
@@ -110,9 +100,21 @@ export default function DiaryListDetailScreen() {
 
   const handleSendComment = () => {
     if (comment.trim()) {
-      console.log(comment);
+      const newComment = {
+        id: Date.now().toString(),
+        user: {
+          id: 'currentUserId', // 当前用户的 ID
+          nickname: '当前用户', // 当前用户的昵称
+          avatar: 'https://picsum.photos/100/100?random=3', // 当前用户的头像
+        },
+        content: comment,
+        createdAt: new Date().toISOString(),
+        // date: new Date().toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }),
+        likes: 0,
+      };
+      setComments([newComment, ...comments]);
       setComment('');
-      Keyboard.dismiss();
+      // Keyboard.dismiss();
 
       // const newComment = {
       //   id: Date.now().toString(),
@@ -129,7 +131,7 @@ export default function DiaryListDetailScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <View style={styles.container}>
-        
+
         {/* 作者信息 */}
         <View style={styles.headerContainer}>
           <Pressable style={styles.backButton} onPress={() => router.back()}>
@@ -182,13 +184,14 @@ export default function DiaryListDetailScreen() {
             {/*地点标记*/}
             {!!(diary.tags) && <TouchableOpacity style={styles.tags} onPress={handleTagPress}>
               <View style={styles.tagContainer}>
-              <Ionicons name="location-outline" size={12} color="#000" />
-              <Text style={styles.tagText}>
-                {diary.tags.length > 1 ?
-                  `${diary.tags[0].name}等`
-                  : diary.tags[0].name
-                }
-              </Text>
+                <Ionicons name="location-outline" size={12} color="#000" />
+                <Text style={styles.tagText}>
+                  {diary.tags.length > 1 ?
+                    `${diary.tags[0].name}等`
+                    : diary.tags[0].name
+                  }
+                </Text>
+                <Ionicons name="chevron-forward" size={12} color="#000" />
               </View>
             </TouchableOpacity>}
 
@@ -257,16 +260,18 @@ export default function DiaryListDetailScreen() {
               </View>
             </Modal>}
 
+
+
             {/* 新增的评论区 */}
-            {!!(diary.commentsData) && <View style={styles.commentsSection}>
+            {!!(comments) && <View style={styles.commentsSection}>
               {/* 评论区标题 */}
-              {!!(diary.commentsData) && <View style={styles.commentsHeader}>
-                <Text style={styles.commentsTitle}>共 {diary.commentsData.length} 条评论</Text>
+              {!!(comments) && <View style={styles.commentsHeader}>
+                <Text style={styles.commentsTitle}>共 {comments.length} 条评论</Text>
               </View>}
 
               {/* 评论列表 */}
-              {diary.commentsData.length > 0 ? (
-                <CommentsList comments={diary.commentsData} />
+              {comments.length > 0 ? (
+                <CommentsList comments={comments} />
               ) : (
                 <Text style={styles.noCommentsText}>暂无评论</Text>
               )}
@@ -398,21 +403,26 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   tags: {
-    backgroundColor:'white',
+    backgroundColor: 'white',
     flexDirection: 'row',
     alignItems: 'center',
     padding: 4,
-    
+    marginLeft: 12,
   },
   tagContainer: {
     flexDirection: 'row',
-    backgroundColor:'#ccc',
-    padding: 4,
+    backgroundColor: '#c3d0dd',
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingLeft: 6,
+    paddingRight: 6,
     borderRadius: 20
   },
   tagText: {
     color: 'black',
     fontSize: 12,
+    marginLeft: 4,
+    marginRight: 4,
   },
   infoBox: {
     flexDirection: 'row',
