@@ -51,17 +51,18 @@ const TravelNoteSchema = new mongoose.Schema({
   title: { type: String, required: true },
   content: { type: String, required: true },
   images: { type: [String], default: ['food.jpg', 'hot_spot.jpg', 'culture.jpg'] }, // 存储图片URL数组
-  video: { type: String, default: '抖音2025511-200054.mp4' }, // 存储视频URL
+  video: { type: String, default: '1747059904050-c667724fd0e22e0648bb78adfbdc9406.mp4' }, // 存储视频URL ,default: '1747059904050-c667724fd0e22e0648bb78adfbdc9406.mp4' 
   location: { type: String, default: '中国-南京' }, // 存储位置信息
 
   when: { type: String, default: '0' },     // 时间字段
   days: { type: String, default: '0' },     // 天数字段
   money: { type: String, default: '0' },     // 金额字段
   who: { type: String, default: '0' },     // 谁字段
+  category: { type: String, enum: ['旅行', '文化', '美食', '生活', '其他'], default: '旅行' }, // 分类
 
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
 
-  category: { type: String, enum: ['travel', 'culture', 'food', 'life', 'other'], default: 'other' }, // 分类
+
   isPublic: { type: Boolean, default: true }, // 是否公开
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   status: {
@@ -128,6 +129,20 @@ const LikeSchema = new mongoose.Schema({
 })
 const Like = mongoose.model('Like', LikeSchema);
 
+
+
+// 举报记录
+const ReportSchema = new mongoose.Schema({
+  reporterId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  reportedId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  noteId: { type: mongoose.Schema.Types.ObjectId, ref: 'TravelNote' },
+  commentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Comment' },
+  reason: { type: String, required: true },
+  status: { type: String, enum: ['pending', 'resolved', 'rejected'], default: 'pending' },
+  createdAt: { type: Date, default: Date.now }
+});
+const Report = mongoose.model('Report', ReportSchema);
+
 module.exports = {
   User,
   TravelNote,
@@ -137,4 +152,5 @@ module.exports = {
   Tag,
   Like,
   Follow,
+  Report
 };

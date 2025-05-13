@@ -20,6 +20,8 @@ const adminRoutes = require('./routes/admin');
 const userRoutes = require('./routes/users');
 const commentRoutes = require('./routes/comments');
 const imageRoutes = require('./routes/images');
+const mainindexRoutes = require('./routes/mainindex');
+
 
 const app = express();
 
@@ -159,6 +161,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/images', imageRoutes);
+app.use('/api/mainindex', mainindexRoutes)
 
 
 // 错误处理中间件

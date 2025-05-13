@@ -47,4 +47,8 @@ export const approveDiary = (id) => api.post(`/travel-notes/${id}/approve`);
 export const rejectDiary = (id, reason) => api.post(`/travel-notes/${id}/reject`, { reason });
 export const deleteDiary = (id) => api.delete(`/travel-notes/${id}`);
 
+
+// 统计相关 API
+export const getStatistics = (params) => api.get('/mainindex/statistics', { params });
+
 export default api; 

@@ -111,7 +111,7 @@ const EditProfileScreen: React.FC = () => {
         birthday: formatDate(user?.user.birthday),
         location: user?.user.location || '',
         profileImage: user?.user.avatar ?
-                      `http://localhost:5000/api/images/image?filename=${user.user.avatar}` :
+                      `http://localhost:5001/api/images/image?filename=${user.user.avatar}` :
                        require('../assets/images/favicon.png'),
     })
     useEffect(() => {
@@ -128,7 +128,7 @@ const EditProfileScreen: React.FC = () => {
                 birthday: formatDate(user?.user.birthday),
                 location: user?.user.location || '',
                 profileImage: user?.user.avatar ?
-                              `http://localhost:5000/api/images/image?filename=${user.user.avatar}` :
+                              `http://localhost:5001/api/images/image?filename=${user.user.avatar}` :
                                require('../assets/images/favicon.png'),
             })
         }
@@ -385,7 +385,7 @@ const EditProfileScreen: React.FC = () => {
                         onChange={(filename) => {
                             setProfileData(prev => ({
                                 ...prev,
-                                profileImage: `http://localhost:5000/api/images/image?filename=${filename}`
+                                profileImage: `http://localhost:5001/api/images/image?filename=${filename}`
                             }));
                             setimageName(filename);
                         }}

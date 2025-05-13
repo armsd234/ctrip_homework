@@ -3,9 +3,10 @@ import { Layout, Menu, Button, Avatar, Dropdown } from 'antd';
 import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
-    DashboardOutlined,
+    HomeOutlined,
     LogoutOutlined,
-    BookOutlined
+    FileTextOutlined,
+    LockOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -43,33 +44,44 @@ const MainLayout = ({ children }) => {
 
     const menuItems = [
         {
-            key: '/dashboard',
-            icon: <DashboardOutlined key="dashboard-icon" />,
+            key: '/mainindex',
+            icon: <HomeOutlined key="home-icon" />,
             label: '首页',
         },
         {
-            key: '/dashboard',
-            icon: <BookOutlined key="dashboard-icon" />,
-            label: '游记管理',
+            key: '/diary',
+            icon: <FileTextOutlined key="diary-icon" />,
+            label: '审核管理',
+            children: [
+                {
+                    key: '/dashboard',
+                    icon: <FileTextOutlined key="diary-list-icon" />,
+                    label: '游记列表',
+                }
+            ]
         },
         {
-            key: '/dashboard',
-            icon: <UserOutlined key="dashboard-icon" />,
-            label: '用户管理',
+            key: '/permission',
+            icon: <LockOutlined key="permission-icon" />,
+            label: '权限管理',
+            
+        },
+        
+        {
+            key: '/logout',
+            icon: <LogoutOutlined key="logout-submenu-icon" />,
+            label: '退出登录',
+            onClick: handleLogout,
         }
     ];
 
     useEffect(() => {
         const fetchAvatarIcon = async () => {
             try {
-                console.log('mainlayout User:', user);
                 if (user?.user.user.avatar) {
-                    // 使用正确的API路径
-                    console.log('mainlayout fetchAvatarIcon:', user);
                     const imageUrl = `http://localhost:5001/api/images/image?filename=${user.user.user.avatar}`;
                     setAvatarIcon(<Avatar key="user-avatar" src={imageUrl} />);
                 } else {
-                    console.log('mainlayout fetchAvatarIcon:', user);
                     setAvatarIcon(<Avatar key="default-avatar" icon={<UserOutlined key="default-user-icon" />} />);
                 }
             } catch (error) {
@@ -87,6 +99,7 @@ const MainLayout = ({ children }) => {
                 trigger={null}
                 collapsible
                 collapsed={collapsed}
+                width={250}
                 style={{
                     overflow: 'auto',
                     height: '100vh',
@@ -98,21 +111,21 @@ const MainLayout = ({ children }) => {
             >
                 <div className={styles.logo}>后台管理</div>
                 <Menu
-                    theme="dark"
                     mode="inline"
                     selectedKeys={[location.pathname]}
+                    defaultOpenKeys={['/diary', '/permission']}
                     items={menuItems}
                     onClick={({ key }) => navigate(key)}
                 />
             </Sider>
-            <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'margin-left 0.2s' }}>
+            <Layout style={{ marginLeft: collapsed ? 80 : 250, transition: 'margin-left 0.2s' }}>
                 <Header className={styles.header}>
-                    <Button
+                    {/* <Button
                         type="text"
                         icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                         onClick={() => setCollapsed(!collapsed)}
                         className={styles.trigger}
-                    />
+                    /> */}
                     <div className={styles.headerRight}>
                         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
                             <div className={styles.userInfo}>

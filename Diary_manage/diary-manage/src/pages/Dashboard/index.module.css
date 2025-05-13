@@ -14,22 +14,75 @@
 
 .diaryDetail {
   padding: 20px;
+  max-height: calc(80vh - 110px); /* Modal 的标题和底部预留空间 */
+  overflow-y: auto;
 }
 
 .authorInfo {
   margin: 16px 0;
   color: #666;
-}
-
-.authorInfo span {
-  margin-right: 24px;
-}
-
-.imageGallery {
-  margin: 16px 0;
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
+}
+
+.authorInfo span {
+  margin-right: 0;
+}
+
+.imageGallery {
+  height: 510px;
+  margin: 8px 0;
+  position: relative;
+  background: #f5f5f5;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.carouselContainer { 
+  max-height: 420px;
+  aspect-ratio: 9/16;
+  margin: 0 auto;
+  position: relative;
+}
+
+.carouselImage {
+  
+  object-fit: contain;
+  background: #fff;
+  border-radius: 4px;
+}
+
+/* 自定义轮播图箭头样式 */
+:global(.ant-carousel .slick-prev),
+:global(.ant-carousel .slick-next) {
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  z-index: 2;
+}
+
+:global(.ant-carousel .slick-prev) {
+  left: 20px;
+}
+
+:global(.ant-carousel .slick-next) {
+  right: 20px;
+}
+
+/* :global(.ant-carousel .slick-dots) {
+  height: 10px;
+} */
+
+:global(.ant-carousel .slick-dots li button) {
+  background: #d9d9d9;
+  opacity: 0.4;
+}
+
+:global(.ant-carousel .slick-dots li.slick-active button) {
+  background: #1890ff;
+  opacity: 1;
 }
 
 .content {
@@ -48,4 +101,51 @@
 .rejectionReason h3 {
   color: #ff4d4f;
   margin-bottom: 8px;
+}
+
+.coverVideo {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  display: block;
+  border-radius: 4px;
+}
+
+.imageGallery::-webkit-scrollbar {
+  height: 6px;
+}
+
+.imageGallery::-webkit-scrollbar-thumb {
+  background-color: #d9d9d9;
+  border-radius: 3px;
+}
+
+.imageGallery::-webkit-scrollbar-track {
+  background-color: #f0f0f0;
+  border-radius: 3px;
+}
+
+.travelInfo {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.travelInfoItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.travelInfoLabel {
+  color: #666;
+  font-weight: 500;
+}
+
+.travelInfoValue {
+  color: #333;
 } 

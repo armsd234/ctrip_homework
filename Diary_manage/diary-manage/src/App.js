@@ -4,6 +4,8 @@ import { useSelector } from 'react-redux';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MainLayout from './layouts/MainLayout';
+import Mainindex from './pages/Mainindex';
+import Permission from './pages/Permission';
 import { useDispatch } from 'react-redux';
 import { fetchCurrentUser } from './store/slices/authSlice';
 
@@ -72,8 +74,25 @@ const App = () => {
           </PrivateRoute>
         }
       />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<Navigate to="/mainindex" replace />} />
+      <Route
+        path="/mainindex"
+        element={
+          <PrivateRoute>
+            <Mainindex />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/permission"
+        element={
+          <PrivateRoute>
+            <Permission />
+          </PrivateRoute>
+        }
+      />
     </Routes>
+
   );
 };
 

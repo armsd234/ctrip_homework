@@ -16,7 +16,7 @@ const Login = () => {
         try {
             await dispatch(login(values)).unwrap();
             message.success('登录成功');
-            navigate('/dashboard');
+            navigate('/');
 
         } catch (error) {
             message.error(error.message || '登录失败');

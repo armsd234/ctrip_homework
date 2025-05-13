@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Card, Input, Select, Space, Button, Modal, Form, message, Image, Typography } from 'antd';
-import { SearchOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import { Table, Card, Input, Select, Space, Button, Modal, Form, message, Image, Typography, Carousel } from 'antd';
+import { SearchOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, EyeOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import { getDiaryList, approveDiary, rejectDiary, deleteDiary } from '../../services/api';
 import styles from './index.module.css';
@@ -37,6 +37,7 @@ const Dashboard = () => {
     const { user } = useSelector((state) => state.auth);
     const [detailModalVisible, setDetailModalVisible] = useState(false);
     const [selectedDiaryDetail, setSelectedDiaryDetail] = useState(null);
+    const [carouselRef, setCarouselRef] = useState(null);
 
     const fetchData = useCallback(async (params = {}) => {
         setLoading(true);
@@ -118,6 +119,14 @@ const Dashboard = () => {
         setDetailModalVisible(true);
     };
 
+    const nextSlide = () => {
+        carouselRef?.next();
+    };
+
+    const prevSlide = () => {
+        carouselRef?.prev();
+    };
+
     const columns = [
         {
             title: '作者',
@@ -188,7 +197,7 @@ const Dashboard = () => {
                 );
             },
         },
-        
+
     ];
 
     return (
@@ -263,6 +272,8 @@ const Dashboard = () => {
                 onCancel={() => setDetailModalVisible(false)}
                 width={800}
                 footer={null}
+                style={{ top: 20 }}
+                bodyStyle={{ padding: 0 }}
             >
                 {selectedDiaryDetail && (
                     <div className={styles.diaryDetail}>
@@ -270,29 +281,99 @@ const Dashboard = () => {
                         <div className={styles.authorInfo}>
                             <span>作者：{selectedDiaryDetail.author?.nickname}</span>
                             <span>发布时间：{formatDate(selectedDiaryDetail.createdAt)}</span>
+                            <span>分类：{selectedDiaryDetail.category || '旅行'}</span>
                         </div>
-                        <div className={styles.imageGallery} style={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>
+                        <div className={styles.travelInfo}>
+                            <div className={styles.travelInfoItem}>
+                                <span className={styles.travelInfoLabel}>目的地：</span>
+                                <span className={styles.travelInfoValue}>{selectedDiaryDetail.location || '未设置'}</span>
+                            </div>
+                            <div className={styles.travelInfoItem}>
+                                <span className={styles.travelInfoLabel}>出行时间：</span>
+                                <span className={styles.travelInfoValue}>{selectedDiaryDetail.when || '未设置'}</span>
+                            </div>
+                            <div className={styles.travelInfoItem}>
+                                <span className={styles.travelInfoLabel}>出行天数：</span>
+                                <span className={styles.travelInfoValue}>{selectedDiaryDetail.days || '0'} 天</span>
+                            </div>
+                            <div className={styles.travelInfoItem}>
+                                <span className={styles.travelInfoLabel}>花费金额：</span>
+                                <span className={styles.travelInfoValue}>¥ {selectedDiaryDetail.money || '0'}</span>
+                            </div>
+                            <div className={styles.travelInfoItem}>
+                                <span className={styles.travelInfoLabel}>同行人数：</span>
+                                <span className={styles.travelInfoValue}>{selectedDiaryDetail.who || '0'} 人</span>
+                            </div>
+                        </div>
+                        <div className={styles.imageGallery}>
                             {selectedDiaryDetail.video ? (
-                                <>
+                                <div style={{ display: 'block' }}>
                                     <video
                                         src={`http://localhost:5001/api/images/video?filename=${selectedDiaryDetail.video}`}
                                         controls
                                         className={styles.coverVideo}
-                                        style={{ zIndex: 2 }}
                                         onClick={e => e.stopPropagation()}
                                     />
-                                </>
-                            ) : (
-                                selectedDiaryDetail.images?.map((image, index) => (
-                                    <span key={index} style={{ display: 'inline-block' }}>
-                                        <Image
-                                            src={`http://localhost:5001/api/images/image?filename=${image}`}
-                                            alt={`图片 ${image}`}
-                                            width={200}
-                                            style={{ margin: '8px' }}
-                                        />
-                                    </span>
-                                )))}
+                                </div>
+                            ) : selectedDiaryDetail.images && selectedDiaryDetail.images.length > 0 ? (
+                                <div className={styles.carouselContainer}>
+                                    <Button
+                                        icon={<LeftOutlined />}
+                                        onClick={prevSlide}
+                                        style={{
+                                            position: 'absolute',
+                                            left: 10,
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            zIndex: 2,
+                                            background: 'rgba(255, 255, 255, 0.8)',
+                                            border: 'none',
+                                            borderRadius: '50%',
+                                            width: 40,
+                                            height: 40,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    />
+                                    <Carousel
+                                        ref={setCarouselRef}
+                                        dots={{ className: styles.carouselDots }}
+                                        autoplay
+                                    >
+                                        {selectedDiaryDetail.images.map((image, index) => (
+                                            <div key={index}>
+                                                <Image
+                                                    src={`http://localhost:5001/api/images/image?filename=${image}`}
+                                                    alt={`图片 ${index + 1}`}
+                                                    className={styles.carouselImage}
+                                                    preview={false}
+                                                />
+                                            </div>
+                                        ))}
+                                    </Carousel>
+                                    <Button
+                                        icon={<RightOutlined />}
+                                        onClick={nextSlide}
+                                        style={{
+                                            position: 'absolute',
+                                            right: 10,
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            zIndex: 2,
+                                            background: 'rgba(255, 255, 255, 0.8)',
+                                            border: 'none',
+                                            borderRadius: '50%',
+                                            width: 40,
+                                            height: 40,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            
+                                        }}
+                                    />
+                                </div>
+                            ) : null}
                         </div>
                         <div className={styles.content}>
                             <Paragraph>{selectedDiaryDetail.content}</Paragraph>
