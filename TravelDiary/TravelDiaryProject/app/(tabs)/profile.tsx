@@ -1,7 +1,7 @@
 // 放在 App.tsx 或入口文件
 ;(React as any).useInsertionEffect = React.useLayoutEffect;
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, Dimensions, StatusBar, Share, FlatList, ActivityIndicator, Animated, StyleSheet, TextInput, Pressable } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import styles from '../../styles/profile.styles';
@@ -13,20 +13,12 @@ import ImageUpload from '@/components/ImageUpload';
 import { api } from '@/services/api';
 import { SideMenu } from '@/components/SiderMemu';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { blue } from 'react-native-reanimated/lib/typescript/Colors';
 import axios from 'axios';
-
+import TravelDiaryMasonry from '@/components/TravelDiaryMasonryCopy';
+import {TravelDiary} from '@/components/TravelDiaryMasonryCopy/types'
 const PROFILE_SECTION_BG = '#4A4E69';
 const ACCENT_COLOR = '#F25F5C';
 
-interface TravelNote {
-  _id: string;
-  title: string;
-  images: string[];
-  views: number;
-  likesCount: number;
-  commentCount: number;
-}
 
 const ProfileScreen = () => {
   const router = useRouter();
@@ -41,14 +33,9 @@ const ProfileScreen = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const slideAnim = useRef(new Animated.Value(0)).current;
-  const [prevTab, setPrevTab] = useState<'travels' | 'favorites' | 'likes'>('travels');
-  const [searchVisible, setSearchVisible] = useState(false);
-  const [searchText, setSearchText] = useState('');
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [filteredTravels, setFilteredTravels] = useState<TravelNote[]>([]);
-  const [filteredFavorites, setFilteredFavorites] = useState<TravelNote[]>([]);
-  const [filteredLikes, setFilteredLikes] = useState<TravelNote[]>([]);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const [filteredTravels, setFilteredTravels] = useState<TravelDiary[]>([]);
+  const [filteredFavorites, setFilteredFavorites] = useState<TravelDiary[]>([]);
+  const [filteredLikes, setFilteredLikes] = useState<TravelDiary[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -56,6 +43,9 @@ const ProfileScreen = () => {
       setIsReady(true);
     };
     checkAuth();
+    if (user?.user._id) {
+      loadAllData();
+    }
   }, []);
 
   useEffect(() => {
@@ -66,55 +56,7 @@ const ProfileScreen = () => {
       });
     }
   }, [isReady, isAuthenticated]);
-
-  // 自动请求游记列表
-  useEffect(() => {
-    if (!user?.user._id) return;
-    setLoading(true);
-    axios.get(`http://localhost:5001/api/travel-notes/user/${user.user._id}`, { params: { page: 1, limit: 10 } })
-      .then(res => setTravels(res.data.data))
-      .catch(err => console.error('获取游记失败', err))
-      .finally(() => setLoading(false));
-  }, [user?.user._id]);
-
-  // 修改搜索过滤函数
-  const filterContent = (text: string) => {
-    const searchLower = text.toLowerCase().trim();
-    
-    // 如果没有搜索文本，显示所有内容
-    if (!searchLower) {
-      setFilteredTravels(travels);
-      setFilteredFavorites(favorites);
-      setFilteredLikes(likes);
-      return;
-    }
-
-    // 优化搜索逻辑
-    const filterItems = (items: TravelNote[]) => 
-      items.filter(item => {
-        if (!item || !item.title) return false;
-        return item.title.toLowerCase().includes(searchLower);
-      });
-
-    const filteredTravelsData = filterItems(travels);
-    const filteredFavoritesData = filterItems(favorites);
-    const filteredLikesData = filterItems(likes);
-
-    // 更新过滤后的数据
-    setFilteredTravels(filteredTravelsData);
-    setFilteredFavorites(filteredFavoritesData);
-    setFilteredLikes(filteredLikesData);
-
-    // 优化标签页切换逻辑
-    if (filteredTravelsData.length > 0) {
-      setActiveTab('travels');
-    } else if (filteredFavoritesData.length > 0) {
-      setActiveTab('favorites');
-    } else if (filteredLikesData.length > 0) {
-      setActiveTab('likes');
-    }
-  };
-
+  
   // 修改 loadAllData 函数，初始化过滤后的数据
   const loadAllData = async () => {
     if (!user?.user._id) return;
@@ -146,13 +88,6 @@ const ProfileScreen = () => {
     }
   };
 
-  // 当用户信息加载完成后，立即加载所有数据
-  useEffect(() => {
-    if (user?.user._id) {
-      loadAllData();
-    }
-  }, [user?.user._id]);
-
   // 加载更多数据
   const loadMoreData = async (type: 'travels' | 'favorites' | 'likes') => {
     if (loading || !hasMore) return;
@@ -180,22 +115,18 @@ const ProfileScreen = () => {
 
       const newData = response.data.data;
       setHasMore(newData.length === 10);
-
       switch (type) {
         case 'travels':
           const updatedTravels = page === 1 ? newData : [...travels, ...newData];
           setTravels(updatedTravels);
-          filterContent(searchText); // 重新过滤数据
           break;
         case 'favorites':
           const updatedFavorites = page === 1 ? newData : [...favorites, ...newData];
           setFavorites(updatedFavorites);
-          filterContent(searchText); // 重新过滤数据
           break;
         case 'likes':
           const updatedLikes = page === 1 ? newData : [...likes, ...newData];
           setLikes(updatedLikes);
-          filterContent(searchText); // 重新过滤数据
           break;
       }
     } catch (error) {
@@ -205,12 +136,15 @@ const ProfileScreen = () => {
     }
   };
 
-  // 切换标签时重置页码并加载更多数据
+
   useEffect(() => {
     if (user?.user._id) {
       setPage(1);
       setHasMore(true);
-      loadMoreData(activeTab);
+      console.log('favorites',favorites);
+      console.log('travels',travels);
+      console.log('likes',likes);
+      // loadMoreData(activeTab);
     }
   }, [activeTab]);
 
@@ -321,94 +255,39 @@ const ProfileScreen = () => {
   // 处理标签切换动画
   const [isAnimating, setIsAnimating] = useState(false);
 
-const handleTabChange = (newTab: 'travels' | 'favorites' | 'likes') => {
-  if (newTab === activeTab || isAnimating) return;
+  const handleTabChange = (newTab: 'travels' | 'favorites' | 'likes') => {
+    if (newTab === activeTab || isAnimating) return;
 
-  const tabOrder = ['travels', 'favorites', 'likes'];
-  const currentIndex = tabOrder.indexOf(activeTab);
-  const newIndex = tabOrder.indexOf(newTab);
-  const direction = newIndex > currentIndex ? 1 : -1;
+    const tabOrder = ['travels', 'favorites', 'likes'];
+    const currentIndex = tabOrder.indexOf(activeTab);
+    const newIndex = tabOrder.indexOf(newTab);
+    const direction = newIndex > currentIndex ? -1 : 1;
 
-  const screenWidth = Dimensions.get('window').width;
-  setIsAnimating(true);
+    const screenWidth = Dimensions.get('window').width;
+    setIsAnimating(true);
 
-  // 滑出当前 tab
-  Animated.timing(slideAnim, {
-    toValue: direction * screenWidth,
-    duration: 200,
-    useNativeDriver: true,
-  }).start(() => {
-    // 切换 tab
-    setActiveTab(newTab);
-
-    // 重置动画初始位置为相反方向
-    slideAnim.setValue(-direction * screenWidth);
-
-    // 滑入新 tab
+    // 滑出当前 tab
     Animated.timing(slideAnim, {
-      toValue: 0,
+      toValue: direction * screenWidth,
       duration: 200,
       useNativeDriver: true,
     }).start(() => {
-      setIsAnimating(false); // 解锁
+      // 切换 tab
+      setActiveTab(newTab);
+
+      // 重置动画初始位置为相反方向
+      slideAnim.setValue(-direction * screenWidth);
+
+      // 滑入新 tab
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(() => {
+        setIsAnimating(false); // 解锁
+      });
     });
-  });
-};
-
-  // 修改 BigSearchBar 组件
-  const BigSearchBar = () => (
-    <View style={[styles.searchWrapper, { zIndex: 1000 }]}>
-      <View style={[
-        styles.searchBox,
-        searchFocused && { borderColor: ACCENT_COLOR }
-      ]}>
-        <View style={styles.searchIconWrapper}>
-          <Ionicons 
-            name="search" 
-            size={20} 
-            color={searchFocused ? ACCENT_COLOR : '#999'} 
-          />
-        </View>
-        <TextInput
-          style={[
-            styles.searchTextInput,
-            { outlineWidth: 0, outlineColor: 'transparent', boxShadow: 'none' }
-          ]}
-          placeholder="搜索游记标题"
-          placeholderTextColor="#999"
-          value={searchText}
-          onChangeText={(text) => {
-            setSearchText(text);
-            filterContent(text);
-          }}
-          onFocus={() => {
-            setSearchFocused(true);
-            // 滚动到搜索框位置
-            scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-          }}
-          onBlur={() => setSearchFocused(false)}
-          returnKeyType="search"
-          autoCapitalize="none"
-          autoCorrect={false}
-          clearButtonMode="while-editing"
-          enablesReturnKeyAutomatically
-        />
-        {searchText.length > 0 && (
-          <TouchableOpacity
-            style={styles.searchClearBtn}
-            onPress={() => {
-              setSearchText('');
-              filterContent('');
-            }}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="close-circle" size={18} color="#999" />
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
-  );
-
+  };
   // 修改ContentTabs组件，去除搜索相关内容
   const ContentTabs = React.memo(() => (
     <View style={styles.contentTabsContainer}>
@@ -431,106 +310,12 @@ const handleTabChange = (newTab: 'travels' | 'favorites' | 'likes') => {
     </View>
   ));
 
-  const renderTravelItem = ({ item }: { item: TravelNote }) => (
-    // console.log('Rendering travel item:', item),
-    <TouchableOpacity 
-      style={styles.travelItem}
-      onPress={() => {
-        router.push({
-          pathname: '/diary-list/[id]',
-          params: { id: item._id }
-        });
-      }}
-    >
-      <Image 
-        source={{ 
-          uri: item.images && item.images.length > 0 
-            ? `http://localhost:5001/api/images/image?filename=${item.images[0] }`
-            : 'http://localhost:5001/api/images/image?filename=default_avatar.jpg'
-        }}
-        style={styles.travelImage}
-      />
-      <View style={styles.travelInfo}>
-        <Text style={styles.travelTitle} numberOfLines={2}>{item.title}</Text>
-        <View style={styles.travelStats}>
-          <Text style={styles.travelStat}>
-            <Ionicons name="eye-outline" size={14} /> {item.views}
-          </Text>
-          <Text style={styles.travelStat}>
-            <Ionicons name="heart-outline" size={14} /> {item.likesCount}
-          </Text>
-          <Text style={styles.travelStat}>
-            <Ionicons name="chatbubble-outline" size={14} /> {item.commentCount}
-          </Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
-  // 修改内容组件的类型定义
-  interface ContentComponentProps {
-    data: TravelNote[];
-    loading: boolean;
-    hasMore: boolean;
-    onLoadMore: () => void;
-    ListEmptyComponent?: React.ComponentType<any>;
-  }
-
-  // 使用React.memo优化各个内容组件
-  const TravelsContent = React.memo(({ data, loading, hasMore, onLoadMore, ListEmptyComponent }: ContentComponentProps) => (
-    <FlatList
-      data={data}
-      renderItem={renderTravelItem}
-      keyExtractor={item => item._id}
-      onEndReached={() => {
-        if (hasMore && !loading) {
-          onLoadMore();
-        }
-      }}
-      onEndReachedThreshold={0.5}
-      ListEmptyComponent={ListEmptyComponent}
-      ListFooterComponent={loading ? <ActivityIndicator size="large" color="#0000ff" /> : null}
-    />
-  ));
-
-  const FavoritesContent = React.memo(({ data, loading, hasMore, onLoadMore, ListEmptyComponent }: ContentComponentProps) => (
-    <FlatList
-      data={data}
-      renderItem={renderTravelItem}
-      keyExtractor={item => item._id}
-      onEndReached={() => {
-        if (hasMore && !loading) {
-          onLoadMore();
-        }
-      }}
-      onEndReachedThreshold={0.5}
-      ListEmptyComponent={ListEmptyComponent}
-      ListFooterComponent={loading ? <ActivityIndicator size="large" color="#0000ff" /> : null}
-    />
-  ));
-
-  const LikesContent = React.memo(({ data, loading, hasMore, onLoadMore, ListEmptyComponent }: ContentComponentProps) => (
-    <FlatList
-      data={data}
-      renderItem={renderTravelItem}
-      keyExtractor={item => item._id}
-      onEndReached={() => {
-        if (hasMore && !loading) {
-          onLoadMore();
-        }
-      }}
-      onEndReachedThreshold={0.5}
-      ListEmptyComponent={ListEmptyComponent}
-      ListFooterComponent={loading ? <ActivityIndicator size="large" color="#0000ff" /> : null}
-    />
-  ));
 
   // 修改Content组件，只对游记tab应用搜索过滤
-  const Content = React.memo(({ activeTab, loading, hasMore, onLoadMore }: {
+  const Content = React.memo(({ activeTab, loading, hasMore }: {
     activeTab: 'travels' | 'favorites' | 'likes',
     loading: boolean,
-    hasMore: boolean,
-    onLoadMore: (type: 'travels' | 'favorites' | 'likes') => void
+    hasMore: boolean
   }) => {
     const screenWidth = Dimensions.get('window').width;
   
@@ -540,73 +325,84 @@ const handleTabChange = (newTab: 'travels' | 'favorites' | 'likes') => {
       width: screenWidth,
     };
   
-    let data: TravelNote[] = [];
+    let data: TravelDiary[] = [];
     switch (activeTab) {
       case 'travels':
-        data = filteredTravels;
+        data = convertToTravelDiary(filteredTravels);
         break;
       case 'favorites':
-        data = filteredFavorites;
+        data = convertToTravelDiary(filteredFavorites);
         break;
       case 'likes':
-        data = filteredLikes;
+        data = convertToTravelDiary(filteredLikes);
         break;
     }
-  
-    const EmptyComponent = () => {
-      if (searchText.trim()) {
-        return (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="search-outline" size={80} color="#D3D3D3" />
-            <Text style={styles.contentText}>未找到相关游记</Text>
-          </View>
-        );
-      }
-      return (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.contentText}>暂无内容</Text>
-        </View>
-      );
-    };
+    console.log(data);
+     // 数据格式转换函数
+     function convertToTravelDiary(data: any[]): TravelDiary[] {
+      return data.map(item => ({
+        id: item._id, 
+        title: item.title,
+        content: item.content,
+        coverImage: item.images.map((image: any) => `http://localhost:5001/api/images/image?filename=${image}`), 
+        video: item.video,
+        duration: 0, // 由于原数据没有duration字段，默认设为0
+        type: item.video ? 'video' : 'image', // 根据是否有video字段判断类型
+        tags: item.tags?.map((tag: string) => ({ id: tag, name: tag })) || [], // 转换tags格式
+        When: item.when,
+        Who: item.who,
+        Days: item.days,
+        Money: item.money,
+        user: {
+          id: item.author._id,
+          nickname: item.author.nickname,
+          avatar: `http://localhost:5001/api/images/image?filename=${item.author.avatar}`
+        },
+        likes: item.likesCount,
+        collects: item.favoriteCount,
+        comments: item.commentCount,
+        views: item.views,
+        location: item.location,
+        createTime: item.createdAt,
+        status: item.status as 'pending' | 'approved' | 'rejected',
+        rejectReason: item.rejectionReason
+      }));
+    }
+  const handlePressItem = (diary: TravelDiary) => {
+    router.push(`/diary-list/${diary.id}`);
+  };
+  const handleLoadMoreinner = useCallback(async () => {
+    if (loading || !hasMore) return;
+    setLoading(true);
+    setTimeout(() => {
+      setPage(prev => prev + 1);
+      loadMoreData(activeTab);
+      setLoading(false);
+    }, 1000);
+  }, [activeTab,page]);
   
     return (
       <Animated.View style={[styles.contentContainer, animatedStyle]}>
-        <FlatList
-          key={activeTab} // 强制刷新
-          data={data}
-          renderItem={renderTravelItem}
-          keyExtractor={item => item._id}
-          onEndReached={() => {
-            if (hasMore && !loading) {
-              onLoadMore(activeTab);
-            }
-          }}
-          onEndReachedThreshold={0.5}
-          ListEmptyComponent={EmptyComponent}
-          ListFooterComponent={loading ? <ActivityIndicator size="large" color="#0000ff" /> : null}
-        />
+        <TravelDiaryMasonry
+            diaries={data}
+            loading={loading}
+            searching = {false}
+            onLoadMore={handleLoadMoreinner}
+            onPressItem={handlePressItem}
+          />
       </Animated.View>
     );
   });
 
-  const handleLoadMore = (type: 'travels' | 'favorites' | 'likes') => {
-    setPage(prev => prev + 1);
-    loadMoreData(type);
-  };
-
   const handleEditProfile = () => {
-    console.log('Navigating to Edit Profile');
     router.push('/editinfo');
   };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-
-      {/* <StatusBar barStyle="light-content" backgroundColor={'blue'} /> */}
       <ProfileHeader />
       <View 
         style={[styles.scrollView, { zIndex: 1 }]}
-    
         >
         <View style={styles.scrollableTopContentWrapper}>
           <UserInfoSection 
@@ -620,13 +416,11 @@ const handleTabChange = (newTab: 'travels' | 'favorites' | 'likes') => {
         </View>
 
         <View style={styles.contentSection}>
-          {/* <BigSearchBar /> */}
           <ContentTabs />
           <Content 
             activeTab={activeTab}
             loading={loading}
             hasMore={hasMore}
-            onLoadMore={handleLoadMore}
           />
         </View>
       </View>
@@ -635,10 +429,4 @@ const handleTabChange = (newTab: 'travels' | 'favorites' | 'likes') => {
 
   );
 };
-
-// 添加新的样式到现有的样式对象中
-// Object.assign(styles, {
-  
-// });
-
 export default ProfileScreen;
