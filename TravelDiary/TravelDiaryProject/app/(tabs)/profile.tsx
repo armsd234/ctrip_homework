@@ -1,3 +1,6 @@
+// 放在 App.tsx 或入口文件
+;(React as any).useInsertionEffect = React.useLayoutEffect;
+
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, Dimensions, StatusBar, Share, FlatList, ActivityIndicator, Animated, StyleSheet, TextInput, Pressable } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
@@ -316,24 +319,41 @@ const ProfileScreen = () => {
   ));
 
   // 处理标签切换动画
-  const handleTabChange = (newTab: 'travels' | 'favorites' | 'likes') => {
-    const tabOrder = ['travels', 'favorites', 'likes'];
-    const currentIndex = tabOrder.indexOf(activeTab);
-    const newIndex = tabOrder.indexOf(newTab);
-    const direction = newIndex > currentIndex ? 1 : -1;
+  const [isAnimating, setIsAnimating] = useState(false);
 
-    // 设置初始位置
-    slideAnim.setValue(direction);
-    setPrevTab(activeTab);
+const handleTabChange = (newTab: 'travels' | 'favorites' | 'likes') => {
+  if (newTab === activeTab || isAnimating) return;
+
+  const tabOrder = ['travels', 'favorites', 'likes'];
+  const currentIndex = tabOrder.indexOf(activeTab);
+  const newIndex = tabOrder.indexOf(newTab);
+  const direction = newIndex > currentIndex ? 1 : -1;
+
+  const screenWidth = Dimensions.get('window').width;
+  setIsAnimating(true);
+
+  // 滑出当前 tab
+  Animated.timing(slideAnim, {
+    toValue: direction * screenWidth,
+    duration: 200,
+    useNativeDriver: true,
+  }).start(() => {
+    // 切换 tab
     setActiveTab(newTab);
 
-    // 执行动画
+    // 重置动画初始位置为相反方向
+    slideAnim.setValue(-direction * screenWidth);
+
+    // 滑入新 tab
     Animated.timing(slideAnim, {
       toValue: 0,
-      duration: 300,
+      duration: 200,
       useNativeDriver: true,
-    }).start();
-  };
+    }).start(() => {
+      setIsAnimating(false); // 解锁
+    });
+  });
+};
 
   // 修改 BigSearchBar 组件
   const BigSearchBar = () => (
@@ -512,11 +532,27 @@ const ProfileScreen = () => {
     hasMore: boolean,
     onLoadMore: (type: 'travels' | 'favorites' | 'likes') => void
   }) => {
-    const translateX = slideAnim.interpolate({
-      inputRange: [-1, 0, 1],
-      outputRange: [-Dimensions.get('window').width, 0, Dimensions.get('window').width]
-    });
-
+    const screenWidth = Dimensions.get('window').width;
+  
+    // 不要用 interpolate，直接用 slideAnim
+    const animatedStyle = {
+      transform: [{ translateX: slideAnim }],
+      width: screenWidth,
+    };
+  
+    let data: TravelNote[] = [];
+    switch (activeTab) {
+      case 'travels':
+        data = filteredTravels;
+        break;
+      case 'favorites':
+        data = filteredFavorites;
+        break;
+      case 'likes':
+        data = filteredLikes;
+        break;
+    }
+  
     const EmptyComponent = () => {
       if (searchText.trim()) {
         return (
@@ -526,67 +562,29 @@ const ProfileScreen = () => {
           </View>
         );
       }
-
-      switch (activeTab) {
-        case 'travels':
-          return (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="camera-outline" size={80} color="#D3D3D3" />
-              <Text style={styles.contentText}>一张照片, 交换春天 🍃</Text>
-              <TouchableOpacity style={styles.publishButton}>
-                <Text style={styles.publishButtonText}>去发布</Text>
-              </TouchableOpacity>
-            </View>
-          );
-        case 'favorites':
-          return (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="bookmark-outline" size={80} color="#D3D3D3" />
-              <Text style={styles.contentText}>还没有收藏任何内容</Text>
-            </View>
-          );
-        case 'likes':
-          return (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="heart-outline" size={80} color="#D3D3D3" />
-              <Text style={styles.contentText}>还没有点赞任何内容</Text>
-            </View>
-          );
-      }
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.contentText}>暂无内容</Text>
+        </View>
+      );
     };
-
+  
     return (
-      <Animated.View style={[
-        styles.contentContainer,
-        { transform: [{ translateX }] }
-      ]}>
-        {activeTab === 'travels' && (
-          <TravelsContent 
-            data={filteredTravels} 
-            loading={loading} 
-            hasMore={hasMore} 
-            onLoadMore={() => onLoadMore('travels')}
-            ListEmptyComponent={EmptyComponent}
-          />
-        )}
-        {activeTab === 'favorites' && (
-          <FavoritesContent 
-            data={filteredFavorites} 
-            loading={loading} 
-            hasMore={hasMore} 
-            onLoadMore={() => onLoadMore('favorites')}
-            ListEmptyComponent={EmptyComponent}
-          />
-        )}
-        {activeTab === 'likes' && (
-          <LikesContent 
-            data={filteredLikes} 
-            loading={loading} 
-            hasMore={hasMore} 
-            onLoadMore={() => onLoadMore('likes')}
-            ListEmptyComponent={EmptyComponent}
-          />
-        )}
+      <Animated.View style={[styles.contentContainer, animatedStyle]}>
+        <FlatList
+          key={activeTab} // 强制刷新
+          data={data}
+          renderItem={renderTravelItem}
+          keyExtractor={item => item._id}
+          onEndReached={() => {
+            if (hasMore && !loading) {
+              onLoadMore(activeTab);
+            }
+          }}
+          onEndReachedThreshold={0.5}
+          ListEmptyComponent={EmptyComponent}
+          ListFooterComponent={loading ? <ActivityIndicator size="large" color="#0000ff" /> : null}
+        />
       </Animated.View>
     );
   });
@@ -606,13 +604,14 @@ const ProfileScreen = () => {
 
       {/* <StatusBar barStyle="light-content" backgroundColor={'blue'} /> */}
       <ProfileHeader />
-      <ScrollView 
+      <View 
         style={[styles.scrollView, { zIndex: 1 }]}
-        contentContainerStyle={[styles.scrollViewContentContainer, { zIndex: 1 }]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        ref={scrollViewRef}>
+        // contentContainerStyle={[styles.scrollViewContentContainer, { zIndex: 1 }]}
+        // showsVerticalScrollIndicator={false}
+        // keyboardShouldPersistTaps="handled"
+        // keyboardDismissMode="on-drag"
+        // ref={scrollViewRef}
+        >
         <View style={styles.scrollableTopContentWrapper}>
           <UserInfoSection 
             user={user} 
@@ -634,7 +633,7 @@ const ProfileScreen = () => {
             onLoadMore={handleLoadMore}
           />
         </View>
-      </ScrollView>
+      </View>
       <SideMenu visible={showMenu} onClose={() => setShowMenu(false)} />
     </SafeAreaView>
 

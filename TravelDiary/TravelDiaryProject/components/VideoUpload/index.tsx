@@ -1,67 +1,133 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Video, ResizeMode } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '@/services/api';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { useEvent } from 'expo';
+import { decode } from 'base-64';
 
 const { width } = Dimensions.get('window');
+const videoSource = require('../../assets/images/IMG_3528.mp4'); // 本地视频文件路径
 
-export default function VideoUploader() {
+export default function VideoUploader({
+  onUploadSuccess,
+  onUploadError,
+}: {
+  onUploadSuccess: (filename: string[]) => void;
+  onUploadError?: (error: Error) => void;
+}) {
   const [video, setVideo] = useState<{ uri: string } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploaded, setUploaded] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  const player = useVideoPlayer(video?.uri || videoSource, player => {
+    player.loop = true;
+    player.play();
+  });
+
+  const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
+
 
   const selectVideo = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      allowsEditing: false,
+      quality: 1,
     });
-    
+
     if (!result.canceled) {
-      setVideo(result.assets[0]);
-    }
-    console.log(result);
-    
-  };
+      // const video = ;
+      await uploadVideo(result.assets[0]);
+      // console.log(result);
+      // // return video;
+      // setVideo({ uri: video.uri });
 
-  const uploadVideo = async () => {
-    if (!video) {
-      alert('请先选择视频');
-      return;
-    }
-    
-    setUploading(true);
-    const formData = new FormData();
-    // 关键：把本地文件转成Blob
-  const response = await fetch(video.uri);
-  const blob = await response.blob();
-  const fileType = video.uri.split('.').pop(); // 获取文件后缀
-  formData.append('video', blob, `video_${Date.now()}.${fileType}`);
-
-  try {
-    await api.post('/api/images/video', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      onUploadProgress: (progressEvent) => {
-        const percent = Math.round(
-          progressEvent.total ? (progressEvent.loaded / progressEvent.total) * 100 : 0
-        );
-        setProgress(percent);
-      },
-    });
-  } catch (error) {
-    console.error('上传失败:', error);
-  } finally {
-    setUploading(false);
+    };
   }
+
+  const uploadVideo = async (videoAsset: ImagePicker.ImagePickerAsset) => {
+    // if (!video) {
+    //   alert('请先选择视频');
+    //   return;
+    // }
+
+    setUploading(true);
+    console.log('1');
+    
+    const formData = new FormData();
+    const base64Data = videoAsset.uri.split(',')[1];
+    const mimeType = videoAsset.mimeType || 'video/mp4';
+    console.log('2');
+
+    // 将 base64 转换为 Blob
+    // const byteCharacters = atob(base64Data);
+    // const byteCharacters = decode(base64Data); // 替代 atob()
+    // const byteArrays = [];
+    // console.log('3');
+    // for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+    //   const slice = byteCharacters.slice(offset, offset + 512);
+    //   const byteNumbers = new Array(slice.length);
+
+    //   for (let i = 0; i < slice.length; i++) {
+    //     byteNumbers[i] = slice.charCodeAt(i);
+    //   }
+
+    //   const byteArray = new Uint8Array(byteNumbers);
+    //   byteArrays.push(byteArray);
+    // }
+    // console.log('4');
+    // const blob = new Blob(byteArrays, { type: mimeType });
+    // const file = new File([blob], 'video.mp4', { type: mimeType });
+    formData.append('video', {
+      uri: videoAsset.uri,
+      name: videoAsset.fileName || 'video.mp4',
+      type: videoAsset.mimeType || 'video/mp4',
+    } as any);
+    console.log('formData', formData.get('video'));
+    
+
+    try {
+      const response = await api.post('/api/images/video', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          // 'Accept': 'application/json',
+        },
+      });
+
+      console.log('上传响应:', response.data);
+
+      if (response.data) {
+        const filename = response.data.filename; // 假设服务器返回的文件名在响应数据中
+        onUploadSuccess(filename);
+        setUploaded(true);
+        // alert('上传成功！');
+      }
+      // await api.post('/api/images/video', formData, {
+      //   headers: {
+      //     'Content-Type': 'multipart/form-data',
+      //   },
+      //   onUploadProgress: (progressEvent) => {
+      //     const percent = Math.round(
+      //       progressEvent.total ? (progressEvent.loaded / progressEvent.total) * 100 : 0
+      //     );
+      //     setProgress(percent);
+      //   },
+      // });
+    } catch (error) {
+      console.error('上传失败:', error);
+    } finally {
+      setUploading(false);
+    }
     // formData.append('video', {
     //   uri: video.uri,
     //   type: 'video/mp4',
     //   name: `video_${Date.now()}.mp4`,
     // } as any);
     // console.log('formData', formData.get('video'));
-    
+
 
     // try {
     //   await api.post('/api/images/video', formData, {
@@ -85,34 +151,39 @@ export default function VideoUploader() {
 
   return (
     <View style={styles.container}>
-      {video ? (
+      {uploaded ? (
         <>
-          <Video
-            source={{ uri: video.uri }}
-            style={styles.video}
-            useNativeControls
-            resizeMode={ResizeMode.CONTAIN}
+          <VideoView
+            player={player}
+            style={styles.videoContainer}
+          // useNativeControls
+          // resizeMode="contain"
           />
-          <TouchableOpacity 
-            style={styles.button} 
+          {/* <TouchableOpacity
+            style={styles.button}
             onPress={uploadVideo}
             disabled={uploading}
-          >
-            <Text style={styles.buttonText}>
-              {uploading ? `上传中... ${progress}%` : '确认上传'}
-            </Text>
-          </TouchableOpacity>
+          > */}
+
+          {/* </TouchableOpacity> */}
         </>
       ) : (
         // <TouchableOpacity style={styles.button} onPress={selectVideo}>
         //   <Text style={styles.buttonText}>选择视频</Text>
         // </TouchableOpacity>
         <View style={styles.uploadItem}>
-        <TouchableOpacity style={styles.uploadButton} onPress={selectVideo}>
-          <Ionicons name="add" size={32} color="#666" />
-          <Text style={styles.uploadText}>上传视频</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.uploadButton} onPress={selectVideo}>
+            <Ionicons name="add" size={32} color="#666" />
+            {
+              uploading ? (
+                <Text style={styles.uploadText}>上传中...</Text>
+              ) : (
+                <Text style={styles.uploadText}>上传视频</Text>
+              )
+            }
+          </TouchableOpacity>
         </View>
+
       )}
     </View>
   );
@@ -128,7 +199,7 @@ const styles = StyleSheet.create({
     width: width - 32,
     height: 100,
     backgroundColor: '#f5f5f5',
-    borderRadius:  20,
+    borderRadius: 20,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
@@ -152,8 +223,8 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 5,
   },
-  video: {
-    width: 200,
+  videoContainer: {
+    width: width - 32,
     height: 200,
     borderRadius: 20,
     margin: 16
@@ -165,7 +236,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   buttonText: {
-    color: 'white',
+    color: 'black',
     fontSize: 16,
   },
 });

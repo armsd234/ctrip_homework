@@ -5,16 +5,24 @@ import { TravelDiary, TravelDiaryMasonryProps } from './types';
 import { useMemo, useState, useEffect } from 'react';
 import { getTravelDiaries } from '@/services/travelDiaryService';
 import HomeBanner from '../HomeBanner';
+// import { Video, ResizeMode } from 'expo-av';
+import Video, { useVideoPlayer, VideoView } from 'expo-video';
+import { useEvent } from 'expo';
 
 // 根据屏幕宽度计算每列宽度
 const { width } = Dimensions.get('window');
 const CARD_MARGIN = 8;
 const COLUMN_WIDTH = (width - CARD_MARGIN * 5) / 2;
 
-/**
- * 游记瀑布流组件
- * 展示双列瀑布流布局的游记列表，支持下拉加载更多
- */
+
+const videoSource = require('../../assets/images/IMG_3528.mp4'); // 本地视频文件路径
+
+const formatDuration = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+};
+
 export default function TravelDiaryMasonry({
   diaries = [],
   loading = false,
@@ -26,37 +34,12 @@ export default function TravelDiaryMasonry({
   // const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 10;
-
-  // 加载数据
-  // const loadData = async (pageNum: number) => {
-  //   setLoading(true);
-  //   try {
-  //     const newDiaries = await getTravelDiaries(pageNum, pageSize);
-  //     if (pageNum === 1) {
-  //       setDiaries(newDiaries);
-  //     } else {
-  //       setDiaries(prev => [...prev, ...newDiaries]);
-  //     }
-  //   } catch (error) {
-  //     console.error('加载数据失败:', error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // 初始加载
-  // useEffect(() => {
-  //   loadData(1);
-  // }, []);
-
-  // 加载更多
-  // const handleLoadMore = () => {
-  //   if (!loading) {
-  //     const nextPage = page + 1;
-  //     setPage(nextPage);
-  //     loadData(nextPage);
-  //   }
-  // };
+  const player = useVideoPlayer(videoSource, player => {
+    player.loop = true;
+    player.play();
+  });
+  
+  const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
 
   // 将数据分为左右两列
   const { leftColumn, rightColumn } = useMemo(() => {
@@ -84,11 +67,53 @@ export default function TravelDiaryMasonry({
 
   // 渲染单个游记卡片
   const renderItem = (item: TravelDiary) => (
+    
     <Pressable style={styles.card} onPress={() => onPressItem?.(item)} >
-      <Image
+      {/* <Image
         source={Array.isArray(item.coverImage) ? { uri: item.coverImage[0] } : { uri: item.coverImage }}
         style={styles.coverImage}
-      />
+      /> */}
+      {item.type === 'video' ? (
+        <View style={styles.videoContainer}>
+          {/* <Video
+            // source={{ uri: item.video }}
+            source={require("../../assets/images/IMG_3528.mp4")}
+            style={styles.coverImage}
+            shouldPlay={false} // 默认不播放，点击后播放
+            resizeMode={ResizeMode.COVER}
+            poster={Array.isArray(item.coverImage) ? item.coverImage[0] : item.coverImage} // 视频封面
+            posterResizeMode="cover"
+          /> */}
+          <VideoView style={styles.coverImage} player={player} allowsFullscreen allowsPictureInPicture />
+          {/* 视频时长标签 */}
+          {/* {item.duration && (
+            <View style={styles.durationBadge}>
+              <Text style={styles.durationText}>
+                {formatDuration(item.duration)}
+              </Text>
+            </View>
+          )} */}
+          {/* 视频播放按钮 */}
+          <View style={styles.playButton}>
+            <Ionicons name="play" size={24} color="white" />
+          </View>
+        </View>
+
+      ) : (
+        <Image
+        source={Array.isArray(item.coverImage) ? { uri: item.coverImage[0] } : { uri: item.coverImage }}
+          style={styles.coverImage}
+          resizeMode="cover"
+        />
+        // <Image
+        //   source={
+        //     require("../../assets/images/IMG_3355.jpg") // 使用 require 加载本地图片
+        //   }
+        //   style={styles.coverImage}
+        //   resizeMode="cover"
+        // />
+
+      )}
       <View style={styles.cardContent}>
         <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
         <View style={styles.userInfo}>
@@ -183,6 +208,37 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 150,
     resizeMode: 'cover',
+  },
+  videoContainer: {
+    position: 'relative',
+    width: '100%',
+    height: 150,
+    resizeMode: 'cover',
+  },
+  durationBadge: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  durationText: {
+    color: 'white',
+    fontSize: 12,
+  },
+  playButton: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -12 }, { translateY: -12 }],
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cardContent: {
     padding: 12,

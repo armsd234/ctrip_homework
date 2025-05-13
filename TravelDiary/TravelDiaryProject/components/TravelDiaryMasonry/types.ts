@@ -29,8 +29,12 @@ interface CommentsData extends Comment {
 
 export interface TravelDiary {
   id: number;
-  title: string;  //标题
+  title: string;
+  content: string;
   coverImage?: string[]|string; //封面图片
+  video?: string; //视频
+  duration?: number; //视频时长(秒)
+  type: 'image' | 'video'; //类型
   tags?:Tag[];
   When?:string;
   Who?:string;
@@ -49,7 +53,7 @@ export interface TravelDiary {
   createTime: string;
   status: 'pending' | 'approved' | 'rejected';
   rejectReason?: string;
-  content: string;
+  
   commentsData?: CommentsData[];
 }
 

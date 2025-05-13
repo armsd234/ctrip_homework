@@ -156,7 +156,7 @@
       "id": 5,
       "title": "纽约城市漫步",
       "content": "这里是度假的好去处。",
-      "coverImage": "https://picsum.photos/400/300?random=5",
+      "coverImage": "IMG_3355.jpg",
       "user": {
         "id": 5,
         "nickname": "城市探索者",
@@ -170,8 +170,9 @@
     },
     {
       "id": 6,
-      "title": "悉尼歌剧院：建筑与艺术的完美结合",
+      "title": "悉尼歌剧院：:建筑与艺术的完美结合",
       "content": "这里是度假的好去处。",
+      "type": "video",
       "coverImage": "https://picsum.photos/400/300?random=6",
       "user": {
         "id": 6,

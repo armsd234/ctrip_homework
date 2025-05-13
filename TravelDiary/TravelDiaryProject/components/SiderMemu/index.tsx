@@ -4,7 +4,7 @@ import { Ionicons, MaterialIcons, FontAwesome5, Entypo } from '@expo/vector-icon
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
 const { width } = Dimensions.get('window');
-const SIDEBAR_WIDTH = width * 0.75;
+const SIDEBAR_WIDTH = width * 0.65;
 
 const menuList = [
   { icon: <Ionicons name="person-add-outline" size={24} color="#222" />, label: '发现好友' },
@@ -49,8 +49,8 @@ export const SideMenu = ({ visible, onClose }: { visible: boolean, onClose: () =
       {visible && (
         <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose} />
       )}
-      <Animated.View style={[styles.sidebar, { left: anim, height: '100%' }]}>
-        <ScrollView>
+      <Animated.View style={[styles.sidebar, { left: anim, height: '110%',marginTop: 0 }]}>
+        <ScrollView style={{ marginTop: 60 }}>
           <View style={{ height: 40 }} />
           {menuList.map((item, idx) =>
             item.divider ? (
@@ -127,6 +127,7 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderTopWidth: 1,
     borderTopColor: '#eee',
+    marginBottom:30,
   },
   bottomMenuItem: {
     alignItems: 'center',
