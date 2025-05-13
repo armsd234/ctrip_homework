@@ -256,12 +256,14 @@ const styles = StyleSheet.create({
     },
   
     contentContainer: {
-      zIndex: 1,
-      position:'relative', // Needed for absolute positioning of icon
-      flex: 1, // <-- Allows this container to take up available vertical space in ContentSection
-      justifyContent: 'center', // <-- Centers content vertically within itself
-      alignItems: 'center', // <-- Centers content horizontally within itself
-      paddingVertical: 50, // Add some padding around the content
+      // zIndex: 1,
+      // position:'relative', // Needed for absolute positioning of icon
+      // flex: 1, // <-- Allows this container to take up available vertical space in ContentSection
+      // justifyContent: 'center', // <-- Centers content vertically within itself
+      // alignItems: 'center', // <-- Centers content horizontally within itself
+      // paddingVertical: 50, // Add some padding around the content
+      flex: 1,
+      width: Dimensions.get('window').width,
     },
   
     tabItem: {
@@ -367,6 +369,141 @@ const styles = StyleSheet.create({
       shadowRadius: 2.22,
       elevation: 3,
       marginBottom: 10, // Adjusted to position correctly relative to nav bar height
+    },
+    travelItem: {
+      flexDirection: 'row',
+      padding: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: '#eee',
+    },
+    travelImage: {
+      width: 100,
+      height: 100,
+      borderRadius: 8,
+    },
+    travelInfo: {
+      flex: 1,
+      marginLeft: 10,
+      justifyContent: 'space-between',
+    },
+    travelTitle: {
+      fontSize: 16,
+      fontWeight: '500',
+    },
+    travelStats: {
+      flexDirection: 'row',
+      marginTop: 5,
+    },
+    travelStat: {
+      marginRight: 15,
+      color: '#666',
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 20,
+    },
+    // 搜索框样式
+    searchWrapper: {
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 16,
+      backgroundColor: '#fff',
+      borderBottomWidth: 1,
+      borderBottomColor: '#f0f0f0',
+    },
+    searchBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#f8f8f8',
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: '#eaeaea',
+      height: 44,
+      paddingRight: 12,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 1,
+      },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    searchIconWrapper: {
+      paddingHorizontal: 14,
+      height: '100%',
+      justifyContent: 'center',
+    },
+    searchTextInput: {
+      flex: 1,
+      height: '100%',
+      fontSize: 15,
+      color: '#333',
+      paddingHorizontal: 8,
+      paddingVertical: 0,
+      outlineWidth: 0,
+      outlineColor: 'transparent',
+      boxShadow: 'none',
+    },
+    searchActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    searchClearBtn: {
+      padding: 6,
+      borderRadius: 12,
+      backgroundColor: '#f0f0f0',
+    },
+    searchButton: {
+      backgroundColor: ACCENT_COLOR,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 16,
+      shadowColor: ACCENT_COLOR,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    searchButtonText: {
+      color: 'white',
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    // contentContainer: {
+    //   flex: 1,
+    //   width: Dimensions.get('window').width,
+    // },
+    searchContainer: {
+      paddingHorizontal: 16,
+      paddingTop: 10,
+      paddingBottom: 12,
+      backgroundColor: '#fafafa',
+    },
+    searchInputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#f5f5f5',
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#e8e8e8',
+      height: 40,
+    },
+    searchIconContainer: {
+      paddingHorizontal: 12,
+      height: '100%',
+      justifyContent: 'center',
+    },
+    
+    clearButton: {
+      position: 'absolute',
+      right: 12,
+      padding: 4,
     },
   });
 export default styles;
