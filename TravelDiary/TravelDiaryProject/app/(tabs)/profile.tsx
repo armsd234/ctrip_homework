@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import TravelDiaryMasonry from '@/components/TravelDiaryMasonryCopy';
 import {TravelDiary} from '@/components/TravelDiaryMasonryCopy/types'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const PROFILE_SECTION_BG = '#4A4E69';
 const ACCENT_COLOR = '#F25F5C';
 
@@ -46,7 +47,7 @@ const ProfileScreen = () => {
     if (user?.user._id) {
       loadAllData();
     }
-  }, []);
+  }, [isReady, isAuthenticated]);
 
   useEffect(() => {
     if (isReady && !isAuthenticated) {
@@ -115,18 +116,16 @@ const ProfileScreen = () => {
 
       const newData = response.data.data;
       setHasMore(newData.length === 10);
+      
       switch (type) {
         case 'travels':
-          const updatedTravels = page === 1 ? newData : [...travels, ...newData];
-          setTravels(updatedTravels);
+          setFilteredTravels(prev => page === 1 ? newData : [...prev, ...newData]);
           break;
         case 'favorites':
-          const updatedFavorites = page === 1 ? newData : [...favorites, ...newData];
-          setFavorites(updatedFavorites);
+          setFilteredFavorites(prev => page === 1 ? newData : [...prev, ...newData]);
           break;
         case 'likes':
-          const updatedLikes = page === 1 ? newData : [...likes, ...newData];
-          setLikes(updatedLikes);
+          setFilteredLikes(prev => page === 1 ? newData : [...prev, ...newData]);
           break;
       }
     } catch (error) {
@@ -141,10 +140,7 @@ const ProfileScreen = () => {
     if (user?.user._id) {
       setPage(1);
       setHasMore(true);
-      console.log('favorites',favorites);
-      console.log('travels',travels);
-      console.log('likes',likes);
-      // loadMoreData(activeTab);
+      loadMoreData(activeTab);
     }
   }, [activeTab]);
 
@@ -183,6 +179,7 @@ const ProfileScreen = () => {
     user: any, 
     onUpdateAvatar: (uri: string) => void 
   }) => (
+    
     <View style={styles.userInfoSection}>
       <View style={styles.avatarContainer}>
         <ImageUpload

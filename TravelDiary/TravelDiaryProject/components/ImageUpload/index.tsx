@@ -12,9 +12,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { api } from '@/services/api';
+import CachedImage from '@/components/CachedImage';
 
 interface ImageUploadProps {
-    value?: string | number;
+    value?: string;
     onChange?: (filename: string) => void;
     style?: any;
     imageStyle?: any;
