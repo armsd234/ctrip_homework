@@ -258,4 +258,13 @@ const styles = StyleSheet.create({
       },
 });
 
-export default ImageUpload;
+// 添加比较函数，只在关键属性改变时重新渲染
+const areEqual = (prevProps: ImageUploadProps, nextProps: ImageUploadProps) => {
+    return (
+        prevProps.value === nextProps.value &&
+        prevProps.disabled === nextProps.disabled &&
+        prevProps.iscameraIcon === nextProps.iscameraIcon
+    );
+};
+
+export default React.memo(ImageUpload, areEqual);

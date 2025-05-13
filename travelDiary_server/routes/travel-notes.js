@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { TravelNote, ReviewLog, User, Favorite, Like } = require('../model');
+const { TravelNote, ReviewLog, User, Favorite, Like, Comment } = require('../model');
 const { auth, isAdmin, isReviewer } = require('../middleware/auth');
 
 // 获取游记列表(首页)
@@ -136,8 +136,7 @@ router.get('/:id', async (req, res) => {
     try {
         const note = await TravelNote.findById(req.params.id)
             .populate('author', 'nickname avatar')
-            .populate('likes', 'nickname avatar');
-
+            .populate('tags', 'name image suggestion url');
         if (!note || note.isDeleted) {
             return res.status(404).json({ message: '游记不存在' });
         }
@@ -146,8 +145,53 @@ router.get('/:id', async (req, res) => {
         note.views += 1;
         await note.save();
 
-        res.json(note);
+        const favoritesCount = await Favorite.countDocuments({ noteId: note._id });
+        const comments = await Comment.find({ noteId: note._id, isDeleted: false }).populate('author', 'nickname avatar');
+        const commentsData = comments.map(comment => {
+            return {
+                id: comment._id,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                user: {
+                    id: comment.author._id,
+                    nickname: comment.author.nickname,
+                    avatar: comment.author.avatar
+                },
+                likes: comment.likesCount,
+            };
+        });
+
+        const responseData = {
+            data: [{
+                id: note._id,
+                title: note.title,
+                When: note.when,
+                Days: note.days,
+                Money: note.money,
+                Who: note.who,
+                tags: note.tags,
+                content: note.content,
+                coverImage: note.images,
+                user: {
+                    id: note.author._id,
+                    nickname: note.author.nickname,
+                    avatar: note.author.avatar
+                },
+                likes: note.likes,
+                collects: favoritesCount,
+                comments: note.commentCount,
+                views: note.views,
+                location: note.location,
+                createTime: note.createdAt,
+                commentsData: commentsData,
+                video: note.video,
+                duration: '00:00:00'
+            }]
+        };
+
+        res.json(responseData);
     } catch (error) {
+        console.error('获取游记详情失败:', error);
         res.status(500).json({ message: '服务器错误' });
     }
 });

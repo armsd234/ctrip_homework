@@ -2,7 +2,7 @@ import { StyleSheet, View, ScrollView, Dimensions, Image, Pressable } from 'reac
 import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { TravelDiary, TravelDiaryMasonryProps } from './types';
-import { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { getTravelDiaries } from '@/services/travelDiaryService';
 import HomeBanner from '../HomeBanner';
 import { useEvent } from 'expo';
@@ -18,32 +18,24 @@ const formatDuration = (seconds: number) => {
   return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 };
 
-export default function TravelDiaryMasonry({
+const TravelDiaryMasonry = ({
   diaries = [],
   loading = false,
   onPressItem,
   onLoadMore,
   searching = false
-}: TravelDiaryMasonryProps) {
-  // const [diaries, setDiaries] = useState<TravelDiary[]>([]);
-  // const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const pageSize = 10;
-
+}: TravelDiaryMasonryProps) => {
   // 将数据分为左右两列
   const { leftColumn, rightColumn } = useMemo(() => {
     const left: TravelDiary[] = [];
     const right: TravelDiary[] = [];
 
-    // 计算每列当前高度
     let leftHeight = 0;
     let rightHeight = 0;
 
     diaries.forEach((diary) => {
-      // 根据当前列高度决定放入哪一列
       if (leftHeight <= rightHeight) {
         left.push(diary);
-        // 模拟计算卡片高度
         leftHeight += 250 + Math.random() * 100;
       } else {
         right.push(diary);
@@ -54,23 +46,22 @@ export default function TravelDiaryMasonry({
     return { leftColumn: left, rightColumn: right };
   }, [diaries]);
 
-  // 渲染单个游记卡片
-  const renderItem = (item: TravelDiary) => (
-
-    <Pressable style={styles.card} onPress={() => onPressItem?.(item)} >
-
+  // 使用useCallback优化渲染函数
+  const renderItem = useCallback((item: TravelDiary) => (
+    <Pressable style={styles.card} onPress={() => onPressItem?.(item)}>
       <Image
         source={Array.isArray(item.coverImage) ? { uri: item.coverImage[0] } : { uri: item.coverImage }}
         style={styles.coverImage}
         resizeMode="cover"
+        fadeDuration={0}
       />
-
       <View style={styles.cardContent}>
         <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
         <View style={styles.userInfo}>
           <Image
             source={{ uri: item.user.avatar }}
             style={styles.avatar}
+            fadeDuration={0}
           />
           <Text style={styles.nickname} numberOfLines={1}>{item.user.nickname}</Text>
           <View style={styles.statItem}>
@@ -80,26 +71,25 @@ export default function TravelDiaryMasonry({
         </View>
       </View>
     </Pressable>
-  );
+  ), [onPressItem]);
+
+  // 使用useCallback优化滚动处理函数
+  const handleScroll = useCallback(({ nativeEvent }: any) => {
+    const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+    const paddingToBottom = 20;
+    if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
+      onLoadMore?.();
+    }
+  }, [onLoadMore]);
 
   return (
     <ScrollView
       style={styles.container}
-      onScroll={({ nativeEvent }) => {
-        const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-        const paddingToBottom = 20;
-        // 判断是否滚动到底部
-        if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
-          onLoadMore?.();
-        }
-      }}
+      onScroll={handleScroll}
       scrollEventThrottle={400}
       showsVerticalScrollIndicator={false}
     >
-      {!searching &&
-        <View style={styles.banner}>
-        </View>}
-
+      {!searching && <View style={styles.banner} />}
       <View style={styles.columns}>
         <View style={styles.column}>
           {leftColumn.map((item) => (
@@ -123,7 +113,18 @@ export default function TravelDiaryMasonry({
       )}
     </ScrollView>
   );
-}
+};
+
+// 添加比较函数，只在必要时重新渲染
+const areEqual = (prevProps: TravelDiaryMasonryProps, nextProps: TravelDiaryMasonryProps) => {
+  return (
+    prevProps.diaries === nextProps.diaries &&
+    prevProps.loading === nextProps.loading &&
+    prevProps.searching === nextProps.searching
+  );
+};
+
+export default React.memo(TravelDiaryMasonry, areEqual);
 
 const styles = StyleSheet.create({
   container: {

@@ -28,7 +28,7 @@ interface CommentsData extends Comment {
 }
 
 export interface TravelDiary {
-  id: number;
+  id: string;
   title: string;
   content: string;
   coverImage?: string[]|string; //封面图片
@@ -41,7 +41,7 @@ export interface TravelDiary {
   Days?:string;
   Money?:string;
   user: {
-    id: number;
+    id: string;
     nickname: string;
     avatar: string;
   };

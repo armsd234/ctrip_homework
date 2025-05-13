@@ -1,7 +1,7 @@
 // 放在 App.tsx 或入口文件
 ;(React as any).useInsertionEffect = React.useLayoutEffect;
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, Dimensions, StatusBar, Share, FlatList, ActivityIndicator, Animated, StyleSheet, TextInput, Pressable } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import styles from '../../styles/profile.styles';
@@ -174,40 +174,52 @@ const ProfileScreen = () => {
     }
   }
 
-  // 使用React.memo优化UserInfoSection组件
+  // 使用useMemo缓存头像URL
   const UserInfoSection = React.memo(({ user, onUpdateAvatar }: { 
     user: any, 
     onUpdateAvatar: (uri: string) => void 
-  }) => (
-    
-    <View style={styles.userInfoSection}>
-      <View style={styles.avatarContainer}>
-        <ImageUpload
-          value={`http://localhost:5001/api/images/image?filename=${user?.user.avatar}`}
-          onChange={(filename) => { onUpdateAvatar(filename); }}
-          style={styles.avatarContainer}
-          imageStyle={styles.avatarInnerPlaceholder}
-          iscameraIcon={false}
-        />
-      </View>
+  }) => {
+    const avatarUrl = useMemo(() => {
+      return user?.user?.avatar ? `http://localhost:5001/api/images/image?filename=${user.user.avatar}` : undefined;
+    }, [user?.user?.avatar]);
 
-      <View style={styles.userDetails}>
-        <Text style={styles.userName}>{user?.user.nickname}</Text>
-        <View style={styles.userIdContainer}>
-          <Text style={styles.userId}>ID:{user?.user._id}</Text>
-          <TouchableOpacity onPress={() => {
-            if (user?.user._id) {
-              Share.share({
-                message: `User ID: ${user.user._id}`
-              });
-            }
-          }}>
-            <FontAwesome5 name="clone" size={12} color="#A9A9A9" style={{ marginLeft: 5 }} />
-          </TouchableOpacity>
+    return (
+      <View style={styles.userInfoSection}>
+        <View style={styles.avatarContainer}>
+          <ImageUpload
+            value={avatarUrl}
+            onChange={(filename) => { onUpdateAvatar(filename); }}
+            style={styles.avatarContainer}
+            imageStyle={styles.avatarInnerPlaceholder}
+            iscameraIcon={false}
+          />
+        </View>
+
+        <View style={styles.userDetails}>
+          <Text style={styles.userName}>{user?.user.nickname}</Text>
+          <View style={styles.userIdContainer}>
+            <Text style={styles.userId}>ID:{user?.user._id}</Text>
+            <TouchableOpacity onPress={() => {
+              if (user?.user._id) {
+                Share.share({
+                  message: `User ID: ${user.user._id}`
+                });
+              }
+            }}>
+              <FontAwesome5 name="clone" size={12} color="#A9A9A9" style={{ marginLeft: 5 }} />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
-  ));
+    );
+  }, (prevProps, nextProps) => {
+    // 只在用户信息真正改变时重新渲染
+    return (
+      prevProps.user?.user?.avatar === nextProps.user?.user?.avatar &&
+      prevProps.user?.user?.nickname === nextProps.user?.user?.nickname &&
+      prevProps.user?.user?._id === nextProps.user?.user?._id
+    );
+  });
 
   // 使用React.memo优化BioAndStats组件
   const BioAndStats = React.memo(({ user, onEditProfile }: { 
@@ -307,87 +319,99 @@ const ProfileScreen = () => {
     </View>
   ));
 
+  // 数据转换函数
+  const convertToTravelDiary = (data: any[]): TravelDiary[] => {
+    return data.map(item => ({
+      id: item._id, 
+      title: item.title,
+      content: item.content,
+      coverImage: item.images.map((image: any) => `http://localhost:5001/api/images/image?filename=${image}`), 
+      video: item.video,
+      duration: 0,
+      type: item.video ? 'video' : 'image',
+      tags: item.tags?.map((tag: string) => ({ id: tag, name: tag })) || [],
+      When: item.when,
+      Who: item.who,
+      Days: item.days,
+      Money: item.money,
+      user: {
+        id: item.author._id,
+        nickname: item.author.nickname,
+        avatar: `http://localhost:5001/api/images/image?filename=${item.author.avatar}`
+      },
+      likes: item.likesCount,
+      collects: item.favoriteCount,
+      comments: item.commentCount,
+      views: item.views,
+      location: item.location,
+      createTime: item.createdAt,
+      status: item.status as 'pending' | 'approved' | 'rejected',
+      rejectReason: item.rejectionReason
+    }));
+  };
 
-  // 修改Content组件，只对游记tab应用搜索过滤
+  // 优化Content组件
   const Content = React.memo(({ activeTab, loading, hasMore }: {
     activeTab: 'travels' | 'favorites' | 'likes',
     loading: boolean,
     hasMore: boolean
   }) => {
     const screenWidth = Dimensions.get('window').width;
-  
-    // 不要用 interpolate，直接用 slideAnim
     const animatedStyle = {
       transform: [{ translateX: slideAnim }],
       width: screenWidth,
     };
-  
-    let data: TravelDiary[] = [];
-    switch (activeTab) {
-      case 'travels':
-        data = convertToTravelDiary(filteredTravels);
-        break;
-      case 'favorites':
-        data = convertToTravelDiary(filteredFavorites);
-        break;
-      case 'likes':
-        data = convertToTravelDiary(filteredLikes);
-        break;
-    }
-    console.log(data);
-     // 数据格式转换函数
-     function convertToTravelDiary(data: any[]): TravelDiary[] {
-      return data.map(item => ({
-        id: item._id, 
-        title: item.title,
-        content: item.content,
-        coverImage: item.images.map((image: any) => `http://localhost:5001/api/images/image?filename=${image}`), 
-        video: item.video,
-        duration: 0, // 由于原数据没有duration字段，默认设为0
-        type: item.video ? 'video' : 'image', // 根据是否有video字段判断类型
-        tags: item.tags?.map((tag: string) => ({ id: tag, name: tag })) || [], // 转换tags格式
-        When: item.when,
-        Who: item.who,
-        Days: item.days,
-        Money: item.money,
-        user: {
-          id: item.author._id,
-          nickname: item.author.nickname,
-          avatar: `http://localhost:5001/api/images/image?filename=${item.author.avatar}`
-        },
-        likes: item.likesCount,
-        collects: item.favoriteCount,
-        comments: item.commentCount,
-        views: item.views,
-        location: item.location,
-        createTime: item.createdAt,
-        status: item.status as 'pending' | 'approved' | 'rejected',
-        rejectReason: item.rejectionReason
-      }));
-    }
-  const handlePressItem = (diary: TravelDiary) => {
-    router.push(`/diary-list/${diary.id}`);
-  };
-  const handleLoadMoreinner = useCallback(async () => {
-    if (loading || !hasMore) return;
-    setLoading(true);
-    setTimeout(() => {
-      setPage(prev => prev + 1);
-      loadMoreData(activeTab);
-      setLoading(false);
-    }, 1000);
-  }, [activeTab,page]);
-  
+
+    // 使用useMemo缓存数据转换结果
+    const data = useMemo(() => {
+      let sourceData: any[] = [];
+      switch (activeTab) {
+        case 'travels':
+          sourceData = filteredTravels;
+          break;
+        case 'favorites':
+          sourceData = filteredFavorites;
+          break;
+        case 'likes':
+          sourceData = filteredLikes;
+          break;
+      }
+      return convertToTravelDiary(sourceData);
+    }, [activeTab, filteredTravels, filteredFavorites, filteredLikes]);
+
+    const handleLoadMoreinner = useCallback(async () => {
+      if (loading || !hasMore) return;
+      setLoading(true);
+      setTimeout(() => {
+        setPage(prev => prev + 1);
+        loadMoreData(activeTab);
+        setLoading(false);
+      }, 1000);
+    }, [activeTab, page, loading, hasMore]);
+
+    const handlePressItem = useCallback((diary: TravelDiary) => {
+      router.push({
+        pathname: '/diary-listCopy/[id]',
+        params: { id: diary.id }
+      });
+    }, []);
+
     return (
       <Animated.View style={[styles.contentContainer, animatedStyle]}>
         <TravelDiaryMasonry
-            diaries={data}
-            loading={loading}
-            searching = {false}
-            onLoadMore={handleLoadMoreinner}
-            onPressItem={handlePressItem}
-          />
+          diaries={data}
+          loading={loading}
+          searching={false}
+          onLoadMore={handleLoadMoreinner}
+          onPressItem={handlePressItem}
+        />
       </Animated.View>
+    );
+  }, (prevProps, nextProps) => {
+    return (
+      prevProps.activeTab === nextProps.activeTab &&
+      prevProps.loading === nextProps.loading &&
+      prevProps.hasMore === nextProps.hasMore
     );
   });
 

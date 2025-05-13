@@ -85,7 +85,7 @@ const TravelNoteSchema = new mongoose.Schema({
   views: { type: Number, default: 0 }, // 浏览量
   commentCount: { type: Number, default: 0 }, // 评论数
 
-  likesCount: { type: Number, default: 0 }, // 点赞数
+  likes: { type: Number, default: 0 }, // 点赞数
 
   favoriteCount: { type: Number, default: 0 }, // 收藏数
 
