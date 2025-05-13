@@ -17,34 +17,37 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import MultiImageUpload from '@/components/MultiImageUpload';
 import VideoUpload from '@/components/VideoUpload';
+import { api } from '@/services/api';
+
+const maxTitleLength = 20;
+const maxContentLength = 100;
 
 export default function TravelPublishScreen() {
-    const [coverImage, setCoverImage] = useState<string | null>(null);
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
-      const [videoFilenames, setVideoFilenames] = useState<string[]>([]);
-    
+    const [videoFilename, setVideoFilename] = useState<string>('');
 
-    const [location, setLocation] = useState('');
-    const [date, setDate] = useState(new Date());
-    const [showDatePicker, setShowDatePicker] = useState(false);
-    const [cost, setCost] = useState('');
-    const [companions, setCompanions] = useState('');
-
-    const pickImage = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            quality: 0.7,
-        });
-
-        if (!result.canceled) {
-            setCoverImage(result.assets[0].uri);
+    const handlePublish = async () => {
+        if (!title || !content) {
+            Alert.alert('提示', '标题和内容不能为空');
+            return;
         }
-    };
-
-    const handlePublish = () => {
-        console.log('发布内容：', { title, content, coverImage, location, date, cost, companions });
-        // 这里可上传到服务器或数据库
+        if (videoFilename === '') {
+            Alert.alert('提示', '请上传视频');
+            return;
+        }
+        const noteData = { title, content, video: videoFilename };
+        console.log('发布内容：', noteData);
+        try {
+            const response = await api.post('/api/travel-notes/', noteData);
+            if (response.status === 201) {
+                router.push('/(tabs)/mydiary');
+                alert('游记创建成功');
+            }
+        } catch (error) {
+            console.error('保存失败:', error);
+            alert('游记创建失败');
+        }
     };
 
     return (
@@ -57,31 +60,38 @@ export default function TravelPublishScreen() {
             </View>
 
             <ScrollView>
-
                 <View>
-                    {/* <VideoUpload /> */}
-                    <VideoUpload 
-          onUploadSuccess={(filename) => {
-            setVideoFilenames(filename);
-            console.log('上传成功:', filename);
-            Alert.alert('提示', `视频已上传`);
-          }}
-          onUploadError={(error) => {
-            Alert.alert('上传失败', error.message);
-          }}
-          />
+                    <VideoUpload
+                        onUploadSuccess={(filename) => {
+                            setVideoFilename(filename);
+                            console.log('上传成功:', filename);
+                            Alert.alert('提示', `视频已上传`);
+                        }}
+                        onUploadError={(error) => {
+                            Alert.alert('上传失败', error.message);
+                        }}
+                    />
                 </View>
 
                 <View style={styles.container}>
-
-                    {/* 标题 */}
-                    <TextInput
-                        style={styles.inputTitle}
-                        placeholder="添加标题"
-                        placeholderTextColor="#999"
-                        value={title}
-                        onChangeText={setTitle}
-                    />
+                    {/* 标题输入 */}
+                    <View style={styles.inputContainer}>
+                        <TextInput
+                            style={styles.inputTitle}
+                            placeholder="添加标题"
+                            placeholderTextColor="#999"
+                            value={title}
+                            onChangeText={(text) => {
+                                if (text.length <= maxTitleLength) {
+                                    setTitle(text);
+                                }
+                            }}
+                            maxLength={maxTitleLength}
+                        />
+                        <Text style={styles.charCount}>
+                            {title.length}/{maxTitleLength}
+                        </Text>
+                    </View>
 
                     {/* 正文内容 */}
                     <TextInput
@@ -89,66 +99,14 @@ export default function TravelPublishScreen() {
                         placeholder="记录你的旅行故事..."
                         placeholderTextColor="#999"
                         value={content}
-                        onChangeText={setContent}
+                        onChangeText={(text) => {
+                            if (text.length <= maxContentLength) {
+                                setContent(text);
+                            }
+                        }}
                         multiline
+                        maxLength={maxContentLength}
                     />
-
-                    {/* 地点 */}
-                    <View style={styles.formItem}>
-                        <Ionicons name="location-outline" size={20} color="#555" />
-                        <TextInput
-                            style={styles.formInput}
-                            placeholder="添加地点或线路"
-                            placeholderTextColor="#999"
-                            value={location}
-                            onChangeText={setLocation}
-                        />
-                    </View>
-
-                    {/* 出发时间 */}
-                    <Pressable style={styles.formItem} onPress={() => setShowDatePicker(true)}>
-                        <Ionicons name="calendar-outline" size={20} color="#555" />
-                        <Text style={styles.formInput}>
-                            出发日期：{date.toLocaleDateString()}
-                        </Text>
-                    </Pressable>
-
-                    {showDatePicker && (
-                        <DateTimePicker
-                            value={date}
-                            mode="date"
-                            display="default"
-                            onChange={(_, selectedDate) => {
-                                setShowDatePicker(false);
-                                if (selectedDate) setDate(selectedDate);
-                            }}
-                        />
-                    )}
-
-                    {/* 人均花费 */}
-                    <View style={styles.formItem}>
-                        <Ionicons name="cash-outline" size={20} color="#555" />
-                        <TextInput
-                            style={styles.formInput}
-                            placeholder="人均花费（元）"
-                            placeholderTextColor="#999"
-                            keyboardType="numeric"
-                            value={cost}
-                            onChangeText={setCost}
-                        />
-                    </View>
-
-                    {/* 出行人 */}
-                    <View style={styles.formItem}>
-                        <Ionicons name="people-outline" size={20} color="#555" />
-                        <TextInput
-                            style={styles.formInput}
-                            placeholder="和谁出行（如：朋友、家人、独自等）"
-                            placeholderTextColor="#999"
-                            value={companions}
-                            onChangeText={setCompanions}
-                        />
-                    </View>
                 </View>
             </ScrollView>
 
@@ -166,7 +124,6 @@ export default function TravelPublishScreen() {
         </SafeAreaView>
     );
 }
-
 
 const styles = StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: 'white' },
@@ -216,23 +173,6 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         resizeMode: 'cover',
     },
-    inputTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        borderBottomWidth: 1,
-        borderColor: '#eee',
-        paddingVertical: 8,
-        marginBottom: 12,
-    },
-    inputContent: {
-        fontSize: 15,
-        minHeight: 120,
-        textAlignVertical: 'top',
-        padding: 10,
-        backgroundColor: '#f7f7f7',
-        borderRadius: 8,
-        marginBottom: 16,
-    },
     formItem: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -269,5 +209,38 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: 'bold',
         fontSize: 16,
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
+        borderBottomWidth: 1,
+        borderColor: '#ddd',
+    },
+    inputTitle: {
+        fontSize: 18,
+        padding: 12,
+        marginRight: 30,
+        fontWeight: 'bold',
+        borderRadius: 6,
+        paddingVertical: 8,
+    },
+    inputContent: {
+        flex: 1,
+        fontSize: 16,
+        // height: 200,
+        padding: 12,
+        // borderWidth: 1,
+        // borderColor: '#ddd',
+        borderRadius: 6,
+        textAlignVertical: 'top',
+    },
+    charCount: {
+        textAlign: 'right',
+        color: '#999',
+        fontSize: 12,
+        marginTop: 4,
+        right: 0,
+        position: 'absolute',
     },
 });

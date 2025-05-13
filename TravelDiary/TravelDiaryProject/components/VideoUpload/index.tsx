@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -9,13 +9,12 @@ import { useEvent } from 'expo';
 import { decode } from 'base-64';
 
 const { width } = Dimensions.get('window');
-const videoSource = require('../../assets/images/IMG_3528.mp4'); // 本地视频文件路径
 
 export default function VideoUploader({
   onUploadSuccess,
   onUploadError,
 }: {
-  onUploadSuccess: (filename: string[]) => void;
+  onUploadSuccess: (filename: string) => void;
   onUploadError?: (error: Error) => void;
 }) {
   const [video, setVideo] = useState<{ uri: string } | null>(null);
@@ -23,15 +22,18 @@ export default function VideoUploader({
   const [uploaded, setUploaded] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const player = useVideoPlayer(video?.uri || videoSource, player => {
+  useEffect(() => {
+  console.log('当前上传状态:', uploading);
+}, [uploading]);
+
+  const videoSource = `http://localhost:5001/api/images/video?filename=${video?.uri}`;
+  const player = useVideoPlayer(videoSource, player => {
     player.loop = true;
     player.play();
   });
 
-  const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
-
-
   const selectVideo = async () => {
+    setUploading(true);
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Videos,
       allowsEditing: false,
@@ -39,24 +41,13 @@ export default function VideoUploader({
     });
 
     if (!result.canceled) {
-      // const video = ;
       await uploadVideo(result.assets[0]);
-      // console.log(result);
-      // // return video;
-      // setVideo({ uri: video.uri });
-
-    };
+    } else {
+      setUploading(false);    
+    }
   }
 
   const uploadVideo = async (videoAsset: ImagePicker.ImagePickerAsset) => {
-    // if (!video) {
-    //   alert('请先选择视频');
-    //   return;
-    // }
-
-    setUploading(true);
-    console.log('1');
-    
     const formData = new FormData();
     const base64Data = videoAsset.uri.split(',')[1];
     const mimeType = videoAsset.mimeType || 'video/mp4';
@@ -87,21 +78,20 @@ export default function VideoUploader({
       type: videoAsset.mimeType || 'video/mp4',
     } as any);
     console.log('formData', formData.get('video'));
-    
 
     try {
       const response = await api.post('/api/images/video', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          // 'Accept': 'application/json',
         },
       });
 
       console.log('上传响应:', response.data);
 
       if (response.data) {
-        const filename = response.data.filename; // 假设服务器返回的文件名在响应数据中
+        const filename = response.data.filename;
         onUploadSuccess(filename);
+        setVideo({ uri: filename });
         setUploaded(true);
         // alert('上传成功！');
       }
@@ -172,13 +162,15 @@ export default function VideoUploader({
         //   <Text style={styles.buttonText}>选择视频</Text>
         // </TouchableOpacity>
         <View style={styles.uploadItem}>
-          <TouchableOpacity style={styles.uploadButton} onPress={selectVideo}>
-            <Ionicons name="add" size={32} color="#666" />
+          <TouchableOpacity onPress={selectVideo}>
             {
               uploading ? (
                 <Text style={styles.uploadText}>上传中...</Text>
               ) : (
-                <Text style={styles.uploadText}>上传视频</Text>
+                <View style={styles.uploadButton}>
+                  <Ionicons name="add" size={40} color="#666" />
+                  <Text style={styles.uploadText}>上传视频</Text>
+                </View>
               )
             }
           </TouchableOpacity>
@@ -197,7 +189,7 @@ const styles = StyleSheet.create({
   },
   uploadItem: {
     width: width - 32,
-    height: 100,
+    height: width / 2,
     backgroundColor: '#f5f5f5',
     borderRadius: 20,
     overflow: 'hidden',
@@ -207,7 +199,7 @@ const styles = StyleSheet.create({
   },
   uploadButton: {
     width: width - 32,
-    height: 100,
+    height: width / 2,
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
@@ -219,13 +211,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   uploadText: {
-    fontSize: 12,
+    fontSize: 16,
     color: '#666',
     marginTop: 5,
   },
   videoContainer: {
     width: width - 32,
-    height: 200,
+    height: width / 2,
     borderRadius: 20,
     margin: 16
   },
