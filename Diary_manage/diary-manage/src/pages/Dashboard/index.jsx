@@ -9,6 +9,18 @@ import DiaryCard from '../../components/diaryCard';
 const { Option } = Select;
 const { Paragraph } = Typography;
 
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const h = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    const s = String(d.getSeconds()).padStart(2, '0');
+    return `${y}/${m}/${day} ${h}:${min}:${s}`;
+}
+
 const Dashboard = () => {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState([]);
@@ -30,7 +42,7 @@ const Dashboard = () => {
         setLoading(true);
         try {
             const { current, pageSize } = params.page ? params : { current: 1, pageSize: 10 };
-            
+
             const response = await getDiaryList({
                 page: current,
                 pageSize,
@@ -45,7 +57,7 @@ const Dashboard = () => {
                 ...(params.page ? { current: params.page } : {}),
                 ...(params.pageSize ? { pageSize: params.pageSize } : {})
             }));
-            
+
         } catch (error) {
             message.error('获取数据失败');
         }
@@ -108,96 +120,75 @@ const Dashboard = () => {
 
     const columns = [
         {
+            title: '作者',
+            dataIndex: ['author', 'nickname'],
+            key: 'author',
+            width: 180,
+            style: { fontSize: '18px' },
+        },
+        {
             title: '内容预览',
             key: 'preview',
             render: (_, record) => (
                 <DiaryCard
+                    onViewDetail={() => handleViewDetail(record)}
                     title={record.title}
                     image={record.images && record.images.length > 0 ? record.images[0] : ''}
                     content={record.content}
                     video={record.video}
+                    status={record.status}
+                    createdAt={record.createdAt}
+                    onApprove={() => handleApprove(record)}
+                    onReject={() => {
+                        setSelectedDiary(record);
+                        setRejectModalVisible(true);
+                    }}
+                    onDelete={() => handleDelete(record)}
+                    canDelete={user?.user.user.role === 'admin'}
+                    canAudit={user?.user.user.role === 'reviewer' || user?.user.user.role === 'admin'}
                 />
             ),
         },
-        {
-            title: '作者',
-            dataIndex: ['author', 'nickname'],
-            key: 'author',
-            width: 120,
-        },
+
         {
             title: '状态',
             dataIndex: 'status',
             key: 'status',
-            width: 100,
+            width: 120,
             render: (status) => {
                 const statusMap = {
-                    pending: { text: '待审核', color: 'orange' },
-                    approved: { text: '已通过', color: 'green' },
-                    rejected: { text: '未通过', color: 'red' },
-                    deleted: { text: '已删除', color: 'gray' },
+                    pending: { text: '待审核', color: '#faad14' },
+                    approved: { text: '已通过', color: '#52c41a' },
+                    rejected: { text: '未通过', color: '#ff4d4f' },
+                    deleted: { text: '已删除', color: '#aaa' },
                 };
+                const statusObj = statusMap[status] || statusMap['pending'];
+
                 return (
-                    <span style={{ color: statusMap[status].color }}>
-                        {statusMap[status].text}
-                    </span>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div
+                            style={{
+                                width: 60,
+                                height: 60,
+                                borderRadius: '50%',
+                                border: `3px solid ${statusObj.color}`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: statusObj.color,
+                                fontWeight: 500,
+                                fontSize: 18,
+                                background: '#fff',
+                            }}
+                        >
+                            {statusObj.text}
+                        </div>
+                    </div>
                 );
             },
         },
-        {
-            title: '发布时间',
-            dataIndex: 'createdAt',
-            key: 'createdAt',
-            width: 180,
-        },
-        {
-            title: '操作',
-            key: 'action',
-            fixed: 'right',
-            width: 200,
-
-            render: (_, record) => (
-                <Space size="middle">
-                    <Button
-                        type="primary"
-                        icon={<EyeOutlined />}
-                        onClick={() => handleViewDetail(record)}
-                    >
-                        查看
-                    </Button>
-                    {record.status === 'pending' && (
-                        <>
-                            <Button
-                                type="primary"
-                                icon={<CheckOutlined />}
-                                onClick={() => handleApprove(record)}
-                            >
-                                通过
-                            </Button>
-                            <Button
-                                danger
-                                icon={<CloseOutlined />}
-                                onClick={() => {
-                                    setSelectedDiary(record);
-                                    setRejectModalVisible(true);
-                                }}
-                            >
-                                拒绝
-                            </Button>
-                        </>
-                    )}
-                    {user?.user.user.role === 'admin' && (
-                        <Button
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={() => handleDelete(record)}
-                        >
-                            删除
-                        </Button>
-                    )}
-                </Space>
-            ),
-        },
+        
     ];
 
     return (
@@ -278,18 +269,30 @@ const Dashboard = () => {
                         <h2>{selectedDiaryDetail.title}</h2>
                         <div className={styles.authorInfo}>
                             <span>作者：{selectedDiaryDetail.author?.nickname}</span>
-                            <span>发布时间：{selectedDiaryDetail.createdAt}</span>
+                            <span>发布时间：{formatDate(selectedDiaryDetail.createdAt)}</span>
                         </div>
-                        <div className={styles.imageGallery}>
-                            {selectedDiaryDetail.images?.map((image, index) => (
-                                <Image
-                                    key={index}
-                                    src={image}
-                                    alt={`图片 ${index + 1}`}
-                                    width={200}
-                                    style={{ margin: '8px' }}
-                                />
-                            ))}
+                        <div className={styles.imageGallery} style={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>
+                            {selectedDiaryDetail.video ? (
+                                <>
+                                    <video
+                                        src={`http://localhost:5001/api/images/video?filename=${selectedDiaryDetail.video}`}
+                                        controls
+                                        className={styles.coverVideo}
+                                        style={{ zIndex: 2 }}
+                                        onClick={e => e.stopPropagation()}
+                                    />
+                                </>
+                            ) : (
+                                selectedDiaryDetail.images?.map((image, index) => (
+                                    <span key={index} style={{ display: 'inline-block' }}>
+                                        <Image
+                                            src={`http://localhost:5001/api/images/image?filename=${image}`}
+                                            alt={`图片 ${image}`}
+                                            width={200}
+                                            style={{ margin: '8px' }}
+                                        />
+                                    </span>
+                                )))}
                         </div>
                         <div className={styles.content}>
                             <Paragraph>{selectedDiaryDetail.content}</Paragraph>
@@ -307,4 +310,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard; 
+export default Dashboard;

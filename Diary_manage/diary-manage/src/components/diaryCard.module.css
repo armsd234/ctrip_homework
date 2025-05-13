@@ -2,7 +2,7 @@
   display: flex;
   align-items: flex-start;
   padding: 12px 0;
-  max-width: 500px;
+  max-width: 1200px;
 }
 
 .imageBox {
@@ -49,6 +49,7 @@
   line-height: 1.6;
   margin-bottom: 0;
   word-break: break-all;
+  min-width: 400px;
   
 }
 

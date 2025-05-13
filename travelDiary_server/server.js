@@ -113,6 +113,7 @@ async function initializeDatabase() {
 
             // 创建收藏默认数据
             const favorites = await Favorite.create([
+                { userId: users[0]._id, noteId: travelNotes[0]._id },
                 { userId: users[1]._id, noteId: travelNotes[0]._id },
                 { userId: users[2]._id, noteId: travelNotes[1]._id }
             ]);
@@ -120,6 +121,7 @@ async function initializeDatabase() {
 
             // 创建点赞默认数据
             const likes = await Like.create([
+                { userId: users[0]._id, noteId: travelNotes[0]._id },
                 { userId: users[1]._id, noteId: travelNotes[0]._id },
                 { userId: users[2]._id, noteId: travelNotes[1]._id }
             ]);

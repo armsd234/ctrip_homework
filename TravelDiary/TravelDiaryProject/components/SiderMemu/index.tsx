@@ -49,7 +49,7 @@ export const SideMenu = ({ visible, onClose }: { visible: boolean, onClose: () =
       {visible && (
         <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose} />
       )}
-      <Animated.View style={[styles.sidebar, { left: anim }]}>
+      <Animated.View style={[styles.sidebar, { left: anim, height: '100%' }]}>
         <ScrollView>
           <View style={{ height: 40 }} />
           {menuList.map((item, idx) =>

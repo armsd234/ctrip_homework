@@ -1,10 +1,37 @@
 import React, { useState, useRef } from 'react';
-import { Typography } from 'antd';
+import { Typography, Button, Popconfirm } from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';
 import styles from './diaryCard.module.css';
 
 const { Title, Paragraph } = Typography;
 
-const DiaryCard = ({ title, image, content, video }) => {
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const h = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    const s = String(d.getSeconds()).padStart(2, '0');
+    return `${y}/${m}/${day} ${h}:${min}:${s}`;
+}
+
+const DiaryCard = ({
+    id,
+    title,
+    image,
+    content,
+    video,
+    status,
+    createdAt,
+    onApprove,
+    onReject,
+    onDelete,
+    canDelete,
+    canAudit,
+    onViewDetail
+}) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [hover, setHover] = useState(false);
     const videoRef = useRef(null);
@@ -39,8 +66,10 @@ const DiaryCard = ({ title, image, content, video }) => {
     const handleVideoPlay = () => setIsPlaying(true);
     const handleVideoPause = () => setIsPlaying(false);
 
+
+
     return (
-        <div className={styles.cardWrapper}>
+        <div className={styles.cardWrapper} >
             <div
                 className={styles.imageBox}
                 style={{ position: 'relative' }}
@@ -96,8 +125,26 @@ const DiaryCard = ({ title, image, content, video }) => {
                 )}
             </div>
             <div className={styles.contentBox}>
-                <Title level={4} className={styles.title}>{title}</Title>
-                <Paragraph className={styles.previewText} ellipsis={{ rows: 3, tooltip: true }}>{content}</Paragraph>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} >
+                    <div onClick={() => onViewDetail && onViewDetail()}>
+                        <Title level={4} className={styles.title}>{title}</Title>
+                        <Paragraph className={styles.previewText} ellipsis={{ rows: 2, tooltip: true }}>{content}</Paragraph>
+                        <div className={styles.timeText}>{formatDate(createdAt)}</div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: 90 }}>
+                        {canAudit && status === 'pending' && (
+                            <div style={{ marginRight: 12 }}>
+                                <Button type="primary" style={{ marginRight: 8, fontSize: 22, padding: '8px 16px' }} onClick={onApprove}>通过</Button>
+                                <Button style={{ fontSize: 22, padding: '8px 16px' }} onClick={onReject}>拒绝</Button>
+                            </div>
+                        )}
+                        {canDelete && status !== 'deleted' && (
+                            <Popconfirm title="确定删除吗？" onConfirm={onDelete} okText="删除" cancelText="取消">
+                                <Button type="text" danger icon={<DeleteOutlined />} style={{ fontSize: 32, padding: '8px' }} />
+                            </Popconfirm>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );

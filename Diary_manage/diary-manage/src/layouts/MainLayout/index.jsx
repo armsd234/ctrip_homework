@@ -83,7 +83,19 @@ const MainLayout = ({ children }) => {
 
     return (
         <Layout className={styles.layout}>
-            <Sider trigger={null} collapsible collapsed={collapsed}>
+            <Sider
+                trigger={null}
+                collapsible
+                collapsed={collapsed}
+                style={{
+                    overflow: 'auto',
+                    height: '100vh',
+                    position: 'fixed',
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                }}
+            >
                 <div className={styles.logo}>后台管理</div>
                 <Menu
                     theme="dark"
@@ -93,7 +105,7 @@ const MainLayout = ({ children }) => {
                     onClick={({ key }) => navigate(key)}
                 />
             </Sider>
-            <Layout>
+            <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'margin-left 0.2s' }}>
                 <Header className={styles.header}>
                     <Button
                         type="text"

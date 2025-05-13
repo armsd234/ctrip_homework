@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { TravelNote, ReviewLog, User } = require('../model');
+const { TravelNote, ReviewLog, User,Favorite,Like } = require('../model');
 const { auth, isAdmin, isReviewer } = require('../middleware/auth');
 
 // 获取游记列表(首页)
@@ -355,5 +355,107 @@ router.delete('/:id', auth, async (req, res) => {
         res.status(500).json({ message: '服务器错误' });
     }
 });
+
+
+// 获取用户的游记列表
+router.get('/user/:userId', async (req, res) => {
+    try {
+        const { page = 1, limit = 10 } = req.query;
+        const skip = (page - 1) * limit;
+
+        const query = {
+            author: req.params.userId,
+            isDeleted: false
+        };
+
+        const [notes, total] = await Promise.all([
+            TravelNote.find(query)
+                .populate('author', 'nickname avatar')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            TravelNote.countDocuments(query)
+        ]);
+
+        res.json({
+            data: notes,
+            total,
+            page: parseInt(page),
+            limit: parseInt(limit)
+        });
+    } catch (error) {
+        res.status(500).json({ message: '服务器错误' });
+    }
+});
+
+// 获取用户收藏的游记列表
+router.get('/favorites/:userId', async (req, res) => {
+    try {
+        const { page = 1, limit = 10 } = req.query;
+        const skip = (page - 1) * limit;
+
+        const [favorites, total] = await Promise.all([
+            Favorite.find({ userId: req.params.userId })
+                .populate({
+                    path: 'noteId',
+                    populate: {
+                        path: 'author',
+                        select: 'nickname avatar'
+                    }
+                })
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Favorite.countDocuments({ userId: req.params.userId })
+        ]);
+
+        const notes = favorites.map(fav => fav.noteId).filter(note => note && !note.isDeleted);
+        
+        res.json({
+            data: notes,
+            total,
+            page: parseInt(page),
+            limit: parseInt(limit)
+        });
+        console.log('ghhj',notes);
+    } catch (error) {
+        res.status(500).json({ message: '服务器错误' });
+    }
+});
+
+// 获取用户点赞的游记列表
+router.get('/likes/:userId', async (req, res) => {
+    try {
+        const { page = 1, limit = 10 } = req.query;
+        const skip = (page - 1) * limit;
+
+        const [likes, total] = await Promise.all([
+            Like.find({ userId: req.params.userId })
+                .populate({
+                    path: 'noteId',
+                    populate: {
+                        path: 'author',
+                        select: 'nickname avatar'
+                    }
+                })
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Like.countDocuments({ userId: req.params.userId })
+        ]);
+
+        const notes = likes.map(like => like.noteId).filter(note => note && !note.isDeleted);
+
+        res.json({
+            data: notes,
+            total,
+            page: parseInt(page),
+            limit: parseInt(limit)
+        });
+    } catch (error) {
+        res.status(500).json({ message: '服务器错误' });
+    }
+});
+
 
 module.exports = router;
