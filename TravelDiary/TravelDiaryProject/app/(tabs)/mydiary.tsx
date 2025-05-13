@@ -7,6 +7,7 @@ import StatusFilter from '@/components/StatusFilter';
 import DiaryCard from '@/components/DiaryCard';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { api } from '@/services/api';
 
 // 模拟当前登录用户
 const CURRENT_USER_ID = 1;
@@ -23,19 +24,31 @@ export default function MyDiaryScreen() {
 
   const handlePressDiary = (diary: TravelDiary) => {
     router.push(`/diary/${diary.id}`);
+    console.log('查看游记:', diary.id);
   };
 
   const handleEditDiary = (diary: TravelDiary) => {
     console.log('编辑游记:', diary.id);
+    // router.push(`/diary/${diary.id}/edit`);
+    // 未完成！！！
   };
 
-  const handleDeleteDiary = (diary: TravelDiary) => {
-    console.log('删除游记:', diary.id);
-  };
-
-  // const handleSearchSubmit = () => {
-  //   router.push(`/publish`);
-  // };
+  const handleDeleteDiary = async(id: number) => {
+      try {
+        const response = await api.post(`/api/travel-notes/:${id}`, {
+          method: 'DELETE',
+        });
+        console.log('删除:', response);
+  
+        if (response.status === 201) {
+          alert('游记已删除');
+          router.push('/mydiary');
+        }
+      } catch (error) {
+        console.error('删除失败:', error);
+        alert('游记删除失败');
+      }
+    };
 
   return (
      <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -56,7 +69,7 @@ export default function MyDiaryScreen() {
               diary={diary}
               onPress={handlePressDiary}
               onEdit={handleEditDiary}
-              onDelete={handleDeleteDiary}
+              onDelete={()=>handleDeleteDiary(diary.id)}
             />
           </View>
         ))}
