@@ -1,19 +1,79 @@
 .container {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f0f2f5;
+  overflow: hidden;
+}
+
+.videoBackground {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 添加一个遮罩层，使背景不那么显眼 */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1;
+  pointer-events: none;
 }
 
 .loginCard {
+  position: relative;
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  border: none !important;
+  z-index: 2;
+}
+
+.loginCard :global(.ant-card-head) {
+  background: transparent !important;
+  border-bottom: none !important;
 }
 
 .loginCard :global(.ant-card-head-title) {
   text-align: center;
-  font-size: 24px;
+  font-size: 28px;
   font-weight: bold;
+  color: #1890ff;
+}
+
+.loginCard :global(.ant-input-affix-wrapper) {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(24, 144, 255, 0.3) !important;
+}
+
+.loginCard :global(.ant-input-affix-wrapper:hover),
+.loginCard :global(.ant-input-affix-wrapper:focus) {
+  border-color: #1890ff !important;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+}
+
+.loginCard :global(.ant-btn) {
+  height: 40px;
+  font-size: 16px;
+  background: #1890ff;
+  border: none;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.045);
+}
+
+.loginCard :global(.ant-btn:hover) {
+  background: #40a9ff;
+  transform: translateY(-1px);
+  transition: all 0.3s;
 } 

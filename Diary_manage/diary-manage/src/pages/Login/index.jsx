@@ -5,19 +5,18 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { login } from '../../store/slices/authSlice';
 import styles from './index.module.css';
+import backgroundVideo from '../../assets/videos/background.gif';
 
 const Login = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [form] = Form.useForm();
 
-
     const onFinish = async (values) => {
         try {
             await dispatch(login(values)).unwrap();
             message.success('登录成功');
             navigate('/');
-
         } catch (error) {
             message.error(error.message || '登录失败');
         }
@@ -25,6 +24,12 @@ const Login = () => {
 
     return (
         <div className={styles.container}>
+            <img
+                src={backgroundVideo}
+                alt="background"
+                className={styles.videoBackground}
+            />
+            <div className={styles.overlay} />
             <Card title="审核管理系统" className={styles.loginCard}>
                 <Form
                     form={form}
@@ -54,7 +59,7 @@ const Login = () => {
                     </Form.Item>
 
                     <Form.Item>
-                        <Button type="primary" htmlType="submit" block >
+                        <Button type="primary" htmlType="submit" block>
                             登录
                         </Button>
                     </Form.Item>
