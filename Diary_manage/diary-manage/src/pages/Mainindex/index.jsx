@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { UserOutlined, FileOutlined, EyeOutlined, FlagOutlined, FileTextOutlined, LikeOutlined, StarOutlined, CommentOutlined, AlertOutlined } from '@ant-design/icons';
+import { UserOutlined, FileOutlined, EyeOutlined, FlagOutlined, LikeOutlined } from '@ant-design/icons';
 import { DatePicker } from 'antd';
 import { useCallback } from 'react';
 import { message } from 'antd';
 import { getStatistics } from '../../services/api';
-import { Card, Row, Col, Statistic, Table, Avatar } from 'antd';
-import { DualAxes } from '@ant-design/plots';
+import { Table, Avatar } from 'antd';
+// import { DualAxes } from '@ant-design/plots';
+import DualAxesChart from '../../components/mychart'
 
 import {
     Chart as ChartJS,
@@ -42,7 +43,6 @@ const Mainindex = () => {
         try {
             const response = await getStatistics({ ...searchTime });
             setData(response.data);
-            console.log('获取数据成功response.data：', response.data);
         } catch (error) {
             message.error('获取数据失败');
         }
@@ -140,107 +140,6 @@ const Mainindex = () => {
         marginBottom: '20px',
     };
 
-    // 准备图表数据
-    const transformData = () => {
-        if (!data.newUserPerDay || !data.newTravelNotePerDay) return { barData: [], lineData: [] };
-
-        // 处理柱状图数据
-        const barData = [];
-        data.newUserPerDay.forEach((item, index) => {
-            barData.push({
-                date: item.date,
-                type: '新用户',
-                count: item.count
-            });
-            barData.push({
-                date: item.date,
-                type: '新笔记',
-                count: data.newTravelNotePerDay[index].count
-            });
-        });
-
-        // 处理折线图数据 - 使用总访问量
-        const lineData = data.newUserPerDay.map(item => ({
-            date: item.date,
-            访问量: data.totalViews || 0
-        }));
-
-        console.log('barData', barData);
-        console.log('lineData', lineData);
-        return { barData, lineData };
-    };
-
-    const { barData, lineData } = transformData();
-
-    // 每日统计图表配置
-    const dailyStatConfig = {
-        data: [barData, lineData],
-        xField: 'date',
-        yField: ['count', '访问量'],
-        geometryOptions: [
-            {
-                geometry: 'column',
-                isGroup: true,
-                seriesField: 'type',
-                columnWidthRatio: 0.6,
-                color: ['#7B9FF2', '#98D283'],
-            },
-            {
-                geometry: 'line',
-                smooth: true,
-                color: '#FFCD56',
-                lineStyle: {
-                    lineWidth: 2,
-                },
-                point: {
-                    size: 3,
-                    shape: 'circle',
-                    style: {
-                        fill: '#FFCD56',
-                        stroke: '#FFCD56',
-                    },
-                },
-            },
-        ],
-        yAxis: {
-            count: {
-                min: 0,
-                title: {
-                    text: '数量',
-                    style: {
-                        fontSize: 12,
-                    },
-                },
-                grid: {
-                    line: {
-                        style: {
-                            stroke: '#E5E5E5',
-                            lineWidth: 1,
-                            lineDash: [4, 4],
-                        },
-                    },
-                },
-            },
-            访问量: {
-                min: 0,
-                title: {
-                    text: '访问量',
-                    style: {
-                        fontSize: 12,
-                    },
-                },
-                position: 'right',
-            },
-        },
-        animation: false,
-        legend: {
-            position: 'top',
-        },
-        tooltip: {
-            shared: true,
-        },
-    };
-
     // 热门笔记表格列配置
     const columns = [
         {
@@ -299,11 +198,10 @@ const Mainindex = () => {
 
     return (
         <div style={containerStyle}>
-
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h1 style={{ fontSize: '24px', margin: 0, color: '#333' }}>仪表盘</h1>
 
-                <DatePicker.RangePicker onChange={(dates) => { if (dates) { setsearchTime({ startDate: dates[0], endDate: dates[1] }); } }} />
+                {/* <DatePicker.RangePicker onChange={(dates) => { if (dates) { setsearchTime({ startDate: dates[0], endDate: dates[1] }); } }} /> */}
             </div>
 
             {/* 顶部统计信息 */}
@@ -338,7 +236,6 @@ const Mainindex = () => {
                 </div>
             </div>
 
-
             <div style={cardGridStyle}>
                 {/* 待审核笔记卡片 */}
                 <div style={cardStyle}>
@@ -367,7 +264,7 @@ const Mainindex = () => {
             {/* 每日统计图表 */}
             <div style={sectionTitleStyle}>每日统计</div>
             <div style={{ ...chartContainerStyle, height: '400px', background: '#fff', padding: '24px', borderRadius: '8px' }}>
-                <DualAxes {...dailyStatConfig} />
+                <DualAxesChart barData={data.newTravelNotePerDay} lineData={data.newUserPerDay}></DualAxesChart>
             </div>
 
             {/* 热门笔记排行 */}
