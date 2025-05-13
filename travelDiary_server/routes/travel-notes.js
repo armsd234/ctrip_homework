@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { TravelNote, ReviewLog, User,Favorite,Like } = require('../model');
+const { TravelNote, ReviewLog, User, Favorite, Like } = require('../model');
 const { auth, isAdmin, isReviewer } = require('../middleware/auth');
 
 // 获取游记列表(首页)
@@ -35,6 +35,8 @@ router.get('/', async (req, res) => {
         const [notes, total] = await Promise.all([
             TravelNote.find(query)
                 .populate('author', '_id nickname')
+                .populate('tags', 'name image suggestion url') // 标签字段，引用Tag模型
+                .populate('comments', 'content author createdAt') // 评论字段，引用Comment模型
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(parseInt(limit)),
@@ -114,8 +116,15 @@ router.post('/', auth, async (req, res) => {
             author: req.user._id,
             status: 'pending'
         });
+        //更新作者post数
+        const author = await User.findById(req.user._id);
+        author.posts += 1;
 
-        await note.save();
+        await Promise.all([
+            note.save(),
+            author.save()
+        ]);
+
         res.status(201).json(note);
     } catch (error) {
         res.status(500).json({ message: '服务器错误' });
@@ -188,25 +197,6 @@ router.put('/:id', auth, async (req, res) => {
     }
 });
 
-// 删除游记
-// router.delete('/:id', auth, async (req, res) => {
-//     try {
-//         const note = await TravelNote.findById(req.params.id);
-
-//         if (!note || note.isDeleted) {
-//             return res.status(404).json({ message: '游记不存在' });
-//         }
-
-//         if (note.author.toString() !== req.user._id.toString()) {
-//             return res.status(403).json({ message: '无权删除此游记' });
-//         }
-
-//         await note.remove();
-//         res.json({ message: '删除成功' });
-//     } catch (error) {
-//         res.status(500).json({ message: '服务器错误' });
-//     }
-// });
 
 // 点赞游记
 router.post('/:id/like', auth, async (req, res) => {
@@ -217,15 +207,42 @@ router.post('/:id/like', auth, async (req, res) => {
             return res.status(404).json({ message: '游记不存在' });
         }
 
-        if (note.likes.includes(req.user._id)) {
+        // 检查是否已经点赞
+        const existingLike = await Like.findOne({
+            userId: req.user._id,
+            noteId: note._id
+        });
+
+        if (existingLike) {
             return res.status(400).json({ message: '已经点赞过了' });
         }
 
-        note.likes.push(req.user._id);
-        await note.save();
+        // 创建点赞记录
+        const like = new Like({
+            userId: req.user._id,
+            noteId: note._id
+        });
 
-        res.json({ likes: note.likes.length });
+        // 更新游记的点赞数
+        note.likesCount += 1;
+
+        // 更新作者的被赞数
+        const author = await User.findById(note.author);
+        author.likeds += 1;
+
+        // 保存所有更改
+        await Promise.all([
+            like.save(),
+            note.save(),
+            author.save()
+        ]);
+
+        res.json({
+            message: '点赞成功',
+            likesCount: note.likesCount
+        });
     } catch (error) {
+        console.error('点赞失败:', error);
         res.status(500).json({ message: '服务器错误' });
     }
 });
@@ -239,13 +256,126 @@ router.delete('/:id/like', auth, async (req, res) => {
             return res.status(404).json({ message: '游记不存在' });
         }
 
-        note.likes = note.likes.filter(
-            like => like.toString() !== req.user._id.toString()
-        );
-        await note.save();
+        // 查找并删除点赞记录
+        const deletedLike = await Like.findOneAndDelete({
+            userId: req.user._id,
+            noteId: note._id
+        });
 
-        res.json({ likes: note.likes.length });
+        if (!deletedLike) {
+            return res.status(400).json({ message: '还没有点赞过' });
+        }
+
+        // 更新游记的点赞数
+        note.likesCount = Math.max(0, note.likesCount - 1);
+
+        // 更新作者的被赞数
+        const author = await User.findById(note.author);
+        author.likeds = Math.max(0, author.likeds - 1);
+
+        // 保存所有更改
+        await Promise.all([
+            note.save(),
+            author.save()
+        ]);
+
+        res.json({
+            message: '取消点赞成功',
+            likesCount: note.likesCount
+        });
     } catch (error) {
+        console.error('取消点赞失败:', error);
+        res.status(500).json({ message: '服务器错误' });
+    }
+});
+
+// 收藏游记
+router.post('/:id/favorite', auth, async (req, res) => {
+    try {
+        const note = await TravelNote.findById(req.params.id);
+
+        if (!note || note.isDeleted) {
+            return res.status(404).json({ message: '游记不存在' });
+        }
+
+        // 检查是否已经收藏
+        const existingFavorite = await Favorite.findOne({
+            userId: req.user._id,
+            noteId: note._id
+        });
+
+        if (existingFavorite) {
+            return res.status(400).json({ message: '已经收藏过了' });
+        }
+
+        // 创建收藏记录
+        const favorite = new Favorite({
+            userId: req.user._id,
+            noteId: note._id
+        });
+
+        // 更新游记的收藏数
+        note.favoriteCount += 1;
+
+        // 更新作者的被收藏数
+        const author = await User.findById(note.author);
+        author.favoriteds += 1;
+
+        // 保存所有更改
+        await Promise.all([
+            favorite.save(),
+            note.save(),
+            author.save()
+        ]);
+
+        res.json({
+            message: '收藏成功',
+            favoriteCount: note.favoriteCount
+        });
+    } catch (error) {
+        console.error('收藏失败:', error);
+        res.status(500).json({ message: '服务器错误' });
+    }
+});
+
+// 取消收藏
+router.delete('/:id/favorite', auth, async (req, res) => {
+    try {
+        const note = await TravelNote.findById(req.params.id);
+
+        if (!note || note.isDeleted) {
+            return res.status(404).json({ message: '游记不存在' });
+        }
+
+        // 查找并删除收藏记录
+        const deletedFavorite = await Favorite.findOneAndDelete({
+            userId: req.user._id,
+            noteId: note._id
+        });
+
+        if (!deletedFavorite) {
+            return res.status(400).json({ message: '还没有收藏过' });
+        }
+
+        // 更新游记的收藏数
+        note.favoriteCount = Math.max(0, note.favoriteCount - 1);
+
+        // 更新作者的被收藏数
+        const author = await User.findById(note.author);
+        author.favoriteds = Math.max(0, author.favoriteds - 1);
+
+        // 保存所有更改
+        await Promise.all([
+            note.save(),
+            author.save()
+        ]);
+
+        res.json({
+            message: '取消收藏成功',
+            favoriteCount: note.favoriteCount
+        });
+    } catch (error) {
+        console.error('取消收藏失败:', error);
         res.status(500).json({ message: '服务器错误' });
     }
 });
@@ -387,6 +517,8 @@ router.get('/user/:userId', async (req, res) => {
         const [notes, total] = await Promise.all([
             TravelNote.find(query)
                 .populate('author', 'nickname avatar')
+                // tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }], // 标签字段，引用Tag模型
+                .populate('tags', 'name image suggestion url') // 标签字段，引用Tag模型
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(parseInt(limit)),
@@ -426,14 +558,14 @@ router.get('/favorites/:userId', async (req, res) => {
         ]);
 
         const notes = favorites.map(fav => fav.noteId).filter(note => note && !note.isDeleted);
-        
+
         res.json({
             data: notes,
             total,
             page: parseInt(page),
             limit: parseInt(limit)
         });
-        console.log('ghhj',notes);
+        console.log('ghhj', notes);
     } catch (error) {
         res.status(500).json({ message: '服务器错误' });
     }

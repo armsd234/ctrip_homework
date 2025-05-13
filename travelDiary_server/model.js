@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+//生成全局唯一id
+function generateId() {
+  return Date.now() + Math.floor(Math.random() * 1000);
+}
+
 // 用户
 const UserSchema = new Schema({
   username: { type: String, required: true }, // 用户名字段
@@ -32,6 +37,7 @@ const User = mongoose.model('User', UserSchema);
 
 //关注
 const FollowSchema = new mongoose.Schema({
+  id: { type: Number },
   followerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // 粉丝ID字段，引用User模型
   followingId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // 被关注的用户ID字段，引用User模型
   createdAt: { type: Date, default: Date.now } // 创建时间字段，默认为当前时间
@@ -45,16 +51,19 @@ const TagSchema = new mongoose.Schema({
   image: { type: String, required: true }, // 标签图片字段
   suggestion: { type: String }, // 建议字段
   url: { type: String, required: true }, // 链接字段
+  id: { type: Number },
 })
 const Tag = mongoose.model('Tag', TagSchema);
 
 // 游记
 const TravelNoteSchema = new mongoose.Schema({
+  id: { type: Number },
   title: { type: String, required: true },
   content: { type: String, required: true },
   images: { type: [String], default: ['food.jpg', 'hot_spot.jpg', 'culture.jpg'] }, // 存储图片URL数组
   video: { type: String, default: '1747059904050-c667724fd0e22e0648bb78adfbdc9406.mp4' }, // 存储视频URL ,default: '1747059904050-c667724fd0e22e0648bb78adfbdc9406.mp4' 
   location: { type: String, default: '中国-南京' }, // 存储位置信息
+  duration: {type: Number, default: 0}, // 存储持续时间
 
   when: { type: String, default: '0' },     // 时间字段
   days: { type: String, default: '0' },     // 天数字段
@@ -88,6 +97,7 @@ const TravelNote = mongoose.model('TravelNote', TravelNoteSchema);
 
 // 审核日志
 const ReviewLogSchema = new mongoose.Schema({
+  id: { type: Number },
   noteId: { type: mongoose.Schema.Types.ObjectId, ref: 'TravelNote', required: true },
   reviewerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   action: { type: String, enum: ['approve', 'reject', 'delete'], required: true },
@@ -98,6 +108,7 @@ const ReviewLog = mongoose.model('ReviewLog', ReviewLogSchema);
 
 // 评论
 const CommentSchema = new mongoose.Schema({
+  id: { type: Number },
   content: { type: String, required: true },
   authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   noteId: { type: mongoose.Schema.Types.ObjectId, ref: 'TravelNote', required: true },
@@ -117,6 +128,7 @@ const Comment = mongoose.model('Comment', CommentSchema);
 
 // 收藏
 const FavoriteSchema = new mongoose.Schema({
+  id: { type: Number },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   noteId: { type: mongoose.Schema.Types.ObjectId, ref: 'TravelNote', required: true },
   createdAt: { type: Date, default: Date.now }
@@ -125,6 +137,7 @@ const Favorite = mongoose.model('Favorite', FavoriteSchema);
 
 //点赞
 const LikeSchema = new mongoose.Schema({
+  id: { type: Number },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   noteId: { type: mongoose.Schema.Types.ObjectId, ref: 'TravelNote', required: true },
   createdAt: { type: Date, default: Date.now }
@@ -135,6 +148,7 @@ const Like = mongoose.model('Like', LikeSchema);
 
 // 举报记录
 const ReportSchema = new mongoose.Schema({
+  id: { type: Number},
   reporterId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   reportedId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   noteId: { type: mongoose.Schema.Types.ObjectId, ref: 'TravelNote' },
