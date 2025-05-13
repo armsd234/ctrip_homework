@@ -143,11 +143,11 @@ router.post('/video', auth, upload.single('video'), (req, res) => {
 router.get('/video', (req, res) => {
     try {
         const { filename } = req.query;
-        console.log('请求的文件名:', req.query); // 打印文件名以进行调试
+        // console.log('请求的文件名:', req.query); // 打印文件名以进行调试
         const decodedFilename = decodeURIComponent(filename);
         const filePath = path.join(__dirname, '../uploads/videos', decodedFilename);
-        console.log('请求的文件路径:', filePath); // 打印文件路径以进行调试
-        console.log('文件是否存在:', fs.existsSync(filePath)); // 打印文件是否存在以进行调试
+        // console.log('请求的文件路径:', filePath); // 打印文件路径以进行调试
+        // console.log('文件是否存在:', fs.existsSync(filePath)); // 打印文件是否存在以进行调试
         // 检查文件是否存在
         if (!fs.existsSync(filePath)) {
             return res.status(404).json({ message: '视频不存在' });
