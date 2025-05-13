@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@antv/g2": "^5.3.2",
     "@react-native-clipboard/clipboard": "^1.16.2",
     "antd": "^5.25.0",
     "expo-clipboard": "~7.1.4",

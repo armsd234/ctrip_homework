@@ -24,6 +24,8 @@ const UserSchema = new Schema({
   followings: { type: Number, default: 0 }, // 关注的用户数量字段，默认为 0
   favoriteds: { type: Number, default: 0 }, // 被收藏的文章数量字段，默认为 0
 
+  createdAt: { type: Date, default: Date.now }, // 创建时间字段，默认为当前时间
+
   role: { type: String, enum: ['user', 'admin', 'reviewer'], default: 'user' }, // 角色字段，默认为 'user'
 });
 const User = mongoose.model('User', UserSchema);

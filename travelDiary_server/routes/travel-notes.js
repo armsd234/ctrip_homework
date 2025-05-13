@@ -83,7 +83,7 @@ router.get('/review/notes', async (req, res) => {
 
         const [notes, total] = await Promise.all([
             TravelNote.find(query)
-                .populate('author', '_id nickname')
+                .populate('author', '_id nickname avatar')
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(parseInt(limit)),

@@ -5,6 +5,8 @@ import { useSelector } from 'react-redux';
 import { getDiaryList, approveDiary, rejectDiary, deleteDiary } from '../../services/api';
 import styles from './index.module.css';
 import DiaryCard from '../../components/diaryCard';
+import { Avatar } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 const { Paragraph } = Typography;
@@ -132,8 +134,19 @@ const Dashboard = () => {
             title: '作者',
             dataIndex: ['author', 'nickname'],
             key: 'author',
-            width: 180,
+            width: 220,
             style: { fontSize: '18px' },
+            render: (nickname, record) => (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Avatar
+                        size={46}
+                        src={record.author.avatar ? `http://localhost:5001/api/images/image?filename=${record.author.avatar}` : null}
+                        icon={<UserOutlined />}
+                    />
+                    <span style={{ fontSize: 20 }}>{nickname}</span>
+                </div>
+            )
+
         },
         {
             title: '内容预览',
@@ -369,7 +382,7 @@ const Dashboard = () => {
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            
+
                                         }}
                                     />
                                 </div>

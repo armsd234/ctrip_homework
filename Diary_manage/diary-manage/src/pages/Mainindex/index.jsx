@@ -1,10 +1,11 @@
-import React from 'react';
-import { UserOutlined, FileOutlined, EyeOutlined, FlagOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { UserOutlined, FileOutlined, EyeOutlined, FlagOutlined, FileTextOutlined, LikeOutlined, StarOutlined, CommentOutlined, AlertOutlined } from '@ant-design/icons';
 import { DatePicker } from 'antd';
-import { useSelector } from 'react-redux';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { message } from 'antd';
 import { getStatistics } from '../../services/api';
+import { Card, Row, Col, Statistic, Table, Avatar } from 'antd';
+import { DualAxes } from '@ant-design/plots';
 
 import {
     Chart as ChartJS,
@@ -34,133 +35,22 @@ const Mainindex = () => {
         startDate: null, // 开始日期
         endDate: null, // 结束日期
     });
-    const [isLoading, setLoading] = useState(false);
+
     const [data, setData] = useState([]);
 
     const fetchData = useCallback(async () => {
-        setLoading(true);
         try {
             const response = await getStatistics({ ...searchTime });
             setData(response.data);
+            console.log('获取数据成功response.data：', response.data);
         } catch (error) {
             message.error('获取数据失败');
         }
-        setLoading(false);
     }, [searchTime]);
 
     useEffect(() => {
         fetchData();
     }, [fetchData]);
-
-
-    // --- Mock Data ---
-    const stats = {
-        totalUsers: 1254,
-        totalNotes: 3872,
-        totalViews: 58961,
-        totalReports: 125,
-    };
-
-    const pending = {
-        pendingReviewNotes: 37,
-        pendingReports: 12,
-    };
-
-    // --- Daily Stats Chart Data and Options (Keep as before) ---
-    const dailyStatsData = {
-        labels: ['2025-04-30', '2025-05-01', '2025-05-02', '2025-05-03', '2025-05-04', '2025-05-05', '2025-05-06'],
-        datasets: [
-            {
-                type: 'bar',
-                label: '新用户',
-                backgroundColor: '#6A7ECA',
-                borderColor: '#6A7ECA',
-                data: [45, 15, 20, 18, 43, 35, 45],
-                yAxisID: 'y-count',
-            },
-            {
-                type: 'bar',
-                label: '新笔记',
-                backgroundColor: '#92C68F',
-                borderColor: '#92C68F',
-                data: [48, 25, 30, 28, 68, 65, 45],
-                yAxisID: 'y-count',
-            },
-            {
-                type: 'line',
-                label: '访问量',
-                borderColor: '#F4C36B',
-                backgroundColor: 'rgba(244, 195, 107, 0.2)',
-                data: [750, 800, 1000, 820, 1400, 1350, 1300],
-                yAxisID: 'y-visits',
-                tension: 0.3,
-                pointRadius: 5,
-                pointBackgroundColor: '#F4C36B',
-            },
-        ],
-    };
-
-    const dailyStatsOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'top',
-                align: 'end',
-                labels: {
-                    usePointStyle: true,
-                    boxWidth: 8,
-                },
-            },
-            title: {
-                display: false,
-            },
-            tooltip: {
-                mode: 'index',
-                intersect: false,
-            }
-        },
-        scales: {
-            'y-count': {
-                type: 'linear',
-                position: 'left',
-                title: {
-                    display: true,
-                    text: '数量',
-                },
-                min: 0,
-                max: 100,
-                ticks: {
-                    stepSize: 20,
-                },
-                grid: {
-                    drawOnChartArea: false,
-                },
-            },
-            'y-visits': {
-                type: 'linear',
-                position: 'right',
-                title: {
-                    display: true,
-                    text: '访问量',
-                },
-                min: 0,
-                max: 1500,
-                ticks: {
-                    stepSize: 300,
-                },
-                grid: {
-                    drawOnChartArea: true,
-                },
-            },
-            x: {
-                grid: {
-                    display: false
-                }
-            }
-        },
-    };
-
 
     // --- Styling ---
     const containerStyle = {
@@ -250,95 +140,250 @@ const Mainindex = () => {
         marginBottom: '20px',
     };
 
+    // 准备图表数据
+    const transformData = () => {
+        if (!data.newUserPerDay || !data.newTravelNotePerDay) return { barData: [], lineData: [] };
+
+        // 处理柱状图数据
+        const barData = [];
+        data.newUserPerDay.forEach((item, index) => {
+            barData.push({
+                date: item.date,
+                type: '新用户',
+                count: item.count
+            });
+            barData.push({
+                date: item.date,
+                type: '新笔记',
+                count: data.newTravelNotePerDay[index].count
+            });
+        });
+
+        // 处理折线图数据 - 使用总访问量
+        const lineData = data.newUserPerDay.map(item => ({
+            date: item.date,
+            访问量: data.totalViews || 0
+        }));
+
+        console.log('barData', barData);
+        console.log('lineData', lineData);
+        return { barData, lineData };
+    };
+
+    const { barData, lineData } = transformData();
+
+    // 每日统计图表配置
+    const dailyStatConfig = {
+        data: [barData, lineData],
+        xField: 'date',
+        yField: ['count', '访问量'],
+        geometryOptions: [
+            {
+                geometry: 'column',
+                isGroup: true,
+                seriesField: 'type',
+                columnWidthRatio: 0.6,
+                color: ['#7B9FF2', '#98D283'],
+            },
+            {
+                geometry: 'line',
+                smooth: true,
+                color: '#FFCD56',
+                lineStyle: {
+                    lineWidth: 2,
+                },
+                point: {
+                    size: 3,
+                    shape: 'circle',
+                    style: {
+                        fill: '#FFCD56',
+                        stroke: '#FFCD56',
+                    },
+                },
+            },
+        ],
+        yAxis: {
+            count: {
+                min: 0,
+                title: {
+                    text: '数量',
+                    style: {
+                        fontSize: 12,
+                    },
+                },
+                grid: {
+                    line: {
+                        style: {
+                            stroke: '#E5E5E5',
+                            lineWidth: 1,
+                            lineDash: [4, 4],
+                        },
+                    },
+                },
+            },
+            访问量: {
+                min: 0,
+                title: {
+                    text: '访问量',
+                    style: {
+                        fontSize: 12,
+                    },
+                },
+                position: 'right',
+            },
+        },
+        animation: false,
+        legend: {
+            position: 'top',
+        },
+        tooltip: {
+            shared: true,
+        },
+    };
+
+    // 热门笔记表格列配置
+    const columns = [
+        {
+            title: '排名',
+            dataIndex: 'index',
+            key: 'index',
+            width: 80,
+            render: (_, __, index) => index + 1
+        },
+        {
+            title: '游记标题',
+            dataIndex: 'title',
+            key: 'title',
+            ellipsis: true,
+        },
+        {
+            title: '作者',
+            dataIndex: ['author', 'nickname'],
+            key: 'author',
+            width: 200,
+            render: (nickname, record) => (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Avatar
+                        src={record.author.avatar ? `http://localhost:5001/api/images/image?filename=${record.author.avatar}` : null}
+                        icon={<UserOutlined />}
+                    />
+                    <span>{nickname}</span>
+                </div>
+            )
+        },
+        {
+            title: '点赞数',
+            dataIndex: 'likesCount',
+            key: 'likesCount',
+            width: 100,
+            render: (likes) => (
+                <span>
+                    <LikeOutlined style={{ marginRight: 8 }} />
+                    {likes}
+                </span>
+            )
+        },
+        {
+            title: '浏览量',
+            dataIndex: 'views',
+            key: 'views',
+            width: 100,
+            render: (views) => (
+                <span>
+                    <EyeOutlined style={{ marginRight: 8 }} />
+                    {views}
+                </span>
+            )
+        }
+    ];
+
     return (
         <div style={containerStyle}>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h1 style={{ fontSize: '24px', margin: 0, color: '#333' }}>仪表盘</h1>
-                {/* Date Range Picker Placeholder */}
+
                 <DatePicker.RangePicker onChange={(dates) => { if (dates) { setsearchTime({ startDate: dates[0], endDate: dates[1] }); } }} />
             </div>
 
-            {/* Top Statistics */}
+            {/* 顶部统计信息 */}
             <div style={cardGridStyle}>
-                <div style={cardStyle}> {/* Use cardStyle for the outer container */}
-                    <div style={{ ...cardTitleStyle, padding: '20px 20px 0 20px' }}>总用户数</div> {/* Add top/side padding */}
+                <div style={cardStyle}>
+                    <div style={{ ...cardTitleStyle, padding: '20px 20px 0 20px' }}>总用户数</div>
                     <div style={statValueStyle}>
                         <span style={statIconStyle}><UserOutlined /></span>
-                        {stats.totalUsers.toLocaleString()}
+                        {data.totalUsers?.toLocaleString()}
                     </div>
                 </div>
                 <div style={cardStyle}>
-                    <div style={{ ...cardTitleStyle, padding: '20px 20px 0 20px' }}>总笔记数</div> {/* Add top/side padding */}
+                    <div style={{ ...cardTitleStyle, padding: '20px 20px 0 20px' }}>总笔记数</div>
                     <div style={statValueStyle}>
                         <span style={statIconStyle}><FileOutlined /></span>
-                        {stats.totalNotes.toLocaleString()}
+                        {data.totalTravelNotes?.toLocaleString()}
                     </div>
                 </div>
                 <div style={cardStyle}>
-                    <div style={{ ...cardTitleStyle, padding: '20px 20px 0 20px' }}>总浏览量</div> {/* Add top/side padding */}
+                    <div style={{ ...cardTitleStyle, padding: '20px 20px 0 20px' }}>总浏览量</div> {/* 添加顶部/侧边内边距 */}
                     <div style={statValueStyle}>
                         <span style={statIconStyle}><EyeOutlined /></span>
-                        {stats.totalViews.toLocaleString()}
+                        {data.totalViews?.toLocaleString()}
                     </div>
                 </div>
                 <div style={cardStyle}>
-                    <div style={{ ...cardTitleStyle, padding: '20px 20px 0 20px' }}>总举报数</div> {/* Add top/side padding */}
+                    <div style={{ ...cardTitleStyle, padding: '20px 20px 0 20px' }}>总举报数</div> {/* 添加顶部/侧边内边距 */}
                     <div style={statValueStyle}>
                         <span style={statIconStyle}><FlagOutlined /></span>
-                        {stats.totalReports.toLocaleString()}
+                        {data.totalReports?.toLocaleString()}
                     </div>
                 </div>
             </div>
 
 
             <div style={cardGridStyle}>
-                {/* Pending Reviews Card */}
-                <div style={cardStyle}> {/* Outer card container */}
-                    {/* Header Area with Title and Divider */}
+                {/* 待审核笔记卡片 */}
+                <div style={cardStyle}>
+
                     <div style={pendingCardHeaderStyle}>待处理</div>
-                    {/* Content Area */}
+
                     <div style={pendingCardContentStyle}>
                         <div style={pendingItemStyle}>
                             待审核笔记
-
                         </div>
-                        <span style={pendingValueStyle('#1890ff')}>{pending.pendingReviewNotes}</span> {/* Blue color */}
-                        {/* Add more pending items here using pendingItemStyle if needed */}
+                        <span style={pendingValueStyle('#1890ff')}>{data.pendingReviews}</span> {/* 蓝色 */}
                     </div>
                 </div>
 
-                {/* Pending Reports Card */}
-                <div style={cardStyle}> {/* Outer card container */}
-                    {/* Header Area with Title and Divider */}
+                <div style={cardStyle}>
                     <div style={pendingCardHeaderStyle}>待处理</div>
-                    {/* Content Area */}
                     <div style={pendingCardContentStyle}>
                         <div style={pendingItemStyle}>
                             待处理举报
                         </div>
-                        <span style={pendingValueStyle('#f5222d')}>{pending.pendingReports}</span>
-                        {/* Add more pending items here using pendingItemStyle if needed */}
+                        <span style={pendingValueStyle('#f5222d')}>{data.pendingReports}</span>
                     </div>
                 </div>
             </div>
 
-            {/* Daily Statistics Chart */}
+            {/* 每日统计图表 */}
             <div style={sectionTitleStyle}>每日统计</div>
-            <div style={chartContainerStyle}>
-                {/* <ChartJS
-                    type='bar'
-                    data={dailyStatsData}
-                    options={dailyStatsOptions}
-                /> */}
+            <div style={{ ...chartContainerStyle, height: '400px', background: '#fff', padding: '24px', borderRadius: '8px' }}>
+                <DualAxes {...dailyStatConfig} />
             </div>
 
-            {/* Popular Notes Ranking Title */}
+            {/* 热门笔记排行 */}
             <div style={sectionTitleStyle}>热门笔记排行</div>
-            {/* Content for popular notes ranking would go here */}
+            <div style={{ background: '#fff', padding: '24px', borderRadius: '8px' }}>
+                <Table
+                    columns={columns}
+                    dataSource={data.top10TravelNotes || []}
+                    rowKey="_id"
+                    pagination={false}
+                    style={{ marginTop: '16px' }}
+                />
+            </div>
 
         </div>
     );
-};
+}
 
 export default Mainindex;
