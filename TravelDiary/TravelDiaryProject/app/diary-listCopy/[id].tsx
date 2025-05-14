@@ -267,18 +267,20 @@ export default function DiaryListDetailScreen() {
             </View>
 
             {/*地点标记*/}
-            {!!(diary.tags) && <TouchableOpacity style={styles.tags} onPress={handleTagPress}>
-              <View style={styles.tagContainer}>
-                <Ionicons name="location-outline" size={12} color="#000" />
-                <Text style={styles.tagText}>
-                  {diary.tags.length > 1 ?
-                    `${diary.tags[0].name}等`
-                    : diary.tags[0].name
-                  }
-                </Text>
-                <Ionicons name="chevron-forward" size={12} color="#000" />
-              </View>
-            </TouchableOpacity>}
+            {diary?.tags && diary.tags.length > 0 && (
+              <TouchableOpacity style={styles.tags} onPress={handleTagPress}>
+                <View style={styles.tagContainer}>
+                  <Ionicons name="location-outline" size={12} color="#000" />
+                  <Text style={styles.tagText}>
+                    {diary.tags.length > 0 
+                      ? `${diary.tags[0]?.name || '未知地点'}等`
+                      : diary.tags[0]?.name || '未知地点'
+                    }
+                  </Text>
+                  <Ionicons name="chevron-forward" size={12} color="#000" />
+                </View>
+              </TouchableOpacity>
+            )}
 
             {/*游记标签*/}
             {!!(diary.When) && <View style={styles.infoBox}>
@@ -299,51 +301,57 @@ export default function DiaryListDetailScreen() {
             </View>
 
             {/* 地点详情弹窗 */}
-            {!!(diary.tags) && <Modal
-              animationType="slide"
-              transparent={true}
-              visible={modalVisible}
-              onRequestClose={() => setModalVisible(false)}
-            >
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContainer}>
-                  <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>提及目的地 ({diary.tags.length})</Text>
-                    <Pressable onPress={() => setModalVisible(false)}>
-                      <Ionicons name="close-outline" size={24} color="#555" />
-                    </Pressable>
+            {diary?.tags && diary.tags.length > 0 && (
+              <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(false)}
+              >
+                <View style={styles.modalOverlay}>
+                  <View style={styles.modalContainer}>
+                    <View style={styles.modalHeader}>
+                      <Text style={styles.modalTitle}>提及目的地 ({diary.tags.length})</Text>
+                      <Pressable onPress={() => setModalVisible(false)}>
+                        <Ionicons name="close-outline" size={24} color="#555" />
+                      </Pressable>
+                    </View>
+
+                    {diary.tags.map((tag, index) => {
+                      const info = {
+                        image: tag?.image || '',
+                        suggestion: tag?.suggestion || '',
+                        url: tag?.url || '',
+                      };
+
+                      return (
+                        <TouchableOpacity
+                          key={index}
+                          style={styles.destCard}
+                          onPress={() => {
+                            setModalVisible(false);
+                            if (info.url) {
+                              Linking.openURL(info.url);
+                            }
+                          }}
+                        >
+                          {info.image && (
+                            <Image source={{ uri: info.image }} style={styles.destImage} />
+                          )}
+                          <View style={{ flex: 1, marginLeft: 12 }}>
+                            <Text style={styles.destName}>{tag?.name || '未知地点'}· 攻略</Text>
+                            {info.suggestion && (
+                              <Text style={styles.destSuggestion}>{info.suggestion}</Text>
+                            )}
+                          </View>
+                          <Ionicons name="chevron-forward" size={20} color="#999" />
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
-
-                  {diary.tags.map((tag, index) => {
-                    const info = {
-                      image: tag.image,
-                      suggestion: tag.suggestion,
-                      url: tag.url,
-                    };
-
-                    return (
-                      <TouchableOpacity
-                        key={index}
-                        style={styles.destCard}
-                        onPress={() => {
-                          setModalVisible(false);
-                          Linking.openURL(info.url);
-                        }}
-                      >
-                        <Image source={{ uri: info.image }} style={styles.destImage} />
-                        <View style={{ flex: 1, marginLeft: 12 }}>
-                          <Text style={styles.destName}> {tag.name}· 攻略</Text>
-                          {info.suggestion ? (
-                            <Text style={styles.destSuggestion}>{info.suggestion}</Text>
-                          ) : null}
-                        </View>
-                        <Ionicons name="chevron-forward" size={20} color="#999" />
-                      </TouchableOpacity>
-                    );
-                  })}
                 </View>
-              </View>
-            </Modal>}
+              </Modal>
+            )}
 
 
 
