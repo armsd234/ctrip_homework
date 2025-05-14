@@ -112,7 +112,7 @@ export default function TabOneScreen() {
   const loadInitialData = async () => {
     setLoading(true);
     try {
-      const response = await api.get(`/api/travel-notes/`, { 
+      const response = await api.get(`/api/travel-notes/newVersion`, { 
         params: { 
           page: 1, 
           limit: PAGE_SIZE,
@@ -136,7 +136,7 @@ export default function TabOneScreen() {
     if (loading || !hasMore) return;
     setLoading(true);
     try {
-      const response = await api.get(`/api/travel-notes/`, { 
+      const response = await api.get(`/api/travel-notes/newVersion`, { 
         params: { 
           page, 
           limit: PAGE_SIZE,
@@ -204,7 +204,7 @@ export default function TabOneScreen() {
 
       setIsSearching(true);
       try {
-        const response = await api.get(`/api/travel-notes/`, { 
+        const response = await api.get(`/api/travel-notes/newVersion`, { 
           params: { 
             page: 1,
             limit: PAGE_SIZE,
@@ -253,7 +253,7 @@ export default function TabOneScreen() {
       // 重置页码
       setPage(1);
       // 重新加载第一页数据
-      const response = await api.get(`/api/travel-notes/`, { 
+      const response = await api.get(`/api/travel-notes/newVersion`, { 
         params: { 
           page: 1, 
           limit: PAGE_SIZE,

@@ -11,7 +11,8 @@ router.get('/newVersion', async (req, res) => {
         const skip = (page - 1) * limit;
 
         const query = {
-            status: status === 'all' ? { $in: ['pending', 'approved', 'rejected'] } : status
+            status: status === 'all' ? { $in: ['pending', 'approved', 'rejected'] } : status,
+            video: { $in: ['', null] }  // 只获取 video 字段为空或 null 的记录
         };
 
         if (search) {
@@ -699,6 +700,7 @@ router.get('/user/:userId', async (req, res) => {
         const query = {
             author: req.params.userId,
             isDeleted: false,
+            video: { $in: ['', null] }
             // status: { $in: ['pending', 'approved'] },
         };
 
@@ -731,7 +733,7 @@ router.get('/favorites/:userId', async (req, res) => {
         const skip = (page - 1) * limit;
 
         const [favorites, total] = await Promise.all([
-            Favorite.find({ userId: req.params.userId })
+            Favorite.find({ userId: req.params.userId, video: { $in: ['', null] } })
                 .populate({
                     path: 'noteId',
                     populate: {
@@ -766,7 +768,7 @@ router.get('/likes/:userId', async (req, res) => {
         const skip = (page - 1) * limit;
 
         const [likes, total] = await Promise.all([
-            Like.find({ userId: req.params.userId })
+            Like.find({ userId: req.params.userId, video: { $in: ['', null] } })
                 .populate({
                     path: 'noteId',
                     populate: {
