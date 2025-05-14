@@ -136,7 +136,7 @@ router.post('/', auth, async (req, res) => {
 // 获取所有游记详情,所有详情，每个游记的格式如单个游记详情
 router.get('/node-all', async (req, res) => {
     try {
-        const notes = await TravelNote.find({ isDeleted: false })
+        const notes = await TravelNote.find({ isDeleted: false, status: 'approved', isPublic: true, video: { $ne: '' } })
             .populate('author')
             .populate('tags')
             .sort({ createdAt: -1 });
