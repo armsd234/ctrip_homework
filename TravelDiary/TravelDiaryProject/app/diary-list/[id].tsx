@@ -65,11 +65,18 @@ export default function DiaryListDetailScreen() {
     useEffect(() => {
       const fetchData = async () => {
         console.log('Received diary id:', id); 
-        const response = await api.get(`/api/travel-notes/${id}`);
-        console.log('Response:', response.data);
-        const convertedDiary = convertResponseToTravelDiary(response.data);
-        console.log('Converted diary:', convertedDiary);
-        setDiary(convertedDiary);
+        //这里我需要判断id是否可以转换成数字，如果不能转换成数字，就不执行请求
+        if (isNaN(Number(id))) {
+          const response = await api.get(`/api/travel-notes/${id}`);
+          console.log('Response:', response.data);
+          const convertedDiary = convertResponseToTravelDiary(response.data);
+          console.log('Converted diary:', convertedDiary);
+          setDiary(convertedDiary);
+        }else{
+          const tmp = travelDiaries.diaries.find(d => d.id === Number(id)) as unknown as TravelDiary;
+          setDiary(tmp);
+        }
+       
       };
       fetchData();
     }, [id]);

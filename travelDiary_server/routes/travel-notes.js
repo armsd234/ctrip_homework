@@ -134,6 +134,10 @@ router.post('/', auth, async (req, res) => {
 // 获取单个游记详情
 router.get('/:id', async (req, res) => {
     try {
+        const { isValidObjectId } = require('mongoose');
+        if (!isValidObjectId(req.params.id)) {
+            return res.status(400).json({ message: '传入的 ID 不是有效的 ObjectId 格式' });
+        }
         const note = await TravelNote.findById(req.params.id)
             .populate('author', 'nickname avatar')
             .populate('tags', 'name image suggestion url');
