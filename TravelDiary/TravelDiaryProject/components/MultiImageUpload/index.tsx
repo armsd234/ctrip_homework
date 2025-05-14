@@ -10,16 +10,19 @@ const ITEM_MARGIN = 18;
 const ITEM_SIZE = (width - ITEM_MARGIN * 4) / 3; // 计算每项宽度（考虑左右边距）
 
 interface MultiImageUploadProps {
+  initialImages?: string[];
   onUploadSuccess: (filenames: string[]) => void;
   onUploadError?: (error: Error) => void;
 }
 
 const ImageGridUploader = ({
+  initialImages = [],
   onUploadSuccess,
   onUploadError
 }: MultiImageUploadProps) => {
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<string[]>(initialImages);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploaded, setIsUploaded] = useState(false);
 
   // 请求相册权限
   const requestPermission = async () => {
@@ -48,6 +51,7 @@ const ImageGridUploader = ({
     });
 
     if (!result.canceled && result.assets) {
+      setIsUploaded(false);
       const newImages = result.assets.slice(0, remainingSlots).map(asset => asset.uri);
       setImages([...images, ...newImages]);
       if (result.assets.length > remainingSlots) {
@@ -107,12 +111,13 @@ const ImageGridUploader = ({
           'Content-Type': 'multipart/form-data',
           'Accept': 'application/json',
         },
-      });      
+      });
 
       if (response.data) {
         // console.log('上传成功:', response.data);
         const filenames = response.data.filenames;
         onUploadSuccess(filenames);
+        setIsUploaded(true);
       }
     } catch (error) {
       console.error('上传失败:', error);
@@ -177,12 +182,17 @@ const ImageGridUploader = ({
       />
       {images.length > 0 && (
         <TouchableOpacity
-          style={styles.uploadButton}
+          style={[
+            styles.uploadToBack,
+            { backgroundColor: !isUploaded ? '#2c91ef' : '#666' }
+          ]}
           onPress={upload}
           disabled={isUploading}
         >
-          <Text style={styles.uploadText}>
-            {isUploading ? '上传中...' : `确认上传 (${images.length}/ 9 )`}
+          <Text style={styles.uploadToBackText}>
+            {isUploading && '上传中...'}
+            {(!isUploading && !isUploaded) && `确认上传 (${images.length}/ 9 )`}
+            {isUploaded && '上传完成'}
           </Text>
         </TouchableOpacity>
       )}
@@ -211,6 +221,19 @@ const styles = StyleSheet.create({
   uploadContent: {
     alignItems: 'center',
     backgroundColor: 'pink'
+  },
+  uploadToBack: {
+    // backgroundColor: '#2c91ef',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  uploadToBackText: {
+    fontSize: 12,
+    color: 'white',
+    // marginTop: 5,
   },
   uploadButton: {
     width: ITEM_SIZE,
