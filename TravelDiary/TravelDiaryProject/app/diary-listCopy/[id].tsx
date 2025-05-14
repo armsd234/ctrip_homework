@@ -65,6 +65,27 @@ export default function DiaryListDetailScreen() {
 
   const convertResponseToTravelDiary = (responseData: any): TravelDiary => {
     const data = responseData.data[0];
+    const defaultTags = [
+      {
+        name: "巴厘岛",
+        image: "https://picsum.photos/400/300?random=10",
+        suggestion: "建议游玩时间3-5天",
+        url: "https://you.ctrip.com/place/bali438.html"
+      },
+      {
+        name: "佩妮达岛",
+        image: "https://picsum.photos/400/300?random=11",
+        suggestion: "建议游玩时间3-5天",
+        url: "https://you.ctrip.com/sight/bali438/64465.html?scene=online"
+      },
+      {
+        name: "巴厘岛",
+        image: "https://picsum.photos/400/300?random=12",
+        suggestion: "",
+        url: "https://you.ctrip.com/place/bali438.html"
+      }
+    ];
+
     return {
       id: data.id,
       title: data.title,
@@ -73,7 +94,7 @@ export default function DiaryListDetailScreen() {
       video: data.video ? `http://localhost:5001/api/images/video?filename=${data.video}` : undefined,
       duration: data.duration ? parseInt(data.duration) : 0,
       type: data.video ? 'video' : 'image',
-      tags: data.tags || [],
+      tags: data.tags?.length > 0 ? data.tags : defaultTags,
       When: data.When,
       Who: data.Who,
       Days: data.Days,
@@ -110,9 +131,9 @@ export default function DiaryListDetailScreen() {
   const router = useRouter();
 
   const [liked, setLiked] = useState(false);
-  const [collected, setCollected] = useState(false)
-  const [likesCount, setLikesCount] = useState(diary?.likes || 0);
-  const [collectsCount, setCollectsCount] = useState(diary?.collects || 0);
+  const [collected, setCollected] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [collectsCount, setCollectsCount] = useState(0);
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
@@ -123,6 +144,14 @@ export default function DiaryListDetailScreen() {
   useEffect(() => {
     if (diary?.commentsData) {
       setComments(diary.commentsData);
+    }
+  }, [diary]);
+
+  // 在获取到游记数据后更新点赞和收藏数
+  useEffect(() => {
+    if (diary) {
+      setLikesCount(diary.likes || 0);
+      setCollectsCount(diary.collects || 0);
     }
   }, [diary]);
 
@@ -142,10 +171,10 @@ export default function DiaryListDetailScreen() {
       }
     };
     
-    if (diary) {
+    if (id) {
       checkUserInteractions();
     }
-  }, [diary, id]);
+  }, [id]);
 
   // 加载评论列表
   useEffect(() => {
@@ -179,21 +208,18 @@ export default function DiaryListDetailScreen() {
 
   const handleLike = async () => {
     try {
-      // 立即更新UI状态
-      setLiked(!liked);
-      setLikesCount(prev => prev + (liked ? -1 : 1));
-
-      // 调用API
       if (!liked) {
-        await api.post(`/api/travel-notes/${id}/like`);
+        // 点赞
+        const response = await api.post(`/api/travel-notes/${id}/like`);
+        setLiked(true);
+        setLikesCount(response.data.likesCount);
       } else {
-        await api.delete(`/api/travel-notes/${id}/like`);
+        // 取消点赞
+        const response = await api.delete(`/api/travel-notes/${id}/like`);
+        setLiked(false);
+        setLikesCount(response.data.likesCount);
       }
     } catch (error: any) {
-      // 如果API调用失败，恢复原状态
-      setLiked(liked);
-      setLikesCount(prev => prev + (liked ? 1 : -1));
-      
       if (error.response?.status === 401) {
         alert('请先登录');
       } else {
@@ -205,21 +231,18 @@ export default function DiaryListDetailScreen() {
 
   const handleCollect = async () => {
     try {
-      // 立即更新UI状态
-      setCollected(!collected);
-      setCollectsCount(prev => prev + (collected ? -1 : 1));
-
-      // 调用API
       if (!collected) {
-        await api.post(`/api/travel-notes/${id}/favorite`);
+        // 收藏
+        const response = await api.post(`/api/travel-notes/${id}/favorite`);
+        setCollected(true);
+        setCollectsCount(response.data.favoriteCount);
       } else {
-        await api.delete(`/api/travel-notes/${id}/favorite`);
+        // 取消收藏
+        const response = await api.delete(`/api/travel-notes/${id}/favorite`);
+        setCollected(false);
+        setCollectsCount(response.data.favoriteCount);
       }
     } catch (error: any) {
-      // 如果API调用失败，恢复原状态
-      setCollected(collected);
-      setCollectsCount(prev => prev + (collected ? 1 : -1));
-
       if (error.response?.status === 401) {
         alert('请先登录');
       } else {
@@ -230,10 +253,12 @@ export default function DiaryListDetailScreen() {
   };
 
   const handleShare = async () => {
+    if (!diary) return;
+    
     try {
       const result = await Share.share({
         message: `快来看看这篇游记：${diary.title} 👉 ${diary.location || '未知地点'}`,
-        url: 'http://127.0.0.1:8081/diary-list/' + diary.id, // 可选：网页链接或App页
+        url: 'http://127.0.0.1:8081/diary-list/' + diary.id,
         title: '分享游记',
       });
 
