@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -16,18 +16,65 @@ import {
 } from 'react-native';
 import { Text } from '@/components/Themed';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { TravelDiary } from '@/components/TravelDiaryMasonry/types';
+import { TravelDiary } from '@/components/TravelDiaryMasonryCopy/types';
 import travelDiaries from '@/data/travelDiaries.json';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CommentsList from '@/components/Comments';
+import { api } from '@/services/api';
 // import { ScrollView } from 'react-native-reanimated/lib/typescript/Animated';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 export default function DiaryListDetailScreen() {
   const { id } = useLocalSearchParams();
-  const diary = travelDiaries.diaries.find(d => d.id === Number(id)) as unknown as TravelDiary;
+    const [diary, setDiary] = useState<TravelDiary | undefined>(undefined);
+    console.log('Received diary id:', id); // 添加日志查看接收到的参数
+  
+    const convertResponseToTravelDiary = (responseData: any): TravelDiary => {
+      const data = responseData.data[0];
+      return {
+        id: data.id,
+        title: data.title,
+        content: data.content,
+        coverImage: data.coverImage.map((image: string) => `http://localhost:5001/api/images/image?filename=${image}`),
+        video: data.video ? `http://localhost:5001/api/images/video?filename=${data.video}` : undefined,
+        duration: data.duration ? parseInt(data.duration) : 0,
+        type: data.video ? 'video' : 'image',
+        tags: data.tags || [],
+        When: data.When,
+        Who: data.Who,
+        Days: data.Days,
+        Money: data.Money,
+        user: {
+          id: data.user.id,
+          nickname: data.user.nickname,
+          avatar: `http://localhost:5001/api/images/image?filename=${data.user.avatar}`
+        },
+        likes: data.likes,
+        collects: data.collects,
+        comments: data.comments,
+        views: data.views,
+        location: data.location,
+        createTime: data.createTime,
+        status: 'approved',
+        commentsData: data.commentsData || []
+      };
+    };
+  
+    useEffect(() => {
+      const fetchData = async () => {
+        console.log('Received diary id:', id); 
+        const response = await api.get(`/api/travel-notes/${id}`);
+        console.log('Response:', response.data);
+        const convertedDiary = convertResponseToTravelDiary(response.data);
+        console.log('Converted diary:', convertedDiary);
+        setDiary(convertedDiary);
+      };
+      fetchData();
+    }, [id]);
+  // const { id } = useLocalSearchParams();
+  // const diary = travelDiaries.diaries.find(d => d.id === Number(id)) as unknown as TravelDiary;
   const router = useRouter();
 
   const [liked, setLiked] = useState(false);
@@ -39,13 +86,25 @@ export default function DiaryListDetailScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const [comment, setComment] = useState('');
-  const [comments, setComments] = useState(diary.commentsData || []);
-
+  const [comments, setComments] = useState<any[]>([]);
+  useEffect(() => {
+      if (diary?.commentsData) {
+        setComments(diary.commentsData);
+      }
+    }, [diary]);
+  
   if (!diary) {
     return (
-      <View style={styles.container}>
-        <Text>未找到该游记</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+              <Pressable style={styles.backButton} onPress={() => router.back()}>
+                <Ionicons name="chevron-back-outline" size={30} color="black" />
+              </Pressable>
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Text>未找到该游记</Text>
+                
+              </View>
+      
+            </SafeAreaView>
     );
   }
 
