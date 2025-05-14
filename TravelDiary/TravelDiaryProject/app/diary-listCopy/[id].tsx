@@ -128,9 +128,15 @@ export default function DiaryListDetailScreen() {
 
   if (!diary) {
     return (
-      <View style={styles.container}>
-        <Text>未找到该游记</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+              <Pressable style={styles.backButton} onPress={() => router.back()}>
+                <Ionicons name="chevron-back-outline" size={30} color="black" />
+              </Pressable>
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Text>未找到该游记</Text>
+              </View>
+      
+            </SafeAreaView>
     );
   }
 
