@@ -29,8 +29,7 @@ export default function MyDiaryScreen() {
 
   const handleEditDiary = (diary: TravelDiary) => {
     console.log('编辑游记:', diary.id);
-    // router.push(`/diary/${diary.id}/edit`);
-    // 未完成！！！
+    router.push(`/diary-edit/${diary.id}`);
   };
 
   const handleDeleteDiary = async(id: number) => {

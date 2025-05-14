@@ -25,7 +25,7 @@ interface VideoItem {
   id: string;
   uri: string;
   title: string;
-  description: string;
+  content: string;
   likes: number;
   comments: Comment[];
   user: User;
@@ -41,9 +41,9 @@ const VideoDetailScreen = () => {
   // 获取视频列表
   const videoList: VideoItem[] = travelDiaries.diaries.map((diary: any) => ({
     id: diary.id.toString(),
-    uri: diary.videoSource,
+    uri: diary.uri,
     title: diary.title,
-    description: diary.description,
+    content: diary.content,
     likes: 0, // Default value
     comments: [], // Default value
     user: {
@@ -119,7 +119,7 @@ const VideoDetailScreen = () => {
           </View>
         </View>
         <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.description}>{item.description}</Text>
+        <Text style={styles.content}>{item.content}</Text>
       </View>
 
 
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 5,
   },
-  description: {
+  content: {
     color: 'white',
     fontSize: 14,
   },

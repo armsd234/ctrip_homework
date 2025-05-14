@@ -3,7 +3,7 @@
     {
       "id": 1,
       "title": "春日西湖漫步",
-      "coverImage": "https://picsum.photos/400/300?random=1",
+      "coverImage": ["https://picsum.photos/400/300?random=1"],
       "user": {
         "id": 1,
         "nickname": "旅行者",
@@ -21,7 +21,7 @@
     {
       "id": 2,
       "title": "故宫博物院深度游",
-      "coverImage": "https://picsum.photos/400/300?random=2",
+      "coverImage": ["https://picsum.photos/400/300?random=2"],
       "user": {
         "id": 1,
         "nickname": "旅行者",
@@ -39,7 +39,7 @@
     {
       "id": 3,
       "title": "夜游外滩",
-      "coverImage": "https://picsum.photos/400/300?random=3",
+      "coverImage": ["https://picsum.photos/400/300?random=3"],
       "user": {
         "id": 1,
         "nickname": "旅行者",
@@ -57,7 +57,7 @@
     {
       "id": 4,
       "title": "鼓浪屿文艺之旅",
-      "coverImage": "https://picsum.photos/400/300?random=4",
+      "coverImage": ["https://picsum.photos/400/300?random=4"],
       "user": {
         "id": 1,
         "nickname": "旅行者",
@@ -75,7 +75,7 @@
     {
       "id": 5,
       "title": "张家界玻璃栈道体验",
-      "coverImage": "https://picsum.photos/400/300?random=5",
+      "coverImage": ["https://picsum.photos/400/300?random=5"],
       "user": {
         "id": 1,
         "nickname": "旅行者",
@@ -93,7 +93,7 @@
     {
       "id": 6,
       "title": "丽江古城漫步",
-      "coverImage": "https://picsum.photos/400/300?random=6",
+      "coverImage": ["https://picsum.photos/400/300?random=6"],
       "user": {
         "id": 1,
         "nickname": "旅行者",
@@ -111,7 +111,7 @@
     {
       "id": 7,
       "title": "三亚海滩度假",
-      "coverImage": "https://picsum.photos/400/300?random=7",
+      "coverImage": ["https://picsum.photos/400/300?random=7"],
       "user": {
         "id": 1,
         "nickname": "旅行者",
@@ -129,7 +129,7 @@
     {
       "id": 8,
       "title": "西安兵马俑探秘",
-      "coverImage": "https://picsum.photos/400/300?random=8",
+      "coverImage": ["https://picsum.photos/400/300?random=8"],
       "user": {
         "id": 1,
         "nickname": "旅行者",

@@ -1,64 +1,16 @@
-import React, { JSX, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Pressable,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  SafeAreaView,
-  Alert,
-  Platform,
-  Modal,
-} from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { StyleSheet, View, ScrollView, Image, Pressable, FlatList, Dimensions, TextInput, Alert } from 'react-native';
+import { Text } from '@/components/Themed';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
+import { TravelDiary } from '@/components/TravelDiaryMasonry/types';
+import myDiaries from '@/data/myDiaries.json';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import MultiImageUpload from '@/components/MultiImageUpload';
+import StatusTag from '@/components/StatusTag';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useRef, useState } from 'react';
 import { api } from '@/services/api';
-// import LocationPicker from '@/components/Map/LocationPicker.native';
-import LocationPicker from '@/components/Map/LocationPicker.web';
+import MultiImageUpload from '@/components/MultiImageUpload';
 
-// let LocationPicker:any;
-
-// if (Platform.OS === 'web') {
-//   LocationPicker = require('@/components/Map/LocationPicker.web').default;
-//   console.log('尝试加载 web 组件');
-  
-// } else {
-//   console.log('尝试加载原生组件');
-  
-  // 移动端尝试加载原生组件，失败后回退默认组件
-  // try {
-    // LocationPicker = require('@/components/Map/LocationPicker.native').default;
-  // } catch (e) {
-    // LocationPicker = require('@/components/Map/LocationPicker.default').default;
-  // }
-// }
-
-// const [Picker, setPicker] = useState(() => () => null);
-
-  // useEffect(() => {
-  //   const loadPicker = async () => {
-  //     if (Platform.OS === 'web') {
-  //       LocationPicker = require('@/components/Map/LocationPicker.web').default;
-
-  //     } else {
-  //       try {
-  //           // LocationPicker = require('@/components/Map/LocationPicker.native').default;
-  //       } catch (e) {
-  //           LocationPicker = require('@/components/Map/LocationPicker.default').default;
-  //       }
-  //     }
-  //   };
-  //   loadPicker();
-  // }, []);
-
-
-// export default LocationPicker;
+const { width: screenWidth } = Dimensions.get('window');
 
 type LocationInfo = {
   latitude: number;
@@ -66,54 +18,118 @@ type LocationInfo = {
   address: string;
 };
 
-export default function TravelPublishScreen() {
+export default function DiaryDetailScreen() {
+    // const { id } = useLocalSearchParams();
+    // const [diary, setDiary] = useState<TravelDiary | undefined>(undefined);
+    // console.log('Received diary id:', id); // 添加日志查看接收到的参数
+  
+    // const convertResponseToTravelDiary = (responseData: any): TravelDiary => {
+    //   const data = responseData.data[0];
+    //   return {
+    //     id: data.id,
+    //     title: data.title,
+    //     content: data.content,
+    //     coverImage: data.coverImage.map((image: string) => `http://localhost:5001/api/images/image?filename=${image}`),
+    //     video: data.video ? `http://localhost:5001/api/images/video?filename=${data.video}` : undefined,
+    //     duration: data.duration ? parseInt(data.duration) : 0,
+    //     type: data.video ? 'video' : 'image',
+    //     tags: data.tags || [],
+    //     When: data.When,
+    //     Who: data.Who,
+    //     Days: data.Days,
+    //     Money: data.Money,
+    //     user: {
+    //       id: data.user.id,
+    //       nickname: data.user.nickname,
+    //       avatar: `http://localhost:5001/api/images/image?filename=${data.user.avatar}`
+    //     },
+    //     likes: data.likes,
+    //     collects: data.collects,
+    //     comments: data.comments,
+    //     views: data.views,
+    //     location: data.location,
+    //     createTime: data.createTime,
+    //     status: 'approved',
+    //     commentsData: data.commentsData || []
+    //   };
+    // };
+  
+    // useEffect(() => {
+    //   const fetchData = async () => {
+    //     console.log('Received diary id:', id);
+    //     const response = await api.get(`/api/travel-notes/${id}`);
+    //     console.log('Response:', response.data);
+    //     const convertedDiary = convertResponseToTravelDiary(response.data);
+    //     console.log('Converted diary:', convertedDiary);
+    //     setDiary(convertedDiary);
+    //   };
+    //   fetchData();
+    // }, [id]);
 
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [imageFilenames, setImageFilenames] = useState<string[]>([]);
+// ——————————————————————————
 
 
-  // const [location, setLocation] = useState('');
-  const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [cost, setCost] = useState('');
-  const [companions, setCompanions] = useState('');
-  const [address, setAddress] = useState('');
-  const [location, setLocation] = useState<LocationInfo | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
+    const { id } = useLocalSearchParams();
+    const diary = myDiaries.diaries.find(d => d.id === Number(id)) as unknown as TravelDiary;
+    const router = useRouter();
+  
+      const [title, setTitle] = useState(diary.title);
+      const [content, setContent] = useState(diary.content);
+      const [imageFilenames, setImageFilenames] = useState<string[]>(Array.isArray(diary.coverImage) ? diary.coverImage : []);
+    
+    
+      // const [location, setLocation] = useState('');
+      const [date, setDate] = useState(new Date());
+      const [showDatePicker, setShowDatePicker] = useState(false);
+      const [cost, setCost] = useState('');
+      const [companions, setCompanions] = useState('');
+      const [address, setAddress] = useState('');
+      const [location, setLocation] = useState<LocationInfo | null>(null);
+      const [modalVisible, setModalVisible] = useState(false);
+    
+      const handleLocationSelected = (location: LocationInfo) => {
+        setLocation(location);
+        setAddress(location.address);
+        setModalVisible(false);
+      };
 
-  const handleLocationSelected = (location: LocationInfo) => {
-    setLocation(location);
-    setAddress(location.address);
-    setModalVisible(false);
-  };
+      const handleSubmit = async () => {
+          if (!title || !content) {
+            Alert.alert('提示', '标题和内容不能为空');
+            return;
+          }
+      
+          if (imageFilenames.length === 0) {
+            Alert.alert('提示', '至少上传 1 张图片');
+            return;
+          }
+      
+          const noteData = { title, content, images: imageFilenames, location, date, cost, companions };
+          console.log('发布内容：', noteData);
+      
+          try {
+            const response = await api.put('/api/travel-notes/', noteData);
+            if (response.status === 201) {
+              alert('游记创建成功');
+            }
+          } catch (error) {
+            console.error('保存失败:', error);
+            alert('游记创建失败');
+          }
+        };
 
-
-  // 提交游记
-  const handleSubmit = async () => {
-    if (!title || !content) {
-      Alert.alert('提示', '标题和内容不能为空');
-      return;
-    }
-
-    if (imageFilenames.length === 0) {
-      Alert.alert('提示', '至少上传 1 张图片');
-      return;
-    }
-
-    const noteData = { title, content, images: imageFilenames, location, date, cost, companions };
-    console.log('发布内容：', noteData);
-
-    try {
-      const response = await api.post('/api/travel-notes/', noteData);
-      if (response.status === 201) {
-        alert('游记创建成功');
-      }
-    } catch (error) {
-      console.error('保存失败:', error);
-      alert('游记创建失败');
-    }
-  };
+  if (!diary) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back-outline" size={30} color="black" />
+        </Pressable>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text>未找到该游记</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -127,6 +143,7 @@ export default function TravelPublishScreen() {
       <ScrollView>
         <View>
           <MultiImageUpload
+          initialImages={imageFilenames}
             onUploadSuccess={(filenames) => {
               setImageFilenames(filenames);
               console.log('上传成功:', filenames);
@@ -161,7 +178,6 @@ export default function TravelPublishScreen() {
             {/* 地点 */}
             <View style={styles.formItem}>
               <Ionicons name="location-outline" size={20} color="#555" />
-              {Platform.OS === 'web' ? (
                 <TextInput
                   style={styles.formInput}
                   placeholder="添加地点或线路"
@@ -169,43 +185,20 @@ export default function TravelPublishScreen() {
                   value={address}
                   onChangeText={setAddress}
                 />
-              ) : (
-                <>
-                  <TouchableOpacity
-                    style={styles.touchable}
-                    onPress={() => setModalVisible(true)}
-                  >
-                    <Text style={address ? styles.addressText : styles.placeholderText}>
-                      {address || '点击选择地址'}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <Modal visible={modalVisible} animationType="slide">
-                    <LocationPicker onLocationSelected={handleLocationSelected} />
-                  </Modal>
-                </>
-              )}
             </View>
 
             {/* 出发时间 */}
-            <Pressable style={styles.formItem} onPress={() => setShowDatePicker(true)}>
+            <View style={styles.formItem}>
               <Ionicons name="calendar-outline" size={20} color="#555" />
-              <Text style={styles.formInput}>
-                出发日期：{date.toLocaleDateString()}
-              </Text>
-            </Pressable>
-
-            {showDatePicker && (
-              <DateTimePicker
-                value={date}
-                mode="date"
-                display="default"
-                onChange={(_, selectedDate) => {
-                  setShowDatePicker(false);
-                  if (selectedDate) setDate(selectedDate);
-                }}
+              <TextInput
+                style={styles.formInput}
+                placeholder="出发时间"
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+                value={cost}
+                onChangeText={setCost}
               />
-            )}
+            </View>
 
             {/* 人均花费 */}
             <View style={styles.formItem}>
@@ -249,7 +242,6 @@ export default function TravelPublishScreen() {
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'white' },
