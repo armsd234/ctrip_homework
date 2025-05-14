@@ -559,7 +559,8 @@ router.get('/user/:userId', async (req, res) => {
 
         const query = {
             author: req.params.userId,
-            isDeleted: false
+            isDeleted: false,
+            // status: { $in: ['pending', 'approved'] },
         };
 
         const [notes, total] = await Promise.all([

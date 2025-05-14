@@ -248,7 +248,7 @@ export default function DiaryListDetailScreen() {
             </View>
 
             {/*地点标记*/}
-            {!!(diary.tags) && <TouchableOpacity style={styles.tags} onPress={handleTagPress}>
+            {!!(diary.tags?.length) && <TouchableOpacity style={styles.tags} onPress={handleTagPress}>
               <View style={styles.tagContainer}>
                 <Ionicons name="location-outline" size={12} color="#000" />
                 <Text style={styles.tagText}>
@@ -280,7 +280,7 @@ export default function DiaryListDetailScreen() {
             </View>
 
             {/* 地点详情弹窗 */}
-            {!!(diary.tags) && <Modal
+            {!!(diary.tags?.length) && <Modal
               animationType="slide"
               transparent={true}
               visible={modalVisible}
@@ -297,9 +297,9 @@ export default function DiaryListDetailScreen() {
 
                   {diary.tags.map((tag, index) => {
                     const info = {
-                      image: tag.image,
-                      suggestion: tag.suggestion,
-                      url: tag.url,
+                      image: tag.image || '',
+                      suggestion: tag.suggestion || '',
+                      url: tag.url || '#',
                     };
 
                     return (
@@ -313,7 +313,7 @@ export default function DiaryListDetailScreen() {
                       >
                         <Image source={{ uri: info.image }} style={styles.destImage} />
                         <View style={{ flex: 1, marginLeft: 12 }}>
-                          <Text style={styles.destName}> {tag.name}· 攻略</Text>
+                          <Text style={styles.destName}> {tag.name || '未知地点'}· 攻略</Text>
                           {info.suggestion ? (
                             <Text style={styles.destSuggestion}>{info.suggestion}</Text>
                           ) : null}
