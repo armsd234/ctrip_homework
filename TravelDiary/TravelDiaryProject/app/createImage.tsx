@@ -19,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import MultiImageUpload from '@/components/MultiImageUpload';
 import { api } from '@/services/api';
-// import LocationPicker from '@/components/Map/LocationPicker.native';
+import LocationPicker from '@/components/Map/LocationPicker.native';
 // import LocationPicker from '@/components/Map/LocationPicker.web';
 
 // let LocationPicker:any;
