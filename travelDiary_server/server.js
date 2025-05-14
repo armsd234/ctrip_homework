@@ -83,21 +83,6 @@ async function initializeDatabase() {
         });
         console.log('审核人员账号创建成功');
 
-        // 创建普通用户账号
-        const userHashedPassword = await bcrypt.hash(config.user1.password, 10);
-        await User.create({
-            ...config.user1,
-            password: userHashedPassword
-        });
-        console.log('普通用户1账号创建成功');
-
-        const userHashedPassword2 = await bcrypt.hash(config.user2.password, 10);
-        await User.create({
-            ...config.user2,
-            password: userHashedPassword2
-        });
-        console.log('普通用户1账号创建成功');
-
         // 创建默认数据
         try {
             // 创建标签默认数据
@@ -106,9 +91,9 @@ async function initializeDatabase() {
 
             // 创建用户默认数据
             const users = await User.create([
-                { username: 'user123', password: await bcrypt.hash('123456', 10), nickname: '旅行者1', email: 'user123@example.com', role: 'user' },
-                { username: 'user12', password: await bcrypt.hash('123456', 10), nickname: '旅行者2', email: 'user12@example.com', role: 'user' },
-                { username: 'user1234', password: await bcrypt.hash('123456', 10), nickname: '旅行者2', email: 'user1234@example.com', role: 'user' }
+                { username: 'user1', password: await bcrypt.hash('123456', 10), nickname: '旅行者1', email: 'user1@example.com', role: 'user' },
+                { username: 'user2', password: await bcrypt.hash('123456', 10), nickname: '旅行者2', email: 'user2@example.com', role: 'user' },
+                { username: 'user3', password: await bcrypt.hash('123456', 10), nickname: '旅行者3', email: 'user3@example.com', role: 'user' }
             ]);
             console.log('用户默认数据创建成功');
 
@@ -122,15 +107,7 @@ async function initializeDatabase() {
                 { title: '文化探索', content: '了解当地文化的经历...', author: users[1]._id, tags: [tags[2]._id], isPublic: true },
                 { title: '历史记忆', content: '记录历史上的重要事件...', author: users[2]._id, tags: [tags[3]._id], isPublic: true },
                 { title: '美食之旅', content: '品尝当地美食的记录...', author: users[2]._id, tags: [tags[1]._id], isPublic: true },
-                { title: '文化探索', content: '了解当地文化的经历...', author: users[0]._id, tags: [tags[2]._id], isPublic: true },
-                { title: '历史记忆', content: '记录历史上的重要事件...', author: users[1]._id, tags: [tags[3]._id], isPublic: true },
-                { title: '美食之旅', content: '品尝当地美食的记录...', author: users[1]._id, tags: [tags[1]._id], isPublic: true },
-                { title: '文化探索', content: '了解当地文化的经历...', author: users[2]._id, tags: [tags[2]._id], isPublic: true },
-                { title: '历史记忆', content: '记录历史上的重要事件...', author: users[0]._id, tags: [tags[3]._id], isPublic: true },
-                { title: '美食之旅', content: '品尝当地美食的记录...', author: users[0]._id, tags: [tags[1]._id], isPublic: true },
-                { title: '文化探索', content: '了解当地文化的经历...', author: users[1]._id, tags: [tags[2]._id], isPublic: true },
-                { title: '历史记忆', content: '记录历史上的重要事件...', author: users[2]._id, tags: [tags[3]._id], isPublic: true }
-            ]);
+                ]);
             console.log('游记默认数据创建成功');
 
             // 创建评论默认数据

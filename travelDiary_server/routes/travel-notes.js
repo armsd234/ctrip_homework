@@ -807,11 +807,18 @@ router.get('/:id/like/check', auth, async (req, res) => {
         // 查找点赞记录
         const existingLike = await Like.findOne({
             userId: req.user._id,
-            noteId: note._id
+            noteId: note._id,
+            isDeleted: false
+        });
+
+        const likesCount = await Like.countDocuments({
+            noteId: note._id,
+            isDeleted: false
         });
 
         res.json({
-            hasLiked: !!existingLike
+            hasLiked: !!existingLike,
+            likesCount
         });
     } catch (error) {
         console.error('检查点赞状态失败:', error);
@@ -831,11 +838,18 @@ router.get('/:id/favorite/check', auth, async (req, res) => {
         // 查找收藏记录
         const existingFavorite = await Favorite.findOne({
             userId: req.user._id,
-            noteId: note._id
+            noteId: note._id,
+            isDeleted: false
+        });
+
+        const favoriteCount = await Favorite.countDocuments({
+            noteId: note._id,
+            isDeleted: false
         });
 
         res.json({
-            hasFavorited: !!existingFavorite
+            hasFavorited: !!existingFavorite,
+            favoriteCount
         });
     } catch (error) {
         console.error('检查收藏状态失败:', error);
