@@ -199,7 +199,7 @@ const Mainindex = () => {
     return (
         <div style={containerStyle}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h1 style={{ fontSize: '24px', margin: 0, color: '#333' }}>仪表盘</h1>
+                <h1 style={{ fontSize: '24px', margin: 0, color: '#333' }}>监控面板</h1>
 
                 {/* <DatePicker.RangePicker onChange={(dates) => { if (dates) { setsearchTime({ startDate: dates[0], endDate: dates[1] }); } }} /> */}
             </div>

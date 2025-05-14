@@ -30,7 +30,7 @@ const Login = () => {
                 className={styles.videoBackground}
             />
             <div className={styles.overlay} />
-            <Card title="审核管理系统" className={styles.loginCard}>
+            <Card title="迹忆管理系统" className={styles.loginCard}>
                 <Form
                     form={form}
                     name="login"
