@@ -152,29 +152,27 @@ export default function DiaryListDetailScreen() {
     if (diary) {
       setLikesCount(diary.likes || 0);
       setCollectsCount(diary.collects || 0);
-    }
-  }, [diary]);
 
-  // 在组件加载时检查当前用户是否已点赞和收藏
-  useEffect(() => {
-    const checkUserInteractions = async () => {
-      try {
-        // 检查点赞状态
-        const likeResponse = await api.get(`/api/travel-notes/${id}/like/check`);
-        setLiked(likeResponse.data.hasLiked);
-        
-        // 检查收藏状态
-        const collectResponse = await api.get(`/api/travel-notes/${id}/favorite/check`);
-        setCollected(collectResponse.data.hasFavorited);
-      } catch (error) {
-        console.error('检查用户交互状态失败:', error);
-      }
-    };
-    
-    if (id) {
+      // 检查用户交互状态
+      const checkUserInteractions = async () => {
+        try {
+          // 检查点赞状态
+          const likeResponse = await api.get(`/api/travel-notes/${id}/like/check`);
+          setLiked(likeResponse.data.hasLiked);
+          
+          // 检查收藏状态
+          const collectResponse = await api.get(`/api/travel-notes/${id}/favorite/check`);
+          setCollected(collectResponse.data.hasFavorited);
+          console.log('Liked',liked);
+          console.log('collected',collected);
+        } catch (error) {
+          console.error('检查用户交互状态失败:', error);
+        }
+      };
+      
       checkUserInteractions();
     }
-  }, [id]);
+  }, [diary, id]);
 
   // 加载评论列表
   useEffect(() => {
@@ -210,14 +208,14 @@ export default function DiaryListDetailScreen() {
     try {
       if (!liked) {
         // 点赞
-        const response = await api.post(`/api/travel-notes/${id}/like`);
+        await api.post(`/api/travel-notes/${id}/like`);
         setLiked(true);
-        setLikesCount(response.data.likesCount);
+        setLikesCount(prev => prev + 1);
       } else {
         // 取消点赞
-        const response = await api.delete(`/api/travel-notes/${id}/like`);
+        await api.delete(`/api/travel-notes/${id}/like`);
         setLiked(false);
-        setLikesCount(response.data.likesCount);
+        setLikesCount(prev => prev - 1);
       }
     } catch (error: any) {
       if (error.response?.status === 401) {
@@ -233,14 +231,14 @@ export default function DiaryListDetailScreen() {
     try {
       if (!collected) {
         // 收藏
-        const response = await api.post(`/api/travel-notes/${id}/favorite`);
+        await api.post(`/api/travel-notes/${id}/favorite`);
         setCollected(true);
-        setCollectsCount(response.data.favoriteCount);
+        setCollectsCount(prev => prev + 1);
       } else {
         // 取消收藏
-        const response = await api.delete(`/api/travel-notes/${id}/favorite`);
+        await api.delete(`/api/travel-notes/${id}/favorite`);
         setCollected(false);
-        setCollectsCount(response.data.favoriteCount);
+        setCollectsCount(prev => prev - 1);
       }
     } catch (error: any) {
       if (error.response?.status === 401) {
@@ -541,20 +539,32 @@ export default function DiaryListDetailScreen() {
             <Ionicons name="send" size={20} color="#1E95D4" />
           </TouchableOpacity>
 
-          <Pressable style={styles.statItem} onPress={handleLike}>
+          <Pressable 
+            style={[styles.statItem, liked && styles.likedItem]} 
+            onPress={handleLike}
+          >
             <Ionicons
               name={liked ? 'heart' : 'heart-outline'}
-              style={[styles.statIcon, liked && { color: 'red' }]}
+              size={24}
+              color={liked ? '#FF4D4F' : '#666'}
             />
-            <Text style={styles.statValue}>{likesCount}</Text>
+            <Text style={[styles.statValue, liked && styles.likedText]}>
+              {likesCount}
+            </Text>
           </Pressable>
 
-          <Pressable style={styles.statItem} onPress={handleCollect}>
+          <Pressable 
+            style={[styles.statItem, collected && styles.collectedItem]} 
+            onPress={handleCollect}
+          >
             <Ionicons
               name={collected ? 'star' : 'star-outline'}
-              style={[styles.statIcon, collected && { color: "#F0C645" }]}
+              size={24}
+              color={collected ? '#F0C645' : '#666'}
             />
-            <Text style={styles.statValue}>{collectsCount}</Text>
+            <Text style={[styles.statValue, collected && styles.collectedText]}>
+              {collectsCount}
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -722,7 +732,16 @@ const styles = StyleSheet.create({
   statItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 12
+    marginRight: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 16,
+  },
+  likedItem: {
+    backgroundColor: 'rgba(255, 77, 79, 0.1)',
+  },
+  collectedItem: {
+    backgroundColor: 'rgba(240, 198, 69, 0.1)',
   },
   statIcon: {
     fontSize: 24,
@@ -732,6 +751,13 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 14,
     color: '#333',
+    marginLeft: 4,
+  },
+  likedText: {
+    color: '#FF4D4F',
+  },
+  collectedText: {
+    color: '#F0C645',
   },
   modalOverlay: {
     flex: 1,

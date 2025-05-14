@@ -1,4 +1,4 @@
-import { StyleSheet, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { TravelDiary } from '@/components/TravelDiaryMasonry/types';
@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '@/services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { Text } from '@/components/Themed';
+import React from 'react';
 
 export default function MyDiaryScreen() {
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
@@ -18,6 +19,7 @@ export default function MyDiaryScreen() {
   const [isReady, setIsReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // 修改 loadAllData 函数，初始化过滤后的数据
   const loadAllData = async () => {
@@ -123,6 +125,18 @@ export default function MyDiaryScreen() {
     }
   };
 
+  // 添加刷新回调函数
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadAllData();
+    } catch (error) {
+      console.error('刷新失败:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [user?.user._id]);
+
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -154,7 +168,19 @@ export default function MyDiaryScreen() {
           selectedStatus={selectedStatus}
           onStatusChange={setSelectedStatus}
         />
-        <ScrollView style={styles.listContainer}>
+        <ScrollView 
+          style={styles.listContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#007AFF']} // Android
+              tintColor="#007AFF" // iOS
+              title="下拉刷新" // iOS
+              titleColor="#999999" // iOS
+            />
+          }
+        >
           {filteredDiaries.length > 0 ? (
             filteredDiaries.map(diary => (
               <View key={diary.id}>

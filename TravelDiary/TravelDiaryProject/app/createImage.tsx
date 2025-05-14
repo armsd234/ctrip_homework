@@ -17,9 +17,9 @@ import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import MultiImageUpload from '@/components/MultiImageUpload';
+import MultiImageUpload from '@/components/MultiImageUploadcopy';
 import { api } from '@/services/api';
-import LocationPicker from '@/components/Map/LocationPicker.native';
+// import LocationPicker from '@/components/Map/LocationPicker.native';
 // import LocationPicker from '@/components/Map/LocationPicker.web';
 
 // let LocationPicker:any;

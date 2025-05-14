@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Image,
@@ -8,6 +8,7 @@ import {
     Text,
     ActivityIndicator,
     Platform,
+    Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -21,6 +22,8 @@ interface ImageUploadProps {
     imageStyle?: any;
     disabled?: boolean;
     iscameraIcon?: boolean;
+    onUploadSuccess?: (filename: string) => void;
+    onUploadError?: (error: Error) => void;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -30,9 +33,12 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     imageStyle,
     disabled = false,
     iscameraIcon = true,
+    onUploadSuccess,
+    onUploadError,
 }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
+    const [image, setImage] = useState<string | null>(value || null);
 
     const handlePress = () => {
         if (disabled) return;
@@ -43,7 +49,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         if (Platform.OS !== 'web') {
           const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
           if (status !== 'granted') {
-            alert('需要相册权限才能上传图片');
+            Alert.alert('权限请求', '需要相册权限才能上传图片');
             return false;
           }
         }
@@ -70,45 +76,77 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         const hasPermission = await requestPermission();
         if (!hasPermission) return;
     
-        const result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: false,
-          allowsMultipleSelection: true,
-          selectionLimit: 1, // 限制选择数量
-          quality: 0.7,
-        });
+        try {
+          const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.7,
+            base64: Platform.OS === 'web',
+          });
     
-        if (!result.canceled && result.assets) {
-          const newImages = result.assets[0];
-          upload(newImages);
+          if (!result.canceled && result.assets && result.assets[0]) {
+            const selectedAsset = result.assets[0];
+            setImage(selectedAsset.uri);
+            await uploadImage(selectedAsset);
+          }
+        } catch (error) {
+          console.error('选择图片失败:', error);
+          Alert.alert('错误', '选择图片失败，请重试');
         }
       };
 
-      const upload = async (imageAsset: ImagePicker.ImagePickerAsset) => {
+      const uploadImage = async (selectedAsset: ImagePicker.ImagePickerAsset) => {
+        if (!selectedAsset.uri) return;
+
         try {
           setIsLoading(true);
           const formData = new FormData();
-          formData.append('image', {
-            uri: imageAsset.uri,
-            name: `image_${Date.now()}.jpg`, // 确保唯一文件名
-            type: getMimeType(imageAsset.uri), // 自动获取MIME类型
-          } as any);
+
+          if (Platform.OS === 'web') {
+            try {
+              const response = await fetch(selectedAsset.uri);
+              const blob = await response.blob();
+              formData.append('image', blob, `image_${Date.now()}.jpg`);
+            } catch (error) {
+              console.error('处理图片失败:', error);
+              throw error;
+            }
+          } else {
+            formData.append('image', {
+              uri: selectedAsset.uri,
+              type: 'image/jpeg',
+              name: `image_${Date.now()}.jpg`,
+            } as any);
+          }
 
           const response = await api.post('/api/images/image', formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
-            //   'Accept': 'application/json',
+              'Accept': 'application/json',
             },
-          });      
-    
-          if (response.data.filename && onChange) {
-            onChange(response.data.filename);
-        }
+          });
+
+          if (response.data && response.data.filename) {
+            if (typeof onUploadSuccess === 'function') {
+              onUploadSuccess(response.data.filename);
+            }
+            if (typeof onChange === 'function') {
+              onChange(response.data.filename);
+            }
+          } else {
+            throw new Error('Upload response missing filename');
+          }
         } catch (error) {
           console.error('上传失败:', error);
+          Alert.alert('上传失败', '请检查网络连接后重试');
+          setImage(null);
+          if (typeof onUploadError === 'function') {
+            onUploadError(error as Error);
+          }
         } finally {
           setIsLoading(false);
-          setModalVisible(false)
+          setModalVisible(false);
         }
       };
 
@@ -129,25 +167,36 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 onPress={handlePress}
                 disabled={disabled || isLoading}
             >
-                <Image
-                    source={getImageSource()}
-                    style={[styles.image, imageStyle]}
-                />
-                {isLoading && (
-                    <View style={styles.loadingOverlay}>
-                        <ActivityIndicator size="large" color="#fff" />
-                    </View>
-                )}
-                {!disabled && !isLoading && iscameraIcon && (
-                    <View style={styles.editOverlay} >
-                        <Ionicons name="camera" size={24} color="#fff" />
-                    </View>
-                )}
+                {image ? (
+                    <>
+                        <Image
+                            source={{ uri: image }}
+                            style={[styles.image, imageStyle]}
+                        />
+                        {isLoading && (
+                            <View style={styles.loadingOverlay}>
+                                <Text style={styles.uploadingText}>上传中...</Text>
+                            </View>
+                        )}
+                    </>
+                ) : (
+                    <>
+                        <Image
+                            source={getImageSource()}
+                            style={[styles.image, imageStyle]}
+                        />
+                        {!disabled && !isLoading && iscameraIcon && (
+                            <View style={styles.editOverlay} >
+                                <Ionicons name="camera" size={24} color="#fff" />
+                            </View>
+                        )}
 
-                {!disabled && !isLoading && !iscameraIcon && (
-                    <TouchableOpacity style={styles.addAvatarButton} onPress={handlePress} disabled={disabled || isLoading}>
-                        <Ionicons name="add" size={18} color="white" />
-                    </TouchableOpacity>
+                        {!disabled && !isLoading && !iscameraIcon && (
+                            <TouchableOpacity style={styles.addAvatarButton} onPress={handlePress} disabled={disabled || isLoading}>
+                                <Ionicons name="add" size={18} color="white" />
+                            </TouchableOpacity>
+                        )}
+                    </>
                 )}
             </TouchableOpacity>
 
@@ -256,6 +305,10 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: 'white' // White border
       },
+    uploadingText: {
+        color: 'white',
+        fontSize: 14,
+    },
 });
 
 // 添加比较函数，只在关键属性改变时重新渲染
@@ -263,7 +316,9 @@ const areEqual = (prevProps: ImageUploadProps, nextProps: ImageUploadProps) => {
     return (
         prevProps.value === nextProps.value &&
         prevProps.disabled === nextProps.disabled &&
-        prevProps.iscameraIcon === nextProps.iscameraIcon
+        prevProps.iscameraIcon === nextProps.iscameraIcon &&
+        prevProps.onUploadSuccess === nextProps.onUploadSuccess &&
+        prevProps.onUploadError === nextProps.onUploadError
     );
 };
 

@@ -32,6 +32,8 @@ export default function TravelDiaryMasonry({
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
+  console.log('diaries',diaries);
+
   // 将数据分为左右两列
   const { leftColumn, rightColumn } = useMemo(() => {
     const left: TravelDiary[] = [];
@@ -58,7 +60,7 @@ export default function TravelDiaryMasonry({
 
   // 渲染单个游记卡片
   const renderItem = (item: TravelDiary) => (
-
+    
     <Pressable style={styles.card} onPress={() => onPressItem?.(item)} >
 
       <Image
@@ -77,7 +79,7 @@ export default function TravelDiaryMasonry({
           <Text style={styles.nickname} numberOfLines={1}>{item.user.nickname}</Text>
           <View style={styles.statItem}>
             <Ionicons name="eye-outline" size={16} color="#666" />
-            <Text style={styles.statText}>{item.likes > 9999 ? (item.likes / 10000).toFixed(1) + `万` : item.likes}</Text>
+            <Text style={styles.statText}>{item.views > 9999 ? (item.views / 10000).toFixed(1) + `万` : item.views}</Text>
           </View>
         </View>
       </View>

@@ -321,7 +321,7 @@ router.get('/:id', async (req, res) => {
                     nickname: note.author.nickname,
                     avatar: note.author.avatar
                 },
-                likes: note.likesCount || 0,
+                likes: note.likes || 0,
                 collects: note.favoriteCount || 0,
                 comments: note.commentCount || 0,
                 views: note.views || 0,
@@ -412,7 +412,7 @@ router.post('/:id/like', auth, async (req, res) => {
         });
 
         // 更新游记的点赞数
-        note.likesCount += 1;
+        note.likes += 1;
 
         // 更新作者的被赞数
         const author = await User.findById(note.author);
@@ -427,7 +427,7 @@ router.post('/:id/like', auth, async (req, res) => {
 
         res.json({
             message: '点赞成功',
-            likesCount: note.likesCount
+            likesCount: note.likes
         });
     } catch (error) {
         console.error('点赞失败:', error);
@@ -455,7 +455,7 @@ router.delete('/:id/like', auth, async (req, res) => {
         }
 
         // 更新游记的点赞数
-        note.likesCount = Math.max(0, note.likesCount - 1);
+        note.likesCount = Math.max(0, note.likes - 1);
 
         // 更新作者的被赞数
         const author = await User.findById(note.author);
@@ -469,7 +469,7 @@ router.delete('/:id/like', auth, async (req, res) => {
 
         res.json({
             message: '取消点赞成功',
-            likesCount: note.likesCount
+            likesCount: note.likes
         });
     } catch (error) {
         console.error('取消点赞失败:', error);
@@ -808,12 +808,10 @@ router.get('/:id/like/check', auth, async (req, res) => {
         const existingLike = await Like.findOne({
             userId: req.user._id,
             noteId: note._id,
-            isDeleted: false
         });
 
         const likesCount = await Like.countDocuments({
             noteId: note._id,
-            isDeleted: false
         });
 
         res.json({
@@ -830,6 +828,7 @@ router.get('/:id/like/check', auth, async (req, res) => {
 router.get('/:id/favorite/check', auth, async (req, res) => {
     try {
         const note = await TravelNote.findById(req.params.id);
+        console.log('note',note.toObject());
 
         if (!note || note.isDeleted) {
             return res.status(404).json({ message: '游记不存在' });
@@ -839,18 +838,19 @@ router.get('/:id/favorite/check', auth, async (req, res) => {
         const existingFavorite = await Favorite.findOne({
             userId: req.user._id,
             noteId: note._id,
-            isDeleted: false
         });
 
         const favoriteCount = await Favorite.countDocuments({
             noteId: note._id,
-            isDeleted: false
         });
 
         res.json({
             hasFavorited: !!existingFavorite,
             favoriteCount
         });
+        console.log('res.req.user._id',req.user._id);
+        console.log('res.hasFavorited',favoriteCount);
+        console.log('res.hasFavorited',!!existingFavorite);
     } catch (error) {
         console.error('检查收藏状态失败:', error);
         res.status(500).json({ message: '服务器错误' });

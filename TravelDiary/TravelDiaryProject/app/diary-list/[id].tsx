@@ -33,6 +33,7 @@ export default function DiaryListDetailScreen() {
   
     const convertResponseToTravelDiary = (responseData: any): TravelDiary => {
       const data = responseData.data[0];
+      console.log('data',data);
       return {
         id: data.id,
         title: data.title,
@@ -101,9 +102,9 @@ export default function DiaryListDetailScreen() {
   const router = useRouter();
 
   const [liked, setLiked] = useState(false);
-  const [collected, setCollected] = useState(false)
-  const [likesCount, setLikesCount] = useState(diary?.likes || 0);
-  const [collectsCount, setCollectsCount] = useState(diary?.collects || 0);
+  const [collected, setCollected] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [collectsCount, setCollectsCount] = useState(0);
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
@@ -116,25 +117,31 @@ export default function DiaryListDetailScreen() {
       }
     }, [diary]);
   
-  if (!diary) {
-    return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-              <Pressable style={styles.backButton} onPress={() => router.back()}>
-                <Ionicons name="chevron-back-outline" size={30} color="black" />
-              </Pressable>
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <Text>未找到该游记</Text>
-                
-              </View>
-      
-            </SafeAreaView>
-    );
-  }
+  // 在获取到游记数据后更新点赞和收藏数，并检查用户交互状态
+  useEffect(() => {
+    const initializeInteractions = async () => {
+      if (!diary || !id) return;
 
-  // 统一 coverImage 为数组
-  const images = Array.isArray(diary.coverImage)
-    ? diary.coverImage
-    : [diary.coverImage];
+      setLikesCount(diary.likes || 0);
+      setCollectsCount(diary.collects || 0);
+
+      try {
+        // 检查点赞状态
+        const likeResponse = await api.get(`/api/travel-notes/${id}/like/check`);
+        setLiked(likeResponse.data.hasLiked);
+        
+        // 检查收藏状态
+        const collectResponse = await api.get(`/api/travel-notes/${id}/favorite/check`);
+        setCollected(collectResponse.data.hasFavorited);
+        console.log('Liked:', likeResponse.data.hasLiked);
+        console.log('Collected:', collectResponse.data.hasFavorited);
+      } catch (error) {
+        console.error('检查用户交互状态失败:', error);
+      }
+    };
+    
+    initializeInteractions();
+  }, [diary, id]);
 
   const handleLike = async () => {
     try {
@@ -259,6 +266,26 @@ export default function DiaryListDetailScreen() {
       }
     }
   };
+
+  if (!diary) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+              <Pressable style={styles.backButton} onPress={() => router.back()}>
+                <Ionicons name="chevron-back-outline" size={30} color="black" />
+              </Pressable>
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Text>未找到该游记</Text>
+                
+              </View>
+      
+            </SafeAreaView>
+    );
+  }
+
+  // 统一 coverImage 为数组
+  const images = Array.isArray(diary.coverImage)
+    ? diary.coverImage
+    : [diary.coverImage];
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -442,20 +469,32 @@ export default function DiaryListDetailScreen() {
             <Ionicons name="send" size={20} color="#1E95D4" />
           </TouchableOpacity>
 
-          <Pressable style={styles.statItem} onPress={handleLike}>
+          <Pressable 
+            style={[styles.statItem, liked && styles.likedItem]} 
+            onPress={handleLike}
+          >
             <Ionicons
               name={liked ? 'heart' : 'heart-outline'}
-              style={[styles.statIcon, liked && { color: 'red' }]}
+              size={24}
+              color={liked ? '#FF4D4F' : '#666'}
             />
-            <Text style={styles.statValue}>{likesCount}</Text>
+            <Text style={[styles.statValue, liked && styles.likedText]}>
+              {likesCount}
+            </Text>
           </Pressable>
 
-          <Pressable style={styles.statItem} onPress={handleCollect}>
+          <Pressable 
+            style={[styles.statItem, collected && styles.collectedItem]} 
+            onPress={handleCollect}
+          >
             <Ionicons
               name={collected ? 'star' : 'star-outline'}
-              style={[styles.statIcon, collected && { color: "#F0C645" }]}
+              size={24}
+              color={collected ? '#F0C645' : '#666'}
             />
-            <Text style={styles.statValue}>{collectsCount}</Text>
+            <Text style={[styles.statValue, collected && styles.collectedText]}>
+              {collectsCount}
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -623,7 +662,16 @@ const styles = StyleSheet.create({
   statItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 12
+    marginRight: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 16,
+  },
+  likedItem: {
+    backgroundColor: 'rgba(255, 77, 79, 0.1)',
+  },
+  collectedItem: {
+    backgroundColor: 'rgba(240, 198, 69, 0.1)',
   },
   statIcon: {
     fontSize: 24,
@@ -633,6 +681,13 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 14,
     color: '#333',
+    marginLeft: 4,
+  },
+  likedText: {
+    color: '#FF4D4F',
+  },
+  collectedText: {
+    color: '#F0C645',
   },
   modalOverlay: {
     flex: 1,

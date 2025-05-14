@@ -66,7 +66,7 @@ const TravelDiaryMasonry = ({
           <Text style={styles.nickname} numberOfLines={1}>{item.user.nickname}</Text>
           <View style={styles.statItem}>
             <Ionicons name="eye-outline" size={16} color="#666" />
-            <Text style={styles.statText}>{item.likes > 9999 ? (item.likes / 10000).toFixed(1) + `万` : item.likes}</Text>
+            <Text style={styles.statText}>{item.views > 9999 ? (item.views / 10000).toFixed(1) + `万` : item.views}</Text>
           </View>
         </View>
       </View>
