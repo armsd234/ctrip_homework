@@ -60,8 +60,8 @@ const TravelNoteSchema = new mongoose.Schema({
   id: { type: Number },
   title: { type: String, required: true },
   content: { type: String, required: true },
-  images: { type: [String], default: ['food.jpg', 'hot_spot.jpg', 'culture.jpg'] }, // 存储图片URL数组
-  video: { type: String, default: '1747059904050-c667724fd0e22e0648bb78adfbdc9406.mp4' }, // 存储视频URL ,default: '1747059904050-c667724fd0e22e0648bb78adfbdc9406.mp4' 
+  images: { type: [String] }, // 存储图片URL数组
+  video: { type: String }, // 存储视频URL ,default: '1747059904050-c667724fd0e22e0648bb78adfbdc9406.mp4' 
   location: { type: String, default: '中国-南京' }, // 存储位置信息
   duration: {type: Number, default: 0}, // 存储持续时间
 

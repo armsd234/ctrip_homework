@@ -26,13 +26,13 @@ const styles = StyleSheet.create({
       fontSize: 28,
       fontWeight: 'bold',
       color: primaryColor,
-      marginBottom: 50,
+      marginBottom: 20,
       textAlign: 'center',
     },
      subtitle: {
       fontSize: 16,
       color: textColor,
-      marginBottom: 20,
+      marginBottom: 50,
       textAlign: 'center',
     },
     errorText: {

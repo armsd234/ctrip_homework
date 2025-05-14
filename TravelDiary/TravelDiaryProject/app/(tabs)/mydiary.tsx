@@ -14,7 +14,7 @@ const CURRENT_USER_ID = 1;
 
 export default function MyDiaryScreen() {
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
-  const [diaries] = useState<TravelDiary[]>(myDiaries.diaries as TravelDiary[]);
+  const [diaries] = useState<TravelDiary[]>(myDiaries.diaries as unknown as TravelDiary[]);
   const router = useRouter();
 
   // 根据状态筛选游记
@@ -32,7 +32,7 @@ export default function MyDiaryScreen() {
     router.push(`/diary-edit/${diary.id}`);
   };
 
-  const handleDeleteDiary = async(id: number) => {
+  const handleDeleteDiary = async(id: string) => {
       try {
         const response = await api.post(`/api/travel-notes/:${id}`, {
           method: 'DELETE',

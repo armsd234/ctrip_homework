@@ -215,7 +215,8 @@ const AuthScreen: React.FC = () => {
 
   const renderLoginForm = () => (
     <>
-      <Text style={styles.title}>登录某书，开启旅程</Text>
+      <Text style={styles.title}>迹忆</Text>
+      <Text style={styles.subtitle}>你的旅行故事，从这里开始。</Text>
 
       <View style={styles.inputContainer}>
         <MaterialIcons name="email" size={20} color={textColor} style={styles.icon} />

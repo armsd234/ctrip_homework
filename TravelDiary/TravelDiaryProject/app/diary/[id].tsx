@@ -13,7 +13,7 @@ const { width: screenWidth } = Dimensions.get('window');
 
 export default function DiaryDetailScreen() {
   const { id } = useLocalSearchParams();
-  const diary = myDiaries.diaries.find(d => d.id === Number(id)) as TravelDiary;
+  const diary = myDiaries.diaries.find(d => d.id === Number(id)) as unknown as TravelDiary;
   const router = useRouter();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
@@ -50,7 +50,7 @@ export default function DiaryDetailScreen() {
     router.push(`/diary-edit/${diary.id}`);
   };
 
-  const handleDeleteDiary = async(id: number) => {
+  const handleDeleteDiary = async(id: string) => {
     try {
       const response = await api.post(`/api/travel-notes/:${id}`, {
         method: 'DELETE',
@@ -141,7 +141,7 @@ export default function DiaryDetailScreen() {
           <View style={styles.actionButtons}>
             <Pressable
               style={styles.actionButton}
-            // onPress={handleEditDiary}
+            onPress={() => handleEditDiary(diary)}
             >
               <Ionicons name="create-outline" size={20} color="#2196F3" />
               <Text style={styles.actionText}>编辑</Text>

@@ -174,7 +174,7 @@ export default function DiaryListDetailScreen() {
               <View style={styles.tagContainer}>
               <Ionicons name="location-outline" size={12} color="#000" />
               <Text style={styles.tagText}>
-                {diary.tags.length > 1 ?
+                {diary.tags.length > 0 ?
                   `${diary.tags[0].name}等`
                   : diary.tags[0].name
                 }
