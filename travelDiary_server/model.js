@@ -63,7 +63,7 @@ const TravelNoteSchema = new mongoose.Schema({
   images: { type: [String] }, // 存储图片URL数组
   video: { type: String }, // 存储视频URL ,default: '1747059904050-c667724fd0e22e0648bb78adfbdc9406.mp4' 
   location: { type: String, default: '中国-南京' }, // 存储位置信息
-  duration: {type: Number, default: 0}, // 存储持续时间
+  duration: { type: Number, default: 0 }, // 存储持续时间
 
   when: { type: String, default: '0' },     // 时间字段
   days: { type: String, default: '0' },     // 天数字段
@@ -110,7 +110,7 @@ const ReviewLog = mongoose.model('ReviewLog', ReviewLogSchema);
 const CommentSchema = new mongoose.Schema({
   id: { type: Number },
   content: { type: String, required: true },
-  authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   noteId: { type: mongoose.Schema.Types.ObjectId, ref: 'TravelNote', required: true },
 
   //回复
@@ -148,7 +148,7 @@ const Like = mongoose.model('Like', LikeSchema);
 
 // 举报记录
 const ReportSchema = new mongoose.Schema({
-  id: { type: Number},
+  id: { type: Number },
   reporterId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   reportedId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   noteId: { type: mongoose.Schema.Types.ObjectId, ref: 'TravelNote' },

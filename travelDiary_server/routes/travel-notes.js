@@ -55,6 +55,7 @@ router.get('/', async (req, res) => {
     }
 });
 
+
 // 审核员获取游记列表(首页)
 router.get('/review/notes', async (req, res) => {
     try {
@@ -111,8 +112,8 @@ router.post('/', auth, async (req, res) => {
         const note = new TravelNote({
             title,
             content,
-            images,
-            video,
+            images: images ? images : [''],
+            video: video ? video : '',
             author: req.user._id,
             status: 'pending'
         });
@@ -127,6 +128,88 @@ router.post('/', auth, async (req, res) => {
 
         res.status(201).json(note);
     } catch (error) {
+        res.status(500).json({ message: '服务器错误' });
+    }
+});
+
+
+// 获取所有游记详情,所有详情，每个游记的格式如单个游记详情
+router.get('/node-all', async (req, res) => {
+    try {
+        const notes = await TravelNote.find({ isDeleted: false })
+            .populate('author')
+            .populate('tags')
+            .sort({ createdAt: -1 });
+
+        // 获取总数用于分页
+        const total = await TravelNote.countDocuments({ isDeleted: false });
+
+        // 处理每个游记的数据
+        const processedNotes = await Promise.all(notes.map(async (note) => {
+            // 获取收藏数
+            const favoritesCount = await Favorite.countDocuments({ noteId: note._id });
+
+            // 获取评论数据
+            const comments = await Comment.find({
+                noteId: note._id,
+                isDeleted: false
+            }).populate('author');
+
+            const commentsData = comments.map(comment => {
+                // 检查评论作者是否存在
+                const author = comment.author || {};
+                return {
+                    id: comment._id,
+                    content: comment.content,
+                    createdAt: comment.createdAt,
+                    user: {
+                        id: author._id || 'deleted',
+                        nickname: author.nickname || '已删除用户',
+                        avatar: author.avatar || 'default_avatar.jpg'
+                    },
+                    likes: comment.likesCount || 0,
+                };
+            }).filter(comment => comment !== null);
+
+            // 检查游记作者是否存在
+            const author = note.author || {};
+
+            // 返回格式化的游记数据
+            return {
+                id: note._id,
+                title: note.title || '',
+                When: note.when || '',
+                Days: note.days || '',
+                Money: note.money || '',
+                Who: note.who || '',
+                tags: note.tags || [],
+                content: note.content || '',
+                coverImage: note.images || [],
+                user: {
+                    id: author._id || 'deleted',
+                    nickname: author.nickname || '已删除用户',
+                    avatar: author.avatar || 'default_avatar.jpg'
+                },
+                likes: note.likes || 0,
+                collects: favoritesCount || 0,
+                comments: note.commentCount || 0,
+                views: note.views || 0,
+                location: note.location || '',
+                createTime: note.createdAt || new Date(),
+                commentsData: commentsData || [],
+                video: note.video || '',
+                duration: '00:00:00'
+            };
+        }));
+
+        // 返回响应
+        res.json({
+            data: processedNotes,
+            total
+        });
+
+    } catch (error) {
+        console.error('获取所有游记详情失败:', error);
         res.status(500).json({ message: '服务器错误' });
     }
 });
