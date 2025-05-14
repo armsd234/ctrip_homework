@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { debounce } from 'lodash';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../../contexts/AuthContext';
 
 const PAGE_SIZE = 10;
 
@@ -22,11 +23,33 @@ export default function TabOneScreen() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
-  const avatar = "https://picsum.photos/100/100?random=1";
+  const { isAuthenticated, checkToken, user } = useAuth();
+  const [isReady, setIsReady] = useState(false);
+  const [avatar, setavatar] = useState("https://picsum.photos/100/100?random=1");
+  // const avatar = "https://picsum.photos/100/100?random=1";
 
   useEffect(() => {
     setFilteredDiaries(diaries);
   }, [diaries]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      await checkToken();
+      setIsReady(true);
+    };
+    checkAuth();
+    if (user?.user._id) {
+      setavatar(`http://localhost:5001/api/images/image?filename=${user?.user.avatar}`);
+      console.log('头像:', avatar);
+    }
+    if (isReady && !isAuthenticated) {
+      router.push({
+        pathname: '/authscreen',
+        params: { from: '/(tabs)/profile' }
+      });
+    }
+  }, [isReady, isAuthenticated]);
+
 
   const handleLoadMore = useCallback(async () => {
     if (loading || !hasMore) return;

@@ -57,7 +57,7 @@ interface ProfileData {
     gender: string;
     birthday: string;
     location: string;
-    profileImage: string | number; 
+    profileImage: string | undefined; 
 }
 
 const getCurrentLocationDetail = async () => {
