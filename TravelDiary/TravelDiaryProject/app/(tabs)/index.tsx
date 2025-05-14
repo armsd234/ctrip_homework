@@ -1,16 +1,97 @@
 import { StyleSheet, TextInput, TouchableOpacity, View,Image } from 'react-native';
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Text } from '@/components/Themed';
 import TravelDiaryMasonry from '@/components/TravelDiaryMasonry';
-import { TravelDiary } from '@/components/TravelDiaryMasonry/types';
+import { TravelDiary, Tag } from '@/components/TravelDiaryMasonry/types';
 import travelDiaries from '@/data/travelDiaries.json';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { debounce } from 'lodash';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
+import { api } from '@/services/api';
 
 const PAGE_SIZE = 10;
+
+interface BackendResponse {
+  data: {
+    _id: string;
+    title: string;
+    content: string;
+    images: string[];
+    author: {
+      _id: string;
+      nickname: string;
+      avatar: string;
+    };
+    status: 'pending' | 'approved' | 'rejected';
+    createdAt: string;
+    video?: string;
+    duration?: number;
+    location?: string;
+    when?: string;
+    days?: string;
+    money?: string;
+    who?: string;
+    tags?: Array<{
+      _id: string;
+      name: string;
+      image: string;
+      suggestion?: string;
+      url: string;
+    }>;
+    views?: number;
+    commentCount?: number;
+    likesCount?: number;
+    favoriteCount?: number;
+    rejectReason?: string;
+  }[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+// 转换后端数据为前端TravelDiary格式
+const convertToTravelDiaries = (responseData: BackendResponse): TravelDiary[] => {
+  if (!responseData?.data || !Array.isArray(responseData.data)) {
+    return [];
+  }
+
+  return responseData.data.map(item => ({
+    id: item._id,
+    title: item.title || '',
+    content: item.content || '',
+    coverImage: item.images?.map(image => 
+      `http://localhost:5001/api/images/image?filename=${image}`
+    ) || [],
+    video: item.video ? `http://localhost:5001/api/images/video?filename=${item.video}` : undefined,
+    duration: item.duration || 0,
+    type: item.video ? 'video' : 'image',
+    tags: item.tags?.map(tag => ({
+      name: tag.name || '',
+      image: tag.image || '',
+      suggestion: tag.suggestion || '',
+      url: tag.url || ''
+    })) || [],
+    When: item.when || '',
+    Who: item.who || '',
+    Days: item.days || '',
+    Money: item.money || '',
+    user: {
+      id: item.author._id,
+      nickname: item.author.nickname || '未知用户',
+      avatar: `http://localhost:5001/api/images/image?filename=${item.author.avatar}`
+    },
+    likes: item.likesCount || 0,
+    collects: item.favoriteCount || 0,
+    comments: item.commentCount || 0,
+    views: item.views || 0,
+    location: item.location || '',
+    createTime: item.createdAt || new Date().toISOString(),
+    status: item.status || 'pending',
+    rejectReason: item.rejectReason
+  }));
+};
 
 export default function TabOneScreen() {
   const router = useRouter();
@@ -19,18 +100,60 @@ export default function TabOneScreen() {
   const [searchText, setSearchText] = useState('');
   const [diaries, setDiaries] = useState<TravelDiary[]>(travelDiaries.diaries as unknown as TravelDiary[]);
   const [filteredDiaries, setFilteredDiaries] = useState<TravelDiary[]>([]);
+  // const [diariestrue, setDiariestrue] = useState<TravelDiary[]>([]);
+  const [filteredDiariestrue, setFilteredDiariestrue] = useState<TravelDiary[]>([]);
+  const [MoreData, setMoreData] = useState<TravelDiary[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const [pageture, setPageture] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [hasMoreTrue, setHasMoreTrue] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const { isAuthenticated, checkToken, user } = useAuth();
   const [isReady, setIsReady] = useState(false);
   const [avatar, setavatar] = useState("https://picsum.photos/100/100?random=1");
   // const avatar = "https://picsum.photos/100/100?random=1";
+  
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const travelsRes = await api.get(`/api/travel-notes/`, { params: { page: 1, limit: 10 ,status:'approved'} });
+      const travelsData = convertToTravelDiaries(travelsRes.data);
+      console.log('loadData travelsData:', travelsData);
+      setFilteredDiariestrue(travelsData);
+      setPageture(pageture + 1);
+      setHasMoreTrue(travelsData.length===10);
+    } catch (error) {
+      console.error('获取数据失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 加载更多数据
+  const loadMoreData = async () => {
+    if (loading || !hasMoreTrue) return;
+    setLoading(true);
+    try {
+      const response = await api.get(`/api/travel-notes/`, { params: { page: pageture, limit: 10 ,status:'approved'} });
+      const newData = convertToTravelDiaries(response.data);
+      
+      setHasMoreTrue(newData.length === 10);
+      console.log(hasMoreTrue)
+      setMoreData(newData);
+    } catch (error) {
+      console.error('获取数据失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     setFilteredDiaries(diaries);
   }, [diaries]);
+
+  
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -49,6 +172,20 @@ export default function TabOneScreen() {
       });
     }
   }, [isReady, isAuthenticated]);
+  
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (filteredDiariestrue.length > 0) {
+      setDiaries(prev => {
+        const existingIds = new Set(prev.map(d => d.id));
+        const uniqueNewDiaries = filteredDiariestrue.filter(item => !existingIds.has(item.id));
+        return [...prev, ...uniqueNewDiaries];
+      });
+    }
+  }, [filteredDiariestrue]);
 
 
   const handleLoadMore = useCallback(async () => {
@@ -56,11 +193,35 @@ export default function TabOneScreen() {
 
     setLoading(true);
     setTimeout(() => {
+      loadMoreData();
+      setPageture(prev => prev + 1);
+      
+      // 使用Set对所有数据进行去重
+      setDiaries(prev => {
+        const existingIds = new Set(prev.map(d => d.id));
+        const uniqueNewData = MoreData.filter(item => !existingIds.has(item.id));
+        
+        // 创建一个新的Set来存储所有不重复的数据
+        const allDiaries = [...prev];
+        uniqueNewData.forEach(diary => {
+          if (!existingIds.has(diary.id)) {
+            allDiaries.push(diary);
+          }
+        });
+        
+        return allDiaries;
+      });
+
       const start = page * 10;
       const end = start + 10;
       const newDiaries = travelDiaries.diaries.slice(start, end) as unknown as TravelDiary[];
+      
       if (newDiaries.length > 0) {
-        setDiaries(prev => [...prev, ...newDiaries]);
+        setDiaries(prev => {
+          const existingIds = new Set(prev.map(d => d.id));
+          const uniqueNewDiaries = newDiaries.filter(item => !existingIds.has(item.id));
+          return [...prev, ...uniqueNewDiaries];
+        });
         setPage(page + 1);
       }
       setLoading(false);
@@ -71,37 +232,6 @@ export default function TabOneScreen() {
   const handlePressItem = (diary: TravelDiary) => {
     router.push(`/diary-list/${diary.id}`);
   };
-
-  // 搜索
-  // const handleSearchChange = useCallback((text: string) => {
-  //   setSearchText(text);
-  //   setIsSearching(text.length > 0);
-  //   console.log('[搜索] 输入内容:', text);
-  //   console.log('[搜索] 当前diaries数量:', diaries.length);
-
-  //   if (!text.trim()) {
-  //     setFilteredDiaries(diaries);
-  //     setIsSearching(false);
-  //     return;
-  //   }
-
-  //   const searchLower = text.toLowerCase();
-  //   const filtered = diaries.filter(diary => {
-  //     const title = diary.title?.toLowerCase() || '';
-  //     const content = diary.content?.toLowerCase() || '';
-  //     const nickname = diary.user?.nickname?.toLowerCase() || '';
-  //     console.log('当前搜索:', title,',',content);
-
-  //     return (
-  //       title.includes(searchLower) ||
-  //       content.includes(searchLower) ||
-  //       nickname.includes(searchLower)
-  //     );
-  //   });
-
-  //   console.log('[搜索] 过滤后结果数量:', filtered.length);
-  //   setFilteredDiaries(filtered);
-  // }, [diaries]);
 
   const debouncedSearch = useMemo(
     () => debounce((text: string) => {

@@ -34,9 +34,8 @@ router.get('/', async (req, res) => {
 
         const [notes, total] = await Promise.all([
             TravelNote.find(query)
-                .populate('author', '_id nickname')
+                .populate('author', '_id nickname avatar')
                 .populate('tags', 'name image suggestion url') // 标签字段，引用Tag模型
-                .populate('comments', 'content author createdAt') // 评论字段，引用Comment模型
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(parseInt(limit)),
@@ -51,6 +50,7 @@ router.get('/', async (req, res) => {
             limit: parseInt(limit)
         });
     } catch (error) {
+        console.error(error); // 打印错误信息，方便调试
         res.status(500).json({ message: '服务器错误' });
     }
 });
