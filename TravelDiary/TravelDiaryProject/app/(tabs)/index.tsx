@@ -1,9 +1,8 @@
-import { StyleSheet, TextInput, TouchableOpacity, View,Image } from 'react-native';
+import { StyleSheet, TextInput, TouchableOpacity, View,Image, RefreshControl } from 'react-native';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Text } from '@/components/Themed';
 import TravelDiaryMasonry from '@/components/TravelDiaryMasonry';
-import { TravelDiary, Tag } from '@/components/TravelDiaryMasonry/types';
-import travelDiaries from '@/data/travelDiaries.json';
+import { TravelDiary } from '@/components/TravelDiaryMasonry/types';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { debounce } from 'lodash';
@@ -96,36 +95,37 @@ const convertToTravelDiaries = (responseData: BackendResponse): TravelDiary[] =>
 export default function TabOneScreen() {
   const router = useRouter();
 
-  // diaries 游记数据、loading 加载状态、page 当前页码
   const [searchText, setSearchText] = useState('');
-  const [diaries, setDiaries] = useState<TravelDiary[]>(travelDiaries.diaries as unknown as TravelDiary[]);
+  const [diaries, setDiaries] = useState<TravelDiary[]>([]);
   const [filteredDiaries, setFilteredDiaries] = useState<TravelDiary[]>([]);
-  // const [diariestrue, setDiariestrue] = useState<TravelDiary[]>([]);
-  const [filteredDiariestrue, setFilteredDiariestrue] = useState<TravelDiary[]>([]);
-  const [MoreData, setMoreData] = useState<TravelDiary[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageture, setPageture] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [hasMoreTrue, setHasMoreTrue] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const { isAuthenticated, checkToken, user } = useAuth();
   const [isReady, setIsReady] = useState(false);
   const [avatar, setavatar] = useState("https://picsum.photos/100/100?random=1");
-  // const avatar = "https://picsum.photos/100/100?random=1";
-  
+  const [isAtBottom, setIsAtBottom] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const loadData = async () => {
+  // 初始加载数据
+  const loadInitialData = async () => {
     setLoading(true);
     try {
-      const travelsRes = await api.get(`/api/travel-notes/`, { params: { page: 1, limit: 10 ,status:'approved'} });
-      const travelsData = convertToTravelDiaries(travelsRes.data);
-      console.log('loadData travelsData:', travelsData);
-      setFilteredDiariestrue(travelsData);
-      setPageture(pageture + 1);
-      setHasMoreTrue(travelsData.length===10);
+      const response = await api.get(`/api/travel-notes/`, { 
+        params: { 
+          page: 1, 
+          limit: PAGE_SIZE,
+          status: 'approved'
+        } 
+      });
+      const travelsData = convertToTravelDiaries(response.data);
+      setDiaries(travelsData);
+      setFilteredDiaries(travelsData);
+      setPage(2);
+      setHasMore(travelsData.length === PAGE_SIZE);
     } catch (error) {
-      console.error('获取数据失败:', error);
+      console.error('获取初始数据失败:', error);
     } finally {
       setLoading(false);
     }
@@ -133,27 +133,36 @@ export default function TabOneScreen() {
 
   // 加载更多数据
   const loadMoreData = async () => {
-    if (loading || !hasMoreTrue) return;
+    if (loading || !hasMore) return;
     setLoading(true);
     try {
-      const response = await api.get(`/api/travel-notes/`, { params: { page: pageture, limit: 10 ,status:'approved'} });
+      const response = await api.get(`/api/travel-notes/`, { 
+        params: { 
+          page, 
+          limit: PAGE_SIZE,
+          status: 'approved'
+        } 
+      });
       const newData = convertToTravelDiaries(response.data);
+      setHasMore(newData.length === PAGE_SIZE);
       
-      setHasMoreTrue(newData.length === 10);
-      console.log(hasMoreTrue)
-      setMoreData(newData);
+      setDiaries(prev => {
+        const existingIds = new Set(prev.map(d => d.id));
+        const uniqueNewData = newData.filter(item => !existingIds.has(item.id));
+        return [...prev, ...uniqueNewData];
+      });
+      
+      setPage(prev => prev + 1);
     } catch (error) {
-      console.error('获取数据失败:', error);
+      console.error('获取更多数据失败:', error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    setFilteredDiaries(diaries);
-  }, [diaries]);
-
-  
+    loadInitialData();
+  }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -163,7 +172,6 @@ export default function TabOneScreen() {
     checkAuth();
     if (user?.user._id) {
       setavatar(`http://localhost:5001/api/images/image?filename=${user?.user.avatar}`);
-      console.log('头像:', avatar);
     }
     if (isReady && !isAuthenticated) {
       router.push({
@@ -172,61 +180,14 @@ export default function TabOneScreen() {
       });
     }
   }, [isReady, isAuthenticated]);
-  
-  useEffect(() => {
-    loadData();
-  }, []);
 
   useEffect(() => {
-    if (filteredDiariestrue.length > 0) {
-      setDiaries(prev => {
-        const existingIds = new Set(prev.map(d => d.id));
-        const uniqueNewDiaries = filteredDiariestrue.filter(item => !existingIds.has(item.id));
-        return [...prev, ...uniqueNewDiaries];
-      });
-    }
-  }, [filteredDiariestrue]);
+    setFilteredDiaries(diaries);
+  }, [diaries]);
 
-
-  const handleLoadMore = useCallback(async () => {
-    if (loading || !hasMore) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      loadMoreData();
-      setPageture(prev => prev + 1);
-      
-      // 使用Set对所有数据进行去重
-      setDiaries(prev => {
-        const existingIds = new Set(prev.map(d => d.id));
-        const uniqueNewData = MoreData.filter(item => !existingIds.has(item.id));
-        
-        // 创建一个新的Set来存储所有不重复的数据
-        const allDiaries = [...prev];
-        uniqueNewData.forEach(diary => {
-          if (!existingIds.has(diary.id)) {
-            allDiaries.push(diary);
-          }
-        });
-        
-        return allDiaries;
-      });
-
-      const start = page * 10;
-      const end = start + 10;
-      const newDiaries = travelDiaries.diaries.slice(start, end) as unknown as TravelDiary[];
-      
-      if (newDiaries.length > 0) {
-        setDiaries(prev => {
-          const existingIds = new Set(prev.map(d => d.id));
-          const uniqueNewDiaries = newDiaries.filter(item => !existingIds.has(item.id));
-          return [...prev, ...uniqueNewDiaries];
-        });
-        setPage(page + 1);
-      }
-      setLoading(false);
-    }, 1000);
-  }, [diaries, loading, page]);
+  const handleLoadMore = useCallback(() => {
+    loadMoreData();
+  }, [loading, page, hasMore]);
 
   // 跳转详情
   const handlePressItem = (diary: TravelDiary) => {
@@ -234,31 +195,31 @@ export default function TabOneScreen() {
   };
 
   const debouncedSearch = useMemo(
-    () => debounce((text: string) => {
+    () => debounce(async (text: string) => {
       if (!text.trim()) {
         setFilteredDiaries(diaries);
         setIsSearching(false);
         return;
       }
 
-      const searchLower = text.toLowerCase();
-      const filtered = diaries.filter(diary => {
-        const title = diary.title?.toLowerCase() || '';
-        const content = diary.content?.toLowerCase() || '';
-        const nickname = diary.user?.nickname?.toLowerCase() || '';
-        console.log('当前搜索:', title, ',', content);
-
-        return (
-          title.includes(searchLower) ||
-          content.includes(searchLower) ||
-          nickname.includes(searchLower)
-        );
-      });
-
-      setFilteredDiaries(filtered);
       setIsSearching(true);
-    }, 500), // 500ms延迟
-    [diaries] // 依赖项
+      try {
+        const response = await api.get(`/api/travel-notes/`, { 
+          params: { 
+            page: 1,
+            limit: PAGE_SIZE,
+            search: text,
+            status: 'approved'
+          } 
+        });
+        const searchResults = convertToTravelDiaries(response.data);
+        setFilteredDiaries(searchResults);
+      } catch (error) {
+        console.error('搜索失败:', error);
+        setFilteredDiaries([]);
+      }
+    }, 500),
+    [diaries]
   );
 
   // 输入变化处理
@@ -274,55 +235,92 @@ export default function TabOneScreen() {
     };
   }, [debouncedSearch]);
 
+  // 添加滚动处理函数
+  const handleScroll = useCallback((event: any) => {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const paddingToBottom = 20; // 添加一些底部padding，提前触发
+    const isScrolledToBottom = 
+      layoutMeasurement.height + contentOffset.y >= 
+      contentSize.height - paddingToBottom;
+    
+    setIsAtBottom(isScrolledToBottom);
+  }, []);
+
+  // 下拉刷新处理函数
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      // 重置页码
+      setPage(1);
+      // 重新加载第一页数据
+      const response = await api.get(`/api/travel-notes/`, { 
+        params: { 
+          page: 1, 
+          limit: PAGE_SIZE,
+          status: 'approved'
+        } 
+      });
+      const travelsData = convertToTravelDiaries(response.data);
+      setDiaries(travelsData);
+      setFilteredDiaries(travelsData);
+      setHasMore(travelsData.length === PAGE_SIZE);
+    } catch (error) {
+      console.error('刷新数据失败:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      
-    <View style={styles.container}>
-      {/* 顶部欢迎栏和用户头像 */}
-      <View style={styles.topBar}>
-        <View style={styles.welcomeContainer}>
-          <Text style={styles.welcomeText}>用一篇游记，看遍世界。</Text>
+      <View style={styles.container}>
+        <View style={styles.topBar}>
+          <View style={styles.welcomeContainer}>
+            <Text style={styles.welcomeText}>用一篇游记，看遍世界。</Text>
+          </View>
         </View>
-        {/* <TouchableOpacity onPress={() => console.log('头像点击')}>
-        <Image 
-          source={{ uri: avatar }} 
-          style={styles.avatar}
-        />
-      </TouchableOpacity> */}
-      </View>
-      
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="搜索游记..."
-          placeholderTextColor="#999"
-          value={searchText}
-          onChangeText={handleSearchChange}
-        />
-      </View>
-      
-      {isSearching && filteredDiaries.length === 0 ? (
-        <View style={styles.emptyResult}>
-          <Text style={styles.emptyText}>没有找到相关游记</Text>
-        </View>
-      ) : (
-        <>
-          <TravelDiaryMasonry
-            diaries={filteredDiaries}
-            loading={loading}
-            searching = {!!isSearching}
-            onLoadMore={handleLoadMore}
-            onPressItem={handlePressItem}
+        
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="搜索游记..."
+            placeholderTextColor="#999"
+            value={searchText}
+            onChangeText={handleSearchChange}
           />
-          {!hasMore && (
-            <View style={styles.noMoreContainer}>
-              <Text style={styles.noMoreText}>没有更多了哦</Text>
-            </View>
-          )}
-        </>
-      )}
-    </View>
+        </View>
+        
+        {isSearching && filteredDiaries.length === 0 ? (
+          <View style={styles.emptyResult}>
+            <Text style={styles.emptyText}>没有找到相关游记</Text>
+          </View>
+        ) : (
+          <>
+            <TravelDiaryMasonry
+              diaries={filteredDiaries}
+              loading={loading}
+              searching={isSearching}
+              onLoadMore={handleLoadMore}
+              onPressItem={handlePressItem}
+              onScroll={handleScroll}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  colors={['#2196F3']} // Android
+                  tintColor="#2196F3" // iOS
+                />
+              }
+            />
+            {!hasMore && isAtBottom && (
+              <View style={styles.noMoreContainer}>
+                <Text style={styles.noMoreText}>没有更多了哦</Text>
+              </View>
+            )}
+          </>
+        )}
+      </View>
     </SafeAreaView>
   );
 }

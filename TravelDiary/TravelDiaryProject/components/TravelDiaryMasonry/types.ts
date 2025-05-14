@@ -1,3 +1,6 @@
+import { RefreshControl, RefreshControlProps } from 'react-native';
+import React from 'react';
+
 // 单个游记数据类型
 export interface Tag {
   name: string;
@@ -64,4 +67,6 @@ export interface TravelDiaryMasonryProps {
   searching: boolean;  //加载状态
   onLoadMore?: () => void;  //加载事件
   onPressItem?: (diary: TravelDiary) => void;  //点击事件
+  onScroll?: (event: any) => void;  //滚动事件
+  refreshControl?: React.ReactElement<RefreshControlProps>;  //下拉刷新控件
 } 

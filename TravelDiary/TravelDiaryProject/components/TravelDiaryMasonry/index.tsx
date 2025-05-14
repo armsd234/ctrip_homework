@@ -23,7 +23,9 @@ export default function TravelDiaryMasonry({
   loading = false,
   onPressItem,
   onLoadMore,
-  searching = false
+  searching = false,
+  onScroll,
+  refreshControl
 }: TravelDiaryMasonryProps) {
   // const [diaries, setDiaries] = useState<TravelDiary[]>([]);
   // const [loading, setLoading] = useState(false);
@@ -85,16 +87,20 @@ export default function TravelDiaryMasonry({
   return (
     <ScrollView
       style={styles.container}
-      onScroll={({ nativeEvent }) => {
-        const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+      onScroll={(event) => {
+        // 调用外部传入的onScroll
+        onScroll?.(event);
+        
+        // 保持原有的加载更多逻辑
+        const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
         const paddingToBottom = 20;
-        // 判断是否滚动到底部
         if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
           onLoadMore?.();
         }
       }}
       scrollEventThrottle={400}
       showsVerticalScrollIndicator={false}
+      refreshControl={refreshControl}
     >
       {!searching &&
         <View style={styles.banner}>
