@@ -2,21 +2,75 @@ import { StyleSheet, View, ScrollView, Image, Pressable, FlatList, Dimensions } 
 import { Text } from '@/components/Themed';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { TravelDiary } from '@/components/TravelDiaryMasonry/types';
-import myDiaries from '@/data/myDiaries.json';
 import { Ionicons } from '@expo/vector-icons';
 import StatusTag from '@/components/StatusTag';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { api } from '@/services/api';
 
 const { width: screenWidth } = Dimensions.get('window');
 
+interface ProcessedDiary extends TravelDiary {
+  coverImage: string[];
+  user: {
+    id: string;
+    avatar: string;
+    nickname: string;
+  };
+}
+
 export default function DiaryDetailScreen() {
   const { id } = useLocalSearchParams();
-  const diary = myDiaries.diaries.find(d => d.id === Number(id)) as unknown as TravelDiary;
   const router = useRouter();
+  const [diary, setDiary] = useState<ProcessedDiary | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
   const flatListRef = useRef<FlatList>(null);
+
+  useEffect(() => {
+    const fetchDiary = async () => {
+      try {
+        const response = await api.get(`/api/travel-notes/${id}`);
+        if (response.data && response.data.data && response.data.data[0]) {
+          const diaryData = response.data.data[0];
+          console.log('diaryData',diaryData);
+          // 转换后端数据格式为前端需要的格式
+          const processedDiary: ProcessedDiary = {
+            ...diaryData,
+            coverImage: Array.isArray(diaryData.coverImage) 
+              ? diaryData.coverImage.map((img: string) => `http://localhost:5001/api/images/image?filename=${img}`)
+              : [`http://localhost:5001/api/images/image?filename=${diaryData.coverImage}`],
+            user: {
+              id: diaryData.user.id,
+              avatar: `http://localhost:5001/api/images/image?filename=${diaryData.user.avatar}`,
+              nickname: diaryData.user.nickname
+            }
+          };
+          setDiary(processedDiary);
+          console.log('processedDiary',processedDiary);
+        }
+      } catch (error) {
+        console.error('获取游记详情失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDiary();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back-outline" size={30} color="black" />
+        </Pressable>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text>加载中...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!diary) {
     return (
@@ -30,34 +84,26 @@ export default function DiaryDetailScreen() {
             <Text style={styles.linkText}>点击回到上一页面</Text>
           </Link>
         </View>
-
       </SafeAreaView>
     );
   }
-
-  // 统一 coverImage 为数组
-  const images = Array.isArray(diary.coverImage)
-    ? diary.coverImage
-    : [diary.coverImage];
 
   const handleScroll = (event: any) => {
     const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
     setCurrentImageIndex(index);
   };
 
-  const handleEditDiary = (diary: TravelDiary) => {
-    console.log('编辑游记:', diary.id);
-    router.push(`/diary-edit/${diary.id}`);
+  const handleEditDiary = (diary: ProcessedDiary) => {
+    router.push({
+      pathname: '/diary-edit/[id]',
+      params: { id: diary.id }
+    });
   };
 
-  const handleDeleteDiary = async(id: string) => {
+  const handleDeleteDiary = async (id: string) => {
     try {
-      const response = await api.post(`/api/travel-notes/:${id}`, {
-        method: 'DELETE',
-      });
-      console.log('删除:', response);
-
-      if (response.status === 201) {
+      const response = await api.delete(`/api/travel-notes/${id}`);
+      if (response.status === 200) {
         alert('游记已删除');
         router.push('/mydiary');
       }
@@ -70,8 +116,6 @@ export default function DiaryDetailScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <View style={styles.container}>
-
-        {/* 作者信息 */}
         <View style={styles.headerContainer}>
           <Pressable style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name="chevron-back-outline" size={30} color="black" />
@@ -84,10 +128,9 @@ export default function DiaryDetailScreen() {
 
         <ScrollView style={styles.scrollArea}>
           <View>
-            {/* 图片轮播区域 */}
             <View>
               <FlatList
-                data={images}
+                data={diary.coverImage}
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
@@ -102,29 +145,30 @@ export default function DiaryDetailScreen() {
                 scrollEventThrottle={16}
                 ref={flatListRef}
               />
-              {/* 小圆点指示器 */}
-              {images.length > 1 && (<View style={styles.indicatorContainer}>
-                {images.map((_, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.indicatorDot,
-                      currentImageIndex === index && styles.activeDot,
-                    ]}
-                  />
-                ))}
-              </View>)}
+              {diary.coverImage.length > 1 && (
+                <View style={styles.indicatorContainer}>
+                  {diary.coverImage.map((_, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.indicatorDot,
+                        currentImageIndex === index && styles.activeDot,
+                      ]}
+                    />
+                  ))}
+                </View>
+              )}
             </View>
 
-            {/*游记标签*/}
-            {!!(diary.When) && <View style={styles.infoBox}>
-              <Text style={styles.infoItem}>出发时间{"\n"}<Text style={styles.infoBold}>{diary.When}</Text></Text>
-              <Text style={styles.infoItem}>行程天数{"\n"}<Text style={styles.infoBold}>{diary.Days}</Text></Text>
-              <Text style={styles.infoItem}>人均花费{"\n"}<Text style={styles.infoBold}>{diary.Money}</Text></Text>
-              <Text style={styles.infoItem}>和谁出行{"\n"}<Text style={styles.infoBold}>{diary.Who}</Text></Text>
-            </View>}
+            {!!(diary.When) && (
+              <View style={styles.infoBox}>
+                <Text style={styles.infoItem}>出发时间{"\n"}<Text style={styles.infoBold}>{diary.When}</Text></Text>
+                <Text style={styles.infoItem}>行程天数{"\n"}<Text style={styles.infoBold}>{diary.Days}</Text></Text>
+                <Text style={styles.infoItem}>人均花费{"\n"}<Text style={styles.infoBold}>{diary.Money}</Text></Text>
+                <Text style={styles.infoItem}>和谁出行{"\n"}<Text style={styles.infoBold}>{diary.Who}</Text></Text>
+              </View>
+            )}
 
-            {/* 游记内容 */}
             <View style={styles.contentContainer}>
               <Text style={styles.title}>{diary.title}</Text>
               <Text style={styles.content}>{diary.content}</Text>
@@ -137,18 +181,17 @@ export default function DiaryDetailScreen() {
         </ScrollView>
 
         <View style={styles.footer}>
-
           <View style={styles.actionButtons}>
             <Pressable
               style={styles.actionButton}
-            onPress={() => handleEditDiary(diary)}
+              onPress={() => handleEditDiary(diary)}
             >
               <Ionicons name="create-outline" size={20} color="#2196F3" />
               <Text style={styles.actionText}>编辑</Text>
             </Pressable>
             <Pressable
               style={[styles.actionButton, styles.deleteButton]}
-            onPress={() => handleDeleteDiary(diary.id)}
+              onPress={() => handleDeleteDiary(diary.id)}
             >
               <Ionicons name="trash-outline" size={20} color="#F44336" />
               <Text style={[styles.actionText, styles.deleteText]}>删除</Text>
@@ -158,66 +201,6 @@ export default function DiaryDetailScreen() {
       </View>
     </SafeAreaView>
   );
-
-  // return (
-  //       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-
-  //   <ScrollView style={styles.container}>
-
-  //     {/* 作者信息和返回按钮 */}
-  //     <View style={styles.headerContainer}>
-  //       <Pressable style={styles.backButton} onPress={() => router.back()}>
-  //         <Ionicons name="chevron-back-outline" size={30} color="black" />
-  //       </Pressable>
-  //       <View style={styles.authorContainer}>
-  //         <Image source={{ uri: diary.user.avatar }} style={styles.avatar} />
-  //           <Text style={styles.nickname}>{diary.user.nickname}</Text>
-  //       </View>
-  //     </View>
-
-  //     {/* 游记图片 */}
-  //     <Image 
-  //       source={{ uri: diary.coverImage }} 
-  //       style={styles.coverImage}
-  //     />
-
-  //     {/* 游记内容 */}
-  //     <View style={styles.contentContainer}>
-  //       <View style={styles.titleContainer}>
-  //         <Text style={styles.title}>{diary.title}</Text>
-  //         <StatusTag status={diary.status} />
-  //       </View>
-  //       <Text style={styles.content}>{diary.content}</Text>
-  //       <View style={styles.otherInfo}>
-  //         <Text style={styles.time}>{new Date(diary.createTime).toLocaleDateString()}</Text>
-  //         <Text style={styles.location}>{diary.location}</Text>
-  //       </View>
-  //       {diary.status === 'rejected' && diary.rejectReason && (
-  //         <View style={styles.rejectionContainer}>
-  //           <Text style={styles.rejectionTitle}>审核未通过原因</Text>
-  //           <Text style={styles.rejectionReason}>{diary.rejectReason}</Text>
-  //         </View>
-  //       )}
-  //     </View>
-
-  //     {/* 统计信息 */}
-  //     <View style={styles.statsContainer}>
-  //       <View style={styles.statItem}>
-  //         <Text style={styles.statValue}>{diary.views}</Text>
-  //         <Text style={styles.statLabel}>浏览</Text>
-  //       </View>
-  //       <View style={styles.statItem}>
-  //         <Text style={styles.statValue}>{diary.likes}</Text>
-  //         <Text style={styles.statLabel}>点赞</Text>
-  //       </View>
-  //       <View style={styles.statItem}>
-  //         <Text style={styles.statValue}>{diary.comments}</Text>
-  //         <Text style={styles.statLabel}>评论</Text>
-  //       </View>
-  //     </View>
-  //   </ScrollView>
-  //   </SafeAreaView>
-  // );
 }
 
 const styles = StyleSheet.create({

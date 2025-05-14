@@ -29,6 +29,7 @@ interface Comment {
 
 export default function CommentsList({ comments }: { comments: Comment[] }) {
   const CommentItem = ({ comment }: { comment: any }) => {
+    console.log('comment',comment);
     return (
       <View style={styles.commentContainer}>
         <Image source={{ uri: comment.user.avatar }} style={styles.commentAvatar} />

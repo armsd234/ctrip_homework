@@ -21,6 +21,9 @@ export default function DiaryCard({ diary, onPress, onEdit, onDelete }: DiaryCar
     }
   };
 
+  console.log('diary',diary);
+
+
   return (
     <Pressable 
       style={styles.card}

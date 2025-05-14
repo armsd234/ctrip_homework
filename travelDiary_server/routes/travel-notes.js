@@ -3,6 +3,60 @@ const router = express.Router();
 const { TravelNote, ReviewLog, User, Favorite, Like, Comment } = require('../model');
 const { auth, isAdmin, isReviewer } = require('../middleware/auth');
 
+
+// 获取游记列表(首页)特供
+router.get('/newVersion', async (req, res) => {
+    try {
+        const { page = 1, limit = 10, search = '', status = 'all' } = req.query;
+        const skip = (page - 1) * limit;
+
+        const query = {
+            status: status === 'all' ? { $in: ['pending', 'approved', 'rejected'] } : status
+        };
+
+        if (search) {
+            // 先查找匹配昵称的用户
+            const users = await User.find({
+                nickname: { $regex: `.*${search}.*`, $options: 'i' }
+            }).select('_id');
+
+            // 构建查询条件
+            query.$or = [
+                { title: { $regex: `.*${search}.*`, $options: 'i' } },
+                { content: { $regex: `.*${search}.*`, $options: 'i' } },
+                { location: { $regex: `.*${search}.*`, $options: 'i' } }
+            ];
+
+            // 如果找到匹配的用户，添加作者ID条件
+            if (users.length > 0) {
+                query.$or.push({ author: { $in: users.map(user => user._id) } });
+            }
+        }
+
+        const [notes, total] = await Promise.all([
+            TravelNote.find(query)
+                .populate('author', '_id nickname avatar')
+                .populate('tags', 'name image suggestion url') // 标签字段，引用Tag模型
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            TravelNote.countDocuments(query)
+        ]);
+        // console.log("notes", notes);
+        //为每个note 添加作者字段
+        res.json({
+            data: notes,
+            total,
+            page: parseInt(page),
+            limit: parseInt(limit)
+        });
+    } catch (error) {
+        console.error(error); // 打印错误信息，方便调试
+        res.status(500).json({ message: '服务器错误' });
+    }
+});
+
+
 // 获取游记列表(首页)
 router.get('/', async (req, res) => {
     try {
@@ -235,16 +289,18 @@ router.get('/:id', async (req, res) => {
         const favoritesCount = await Favorite.countDocuments({ noteId: note._id });
         const comments = await Comment.find({ noteId: note._id, isDeleted: false }).populate('author', 'nickname avatar');
         const commentsData = comments.map(comment => {
+            // 检查评论作者是否存在
+            const author = comment.author || {};
             return {
                 id: comment._id,
                 content: comment.content,
                 createdAt: comment.createdAt,
                 user: {
-                    id: comment.author._id,
-                    nickname: comment.author.nickname,
-                    avatar: comment.author.avatar
+                    id: author._id || 'deleted',
+                    nickname: author.nickname || '已删除用户',
+                    avatar: author.avatar || 'default_avatar.jpg'
                 },
-                likes: comment.likesCount,
+                likes: comment.likesCount || 0,
             };
         });
 
@@ -264,10 +320,10 @@ router.get('/:id', async (req, res) => {
                     nickname: note.author.nickname,
                     avatar: note.author.avatar
                 },
-                likes: note.likes,
-                collects: favoritesCount,
-                comments: note.commentCount,
-                views: note.views,
+                likes: note.likesCount || 0,
+                collects: note.favoriteCount || 0,
+                comments: note.commentCount || 0,
+                views: note.views || 0,
                 location: note.location,
                 createTime: note.createdAt,
                 commentsData: commentsData,
@@ -737,5 +793,52 @@ router.get('/likes/:userId', async (req, res) => {
     }
 });
 
+// 检查点赞状态
+router.get('/:id/like/check', auth, async (req, res) => {
+    try {
+        const note = await TravelNote.findById(req.params.id);
+
+        if (!note || note.isDeleted) {
+            return res.status(404).json({ message: '游记不存在' });
+        }
+
+        // 查找点赞记录
+        const existingLike = await Like.findOne({
+            userId: req.user._id,
+            noteId: note._id
+        });
+
+        res.json({
+            hasLiked: !!existingLike
+        });
+    } catch (error) {
+        console.error('检查点赞状态失败:', error);
+        res.status(500).json({ message: '服务器错误' });
+    }
+});
+
+// 检查收藏状态
+router.get('/:id/favorite/check', auth, async (req, res) => {
+    try {
+        const note = await TravelNote.findById(req.params.id);
+
+        if (!note || note.isDeleted) {
+            return res.status(404).json({ message: '游记不存在' });
+        }
+
+        // 查找收藏记录
+        const existingFavorite = await Favorite.findOne({
+            userId: req.user._id,
+            noteId: note._id
+        });
+
+        res.json({
+            hasFavorited: !!existingFavorite
+        });
+    } catch (error) {
+        console.error('检查收藏状态失败:', error);
+        res.status(500).json({ message: '服务器错误' });
+    }
+});
 
 module.exports = router;

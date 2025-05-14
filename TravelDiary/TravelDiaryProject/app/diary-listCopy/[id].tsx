@@ -126,33 +126,107 @@ export default function DiaryListDetailScreen() {
     }
   }, [diary]);
 
-  if (!diary) {
-    return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-              <Pressable style={styles.backButton} onPress={() => router.back()}>
-                <Ionicons name="chevron-back-outline" size={30} color="black" />
-              </Pressable>
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <Text>未找到该游记</Text>
-              </View>
+  // 在组件加载时检查当前用户是否已点赞和收藏
+  useEffect(() => {
+    const checkUserInteractions = async () => {
+      try {
+        // 检查点赞状态
+        const likeResponse = await api.get(`/api/travel-notes/${id}/like/check`);
+        setLiked(likeResponse.data.hasLiked);
+        
+        // 检查收藏状态
+        const collectResponse = await api.get(`/api/travel-notes/${id}/favorite/check`);
+        setCollected(collectResponse.data.hasFavorited);
+      } catch (error) {
+        console.error('检查用户交互状态失败:', error);
+      }
+    };
+    
+    if (diary) {
+      checkUserInteractions();
+    }
+  }, [diary, id]);
+
+  // 加载评论列表
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const response = await api.get(`/api/comments/${id}`);
+        
+        // 转换评论数据格式
+        const formattedComments = response.data.map((comment: any) => ({
+          id: comment._id,
+          content: comment.content,
+          user: {
+            id: comment.author._id,
+            nickname: comment.author.nickname,
+            avatar: `http://localhost:5001/api/images/image?filename=${comment.author.avatar}`
+          },
+          createdAt: comment.createdAt,
+          likes: comment.likesCount || 0
+        }));
+
+        setComments(formattedComments);
+      } catch (error) {
+        console.error('加载评论失败:', error);
+      }
+    };
+
+    if (diary) {
+      fetchComments();
+    }
+  }, [diary, id]);
+
+  const handleLike = async () => {
+    try {
+      // 立即更新UI状态
+      setLiked(!liked);
+      setLikesCount(prev => prev + (liked ? -1 : 1));
+
+      // 调用API
+      if (!liked) {
+        await api.post(`/api/travel-notes/${id}/like`);
+      } else {
+        await api.delete(`/api/travel-notes/${id}/like`);
+      }
+    } catch (error: any) {
+      // 如果API调用失败，恢复原状态
+      setLiked(liked);
+      setLikesCount(prev => prev + (liked ? 1 : -1));
       
-            </SafeAreaView>
-    );
-  }
-
-  // 统一 coverImage 为数组
-  const images = Array.isArray(diary.coverImage)
-    ? diary.coverImage
-    : [diary.coverImage];
-
-  const handleLike = () => {
-    setLiked(!liked);
-    setLikesCount(prev => prev + (liked ? -1 : 1));
+      if (error.response?.status === 401) {
+        alert('请先登录');
+      } else {
+        console.error('点赞操作失败:', error);
+        alert(error.response?.data?.message || '操作失败');
+      }
+    }
   };
 
-  const handleCollect = () => {
-    setCollected(!collected);
-    setCollectsCount(prev => prev + (collected ? -1 : 1));
+  const handleCollect = async () => {
+    try {
+      // 立即更新UI状态
+      setCollected(!collected);
+      setCollectsCount(prev => prev + (collected ? -1 : 1));
+
+      // 调用API
+      if (!collected) {
+        await api.post(`/api/travel-notes/${id}/favorite`);
+      } else {
+        await api.delete(`/api/travel-notes/${id}/favorite`);
+      }
+    } catch (error: any) {
+      // 如果API调用失败，恢复原状态
+      setCollected(collected);
+      setCollectsCount(prev => prev + (collected ? 1 : -1));
+
+      if (error.response?.status === 401) {
+        alert('请先登录');
+      } else {
+        console.error('收藏操作失败:', error);
+        alert(error.response?.data?.message || '操作失败');
+      }
+    }
   };
 
   const handleShare = async () => {
@@ -189,35 +263,68 @@ export default function DiaryListDetailScreen() {
     setModalVisible(true);
   };
 
-  const handleSendComment = () => {
+  const handleSendComment = async () => {
     if (comment.trim()) {
-      const newComment = {
-        id: Date.now().toString(),
-        user: {
-          id: 'currentUserId', // 当前用户的 ID
-          nickname: '当前用户', // 当前用户的昵称
-          avatar: 'https://picsum.photos/100/100?random=3', // 当前用户的头像
-        },
-        content: comment,
-        createdAt: new Date().toISOString(),
-        // date: new Date().toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }),
-        likes: 0,
-      };
-      setComments([newComment, ...comments]);
-      setComment('');
-      // Keyboard.dismiss();
+      try {
+        // 发送评论到后端
+        const response = await api.post(`/api/comments/${id}`, {
+          content: comment.trim()
+        });
 
-      // const newComment = {
-      //   id: Date.now().toString(),
-      //   user: { name: '当前用户', avatar: 'https://example.com/current-user.jpg' },
-      //   content: comment,
-      //   date: new Date().toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }),
-      //   replies: []
-      // };
-      // // setComments([...comments, newComment]);
-      // setComment('');
+        // 转换后端返回的评论数据格式
+        const newComment = {
+          id: response.data._id,
+          content: response.data.content,
+          user: {
+            id: response.data.author._id,
+            nickname: response.data.author.nickname,
+            avatar: `http://localhost:5001/api/images/image?filename=${response.data.author.avatar}`
+          },
+          createdAt: response.data.createdAt,
+          likes: 0
+        };
+
+        // 更新本地评论列表
+        setComments(prevComments => [newComment, ...prevComments]);
+        setComment('');
+        Keyboard.dismiss();
+
+        // 更新评论总数
+        if (diary) {
+          setDiary({
+            ...diary,
+            comments: diary?.comments ? diary.comments + 1 : 1
+          });
+        }
+      } catch (error: any) {
+        if (error.response?.status === 401) {
+          alert('请先登录后再评论');
+        } else {
+          console.error('发送评论失败:', error);
+          alert(error.response?.data?.message || '评论失败');
+        }
+      }
     }
   };
+
+  if (!diary) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+              <Pressable style={styles.backButton} onPress={() => router.back()}>
+                <Ionicons name="chevron-back-outline" size={30} color="black" />
+              </Pressable>
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Text>未找到该游记</Text>
+              </View>
+      
+            </SafeAreaView>
+    );
+  }
+
+  // 统一 coverImage 为数组
+  const images = Array.isArray(diary.coverImage)
+    ? diary.coverImage
+    : [diary.coverImage];
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>

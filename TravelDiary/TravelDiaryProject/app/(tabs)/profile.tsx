@@ -326,7 +326,7 @@ const ProfileScreen = () => {
       title: item.title,
       content: item.content,
       coverImage: item.images.map((image: any) => `http://localhost:5001/api/images/image?filename=${image}`), 
-      video: item.video,
+      video: `http://localhost:5001/api/images/image?filename=${item.video}`,
       duration: 0,
       type: item.video ? 'video' : 'image',
       tags: item.tags?.map((tag: string) => ({ id: tag, name: tag })) || [],

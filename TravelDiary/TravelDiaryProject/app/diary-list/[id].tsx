@@ -64,19 +64,35 @@ export default function DiaryListDetailScreen() {
   
     useEffect(() => {
       const fetchData = async () => {
-        console.log('Received diary id:', id); 
-        //这里我需要判断id是否可以转换成数字，如果不能转换成数字，就不执行请求
         if (isNaN(Number(id))) {
-          const response = await api.get(`/api/travel-notes/${id}`);
-          console.log('Response:', response.data);
-          const convertedDiary = convertResponseToTravelDiary(response.data);
-          console.log('Converted diary:', convertedDiary);
-          setDiary(convertedDiary);
-        }else{
+          try {
+            const response = await api.get(`/api/travel-notes/${id}`);
+            const convertedDiary = convertResponseToTravelDiary(response.data);
+            setDiary(convertedDiary);
+            
+            // 获取评论列表并转换数据结构
+            const commentsResponse = await api.get(`/api/comments/${id}`);
+            const formattedComments = commentsResponse.data.map((comment: any) => ({
+              id: comment._id,
+              content: comment.content,
+              createdAt: comment.createdAt,
+              likes: comment.likesCount || 0,
+              user: {
+                id: comment.author._id,
+                nickname: comment.author.nickname,
+                avatar: `http://localhost:5001/api/images/image?filename=${comment.author.avatar}`
+              }
+            }));
+            setComments(formattedComments);
+            
+          } catch (error) {
+            console.error('获取数据失败:', error);
+          }
+        } else {
           const tmp = travelDiaries.diaries.find(d => d.id === Number(id)) as unknown as TravelDiary;
           setDiary(tmp);
+          setComments(tmp.commentsData || []);
         }
-       
       };
       fetchData();
     }, [id]);
@@ -120,14 +136,56 @@ export default function DiaryListDetailScreen() {
     ? diary.coverImage
     : [diary.coverImage];
 
-  const handleLike = () => {
-    setLiked(!liked);
-    setLikesCount(prev => prev + (liked ? -1 : 1));
+  const handleLike = async () => {
+    try {
+      // 立即更新UI状态
+      setLiked(!liked);
+      setLikesCount(prev => prev + (liked ? -1 : 1));
+
+      // 调用API
+      if (!liked) {
+        await api.post(`/api/travel-notes/${id}/like`);
+      } else {
+        await api.delete(`/api/travel-notes/${id}/like`);
+      }
+    } catch (error: any) {
+      // 如果API调用失败，恢复原状态
+      setLiked(liked);
+      setLikesCount(prev => prev + (liked ? 1 : -1));
+      
+      if (error.response?.status === 401) {
+        alert('请先登录');
+      } else {
+        console.error('点赞操作失败:', error);
+        alert(error.response?.data?.message || '操作失败');
+      }
+    }
   };
 
-  const handleCollect = () => {
-    setCollected(!collected);
-    setCollectsCount(prev => prev + (collected ? -1 : 1));
+  const handleCollect = async () => {
+    try {
+      // 立即更新UI状态
+      setCollected(!collected);
+      setCollectsCount(prev => prev + (collected ? -1 : 1));
+
+      // 调用API
+      if (!collected) {
+        await api.post(`/api/travel-notes/${id}/favorite`);
+      } else {
+        await api.delete(`/api/travel-notes/${id}/favorite`);
+      }
+    } catch (error: any) {
+      // 如果API调用失败，恢复原状态
+      setCollected(collected);
+      setCollectsCount(prev => prev + (collected ? 1 : -1));
+
+      if (error.response?.status === 401) {
+        alert('请先登录');
+      } else {
+        console.error('收藏操作失败:', error);
+        alert(error.response?.data?.message || '操作失败');
+      }
+    }
   };
 
   const handleShare = async () => {
@@ -164,33 +222,41 @@ export default function DiaryListDetailScreen() {
     setModalVisible(true);
   };
 
-  const handleSendComment = () => {
+  const handleSendComment = async () => {
     if (comment.trim()) {
-      const newComment = {
-        id: Date.now().toString(),
-        user: {
-          id: 'currentUserId', // 当前用户的 ID
-          nickname: '当前用户', // 当前用户的昵称
-          avatar: 'https://picsum.photos/100/100?random=3', // 当前用户的头像
-        },
-        content: comment,
-        createdAt: new Date().toISOString(),
-        // date: new Date().toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }),
-        likes: 0,
-      };
-      setComments([newComment, ...comments]);
-      setComment('');
-      // Keyboard.dismiss();
+      try {
+        // 发送评论到后端
+        const response = await api.post(`/api/comments/${id}`, {
+          content: comment.trim()
+        });
 
-      // const newComment = {
-      //   id: Date.now().toString(),
-      //   user: { name: '当前用户', avatar: 'https://example.com/current-user.jpg' },
-      //   content: comment,
-      //   date: new Date().toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }),
-      //   replies: []
-      // };
-      // // setComments([...comments, newComment]);
-      // setComment('');
+        // 转换新评论数据结构
+        const newComment = {
+          id: response.data._id,
+          content: response.data.content,
+          createdAt: response.data.createdAt,
+          likes: response.data.likesCount || 0,
+          user: {
+            id: response.data.author._id,
+            nickname: response.data.author.nickname,
+            avatar: `http://localhost:5001/api/images/image?filename=${response.data.author.avatar}`
+          }
+        };
+
+        // 添加新评论到列表
+        setComments(prevComments => [newComment, ...prevComments]);
+        
+        // 清空输入框
+        setComment('');
+        Keyboard.dismiss();
+      } catch (error: any) {
+        if (error.response?.status === 401) {
+          alert('请先登录后再评论');
+        } else {
+          console.error('发送评论失败:', error);
+          alert('发送评论失败，请稍后重试');
+        }
+      }
     }
   };
 
