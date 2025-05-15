@@ -44,7 +44,7 @@ export default function DiaryListDetailScreen() {
   if (!diary) {
     return (
       <View style={styles.container}>
-        <Text>未找到该游记</Text>
+        <Text>加载中</Text>
       </View>
     );
   }

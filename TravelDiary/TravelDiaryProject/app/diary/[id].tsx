@@ -79,7 +79,7 @@ export default function DiaryDetailScreen() {
           <Ionicons name="chevron-back-outline" size={30} color="black" />
         </Pressable>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text>未找到该游记</Text>
+          <Text>加载中</Text>
           <Link href="/" style={styles.link}>
             <Text style={styles.linkText}>点击回到上一页面</Text>
           </Link>

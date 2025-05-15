@@ -65,10 +65,10 @@ const TravelNoteSchema = new mongoose.Schema({
   location: { type: String, default: '中国-南京' }, // 存储位置信息
   duration: { type: Number, default: 0 }, // 存储持续时间
 
-  when: { type: String, default: '0' },     // 时间字段
-  days: { type: String, default: '0' },     // 天数字段
-  money: { type: String, default: '0' },     // 金额字段
-  who: { type: String, default: '0' },     // 谁字段
+  when: { type: String, default: '二月' },     // 时间字段
+  days: { type: String, default: '3天' },     // 天数字段
+  money: { type: String, default: '10K' },     // 金额字段
+  who: { type: String, default: '家人' },     // 谁字段
   category: { type: String, enum: ['旅行', '文化', '美食', '生活', '其他'], default: '旅行' }, // 分类
 
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
