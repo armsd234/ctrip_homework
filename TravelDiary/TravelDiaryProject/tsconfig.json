@@ -10,8 +10,7 @@
       "../services/*": [
         "./services/*"
       ]
-    }
-  },
+    }},
   "include": [
     "**/*.ts",
     "**/*.tsx",

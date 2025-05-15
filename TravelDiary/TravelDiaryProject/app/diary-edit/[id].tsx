@@ -104,7 +104,7 @@ export default function DiaryDetailScreen() {
                     <Ionicons name="chevron-back-outline" size={30} color="black" />
                 </Pressable>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <Text>未找到该游记</Text>
+                    <Text>加载中</Text>
                 </View>
             </SafeAreaView>
         );

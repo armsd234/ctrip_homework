@@ -172,6 +172,7 @@ router.post('/', auth, async (req, res) => {
             author: req.user._id,
             status: 'pending'
         });
+        
         //更新作者post数
         const author = await User.findById(req.user._id);
         author.posts += 1;
