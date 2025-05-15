@@ -41,6 +41,8 @@ const PrivateRoute = ({ children }) => {
 
   const navigate = useNavigate();
 
+  
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     

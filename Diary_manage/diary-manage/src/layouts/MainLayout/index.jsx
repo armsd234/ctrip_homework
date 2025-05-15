@@ -9,7 +9,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 import styles from './index.module.css';
-import { UserOutlined } from '@ant-design/icons';
+import { UserOutlined, MenuUnfoldOutlined, MenuFoldOutlined  } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
 
@@ -103,19 +103,19 @@ const MainLayout = ({ children }) => {
                 <Menu
                     mode="inline"
                     selectedKeys={[location.pathname]}
-                    defaultOpenKeys={['/diary', '/permission']}
+                    defaultOpenKeys={['/diary']}
                     items={menuItems}
                     onClick={({ key }) => navigate(key)}
                 />
             </Sider>
             <Layout style={{ marginLeft: collapsed ? 80 : 250, transition: 'margin-left 0.2s' }}>
                 <Header className={styles.header}>
-                    {/* <Button
+                    <Button
                         type="text"
                         icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                         onClick={() => setCollapsed(!collapsed)}
                         className={styles.trigger}
-                    /> */}
+                    />
                     <div className={styles.headerRight}>
                         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
                             <div className={styles.userInfo}>

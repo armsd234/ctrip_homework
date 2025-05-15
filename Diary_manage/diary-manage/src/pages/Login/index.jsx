@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form, Input, Button, Card, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { login } from '../../store/slices/authSlice';
 import styles from './index.module.css';
@@ -10,12 +10,20 @@ import backgroundVideo from '../../assets/videos/background.gif';
 const Login = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const location = useLocation();
     const [form] = Form.useForm();
 
     const onFinish = async (values) => {
         try {
             await dispatch(login(values)).unwrap();
             message.success('登录成功');
+            console.log('location.state',location); // 打印 location.state 以确认其内容
+            console.log('location.pathname',location.pathname);
+            if (location.state?.from) {
+                navigate(location.state.from);
+                return;
+            }
+            console.log('das');
             navigate('/');
         } catch (error) {
             message.error(error.message || '登录失败');
