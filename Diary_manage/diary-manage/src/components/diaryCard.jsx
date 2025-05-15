@@ -39,8 +39,22 @@ const DiaryCard = ({
     // 鼠标进入video或暂停按钮时都显示按钮，离开video和按钮区域才隐藏
     const handleMouseEnter = () => setHover(true);
     const handleMouseLeave = (e) => {
-        // 只有当鼠标离开video和暂停按钮区域时才隐藏
-        if (!e.relatedTarget || !e.currentTarget.contains(e.relatedTarget)) {
+        // 检查 relatedTarget 是否存在且是有效的 DOM 节点
+        const currentTarget = e.currentTarget;
+        const relatedTarget = e.relatedTarget;
+
+        if (!currentTarget || !relatedTarget || !(currentTarget instanceof Node)) {
+            setHover(false);
+            return;
+        }
+
+        // 安全地检查 contains 关系
+        try {
+            if (!currentTarget.contains(relatedTarget)) {
+                setHover(false);
+            }
+        } catch (error) {
+            // 如果出现任何错误，默认隐藏悬停状态
             setHover(false);
         }
     };

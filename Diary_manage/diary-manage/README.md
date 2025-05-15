@@ -21,7 +21,7 @@ src/
 
 ## 3. 核心功能
 
-### 3.1 用户认证系统
+### 3.1 用户认证模块
 
 #### 功能描述
 
@@ -31,9 +31,9 @@ src/
 
 #### 技术实现
 
-- 使用 React Router v6 实现路由管理
+- 使用 React Router 进行路由管理
 - 基于 HOC 模式实现 `PrivateRoute` 组件进行路由保护
-- 集成 JWT Token 验证机制
+- 使用JWT Token 实现持久化登录
 - 使用 Redux Toolkit 管理用户认证状态
 - 实现路由守卫功能，自动跳转未授权访问
 
@@ -63,8 +63,6 @@ src/
 
 - 使用 React 组件化开发
 - Redux Toolkit 进行状态管理
-- Ant Design 组件库实现界面交互
-- Axios 处理后端 API 调用
 
 ## 4. 快速开始
 

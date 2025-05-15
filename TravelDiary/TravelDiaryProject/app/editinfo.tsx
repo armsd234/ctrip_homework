@@ -268,6 +268,8 @@ const EditProfileScreen: React.FC = () => {
             return;
         }
         if(name !== user?.user.nickname){
+            console.log('Checking name:', name);
+            console.log('User nickname:', user?.user.nickname);
             try {
                 const response = await api.get(`/api/users/check-nickname?nickname=${name}`);
                 if (response.data.exists) {
