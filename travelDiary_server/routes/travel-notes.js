@@ -163,16 +163,16 @@ router.get('/review/notes', async (req, res) => {
 // 创建游记
 router.post('/', auth, async (req, res) => {
     try {
-        const { title, content, images, video, location,when, days, money, who} = req.body;
+        const { title, content, images, video, location, when, days, money, who } = req.body;
         const note = new TravelNote({
             title,
-            content,location,when, days, money, who,
+            content, location, when, days, money, who,
             images: images ? images : [''],
             video: video ? video : '',
             author: req.user._id,
             status: 'pending'
         });
-        
+
         //更新作者post数
         const author = await User.findById(req.user._id);
         author.posts += 1;
@@ -734,13 +734,14 @@ router.get('/favorites/:userId', async (req, res) => {
         const skip = (page - 1) * limit;
 
         const [favorites, total] = await Promise.all([
-            Favorite.find({ userId: req.params.userId, video: { $in: ['', null] } })
+            Favorite.find({ userId: req.params.userId })
                 .populate({
                     path: 'noteId',
                     populate: {
                         path: 'author',
                         select: 'nickname avatar'
-                    }
+                    },
+                    match: { isDeleted: false, video: { $in: ['', null] } }
                 })
                 .sort({ createdAt: -1 })
                 .skip(skip)
@@ -748,7 +749,7 @@ router.get('/favorites/:userId', async (req, res) => {
             Favorite.countDocuments({ userId: req.params.userId })
         ]);
 
-        const notes = favorites.map(fav => fav.noteId).filter(note => note && !note.isDeleted);
+        const notes = favorites.map(fav => fav.noteId).filter(note => note && !note.isDeleted && note.status === 'approved');
 
         res.json({
             data: notes,
@@ -756,7 +757,7 @@ router.get('/favorites/:userId', async (req, res) => {
             page: parseInt(page),
             limit: parseInt(limit)
         });
-        console.log('ghhj', notes);
+        // console.log('ghhj', notes);
     } catch (error) {
         res.status(500).json({ message: '服务器错误' });
     }
@@ -769,13 +770,14 @@ router.get('/likes/:userId', async (req, res) => {
         const skip = (page - 1) * limit;
 
         const [likes, total] = await Promise.all([
-            Like.find({ userId: req.params.userId, video: { $in: ['', null] } })
+            Like.find({ userId: req.params.userId })
                 .populate({
                     path: 'noteId',
                     populate: {
                         path: 'author',
                         select: 'nickname avatar'
-                    }
+                    },
+                    match: { isDeleted: false, video: { $in: ['', null] } },
                 })
                 .sort({ createdAt: -1 })
                 .skip(skip)
@@ -783,8 +785,8 @@ router.get('/likes/:userId', async (req, res) => {
             Like.countDocuments({ userId: req.params.userId })
         ]);
 
-        const notes = likes.map(like => like.noteId).filter(note => note && !note.isDeleted);
-
+        const notes = likes.map(like => like.noteId).filter(note => note && !note.isDeleted && note.status === 'approved');
+        console.log('notes', notes);
         res.json({
             data: notes,
             total,
@@ -792,6 +794,7 @@ router.get('/likes/:userId', async (req, res) => {
             limit: parseInt(limit)
         });
     } catch (error) {
+        console.error('获取用户点赞的游记列表失败:', error);
         res.status(500).json({ message: '服务器错误' });
     }
 });
@@ -829,7 +832,7 @@ router.get('/:id/like/check', auth, async (req, res) => {
 router.get('/:id/favorite/check', auth, async (req, res) => {
     try {
         const note = await TravelNote.findById(req.params.id);
-        console.log('note',note.toObject());
+        console.log('note', note.toObject());
 
         if (!note || note.isDeleted) {
             return res.status(404).json({ message: '游记不存在' });
@@ -849,9 +852,9 @@ router.get('/:id/favorite/check', auth, async (req, res) => {
             hasFavorited: !!existingFavorite,
             favoriteCount
         });
-        console.log('res.req.user._id',req.user._id);
-        console.log('res.hasFavorited',favoriteCount);
-        console.log('res.hasFavorited',!!existingFavorite);
+        console.log('res.req.user._id', req.user._id);
+        console.log('res.hasFavorited', favoriteCount);
+        console.log('res.hasFavorited', !!existingFavorite);
     } catch (error) {
         console.error('检查收藏状态失败:', error);
         res.status(500).json({ message: '服务器错误' });

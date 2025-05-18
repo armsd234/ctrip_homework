@@ -20,6 +20,69 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const PROFILE_SECTION_BG = '#4A4E69';
 const ACCENT_COLOR = '#F25F5C';
 
+// 将 UserInfoSection 组件移到外部
+interface UserInfoProps {
+  userInfo: {
+    avatar: string;
+    nickname: string;
+    _id: string;
+  };
+  onUpdateAvatar: (uri: string) => void;
+}
+
+const UserInfoSection = React.memo(({ userInfo, onUpdateAvatar }: UserInfoProps) => {
+  console.log('[RENDER] UserInfoSection');
+  
+  const avatarUrl = userInfo.avatar ? 
+    `http://localhost:5001/api/images/image?filename=${userInfo.avatar}` : '';
+
+  useEffect(() => {
+    console.log('[EFFECT] UserInfoSection props changed:', { userInfo });
+  }, [userInfo]);
+
+  return (
+    <View style={styles.userInfoSection}>
+      <View style={styles.avatarContainer}>
+        <ImageUpload
+          value={avatarUrl}
+          onChange={onUpdateAvatar}
+          style={styles.avatarContainer}
+          imageStyle={styles.avatarInnerPlaceholder}
+          iscameraIcon={false}
+        />
+      </View>
+
+      <View style={styles.userDetails}>
+        <Text style={styles.userName}>{userInfo.nickname || '未设置昵称'}</Text>
+        <View style={styles.userIdContainer}>
+          <Text style={styles.userId}>ID:{userInfo._id}</Text>
+          <TouchableOpacity onPress={() => {
+            if (userInfo._id) {
+              Share.share({
+                message: `User ID: ${userInfo._id}`
+              });
+            }
+          }}>
+            <MaterialIcons name="share" size={16} color="#A9A9A9" style={{ marginLeft: 5 }} />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+}, (prevProps, nextProps) => {
+  const isEqual = prevProps.userInfo.avatar === nextProps.userInfo.avatar &&
+         prevProps.userInfo.nickname === nextProps.userInfo.nickname &&
+         prevProps.userInfo._id === nextProps.userInfo._id &&
+         prevProps.onUpdateAvatar === nextProps.onUpdateAvatar;
+  
+  console.log('[MEMO] UserInfoSection comparison:', { 
+    isEqual,
+    prevProps: prevProps.userInfo,
+    nextProps: nextProps.userInfo
+  });
+  
+  return isEqual;
+});
 
 const ProfileScreen = () => {
   const router = useRouter();
@@ -44,7 +107,7 @@ const ProfileScreen = () => {
       setIsReady(true);
     };
     checkAuth();
-    if (user?.user._id) {
+    if (user?.user?._id) {
       loadAllData();
     }
   }, [isReady, isAuthenticated]);
@@ -60,7 +123,7 @@ const ProfileScreen = () => {
   
   // 修改 loadAllData 函数，初始化过滤后的数据
   const loadAllData = async () => {
-    if (!user?.user._id) return;
+    if (!user?.user?._id) return;
     
     setLoading(true);
     try {
@@ -137,6 +200,7 @@ const ProfileScreen = () => {
 
 
   useEffect(() => {
+    console.log('activeTab changed:', activeTab);
     if (user?.user._id) {
       setPage(1);
       setHasMore(true);
@@ -159,7 +223,8 @@ const ProfileScreen = () => {
     </View>
   );
 
-  const updateavatar = async (uri: string) => {
+  
+  const updateavatar = useCallback(async (uri: string) => {
     try {
       const response = await api.put('/api/users/me', {
         avatar: uri,
@@ -172,54 +237,18 @@ const ProfileScreen = () => {
       console.error('保存失败:', error);
       alert(error.response?.data?.message || '保存失败，请重试');
     }
-  }
+  }, []);
 
-  // 使用useMemo缓存头像URL
-  const UserInfoSection = React.memo(({ user, onUpdateAvatar }: { 
-    user: any, 
-    onUpdateAvatar: (uri: string) => void 
-  }) => {
-    const avatarUrl = useMemo(() => {
-      return user?.user?.avatar ? `http://localhost:5001/api/images/image?filename=${user.user.avatar}` : undefined;
-    }, [user?.user?.avatar]);
-
-    return (
-      <View style={styles.userInfoSection}>
-        <View style={styles.avatarContainer}>
-          <ImageUpload
-            value={avatarUrl}
-            onChange={(filename) => { onUpdateAvatar(filename); }}
-            style={styles.avatarContainer}
-            imageStyle={styles.avatarInnerPlaceholder}
-            iscameraIcon={false}
-          />
-        </View>
-
-        <View style={styles.userDetails}>
-          <Text style={styles.userName}>{user?.user.nickname}</Text>
-          <View style={styles.userIdContainer}>
-            <Text style={styles.userId}>ID:{user?.user._id}</Text>
-            <TouchableOpacity onPress={() => {
-              if (user?.user._id) {
-                Share.share({
-                  message: `User ID: ${user.user._id}`
-                });
-              }
-            }}>
-              <FontAwesome5 name="clone" size={12} color="#A9A9A9" style={{ marginLeft: 5 }} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    );
-  }, (prevProps, nextProps) => {
-    // 只在用户信息真正改变时重新渲染
-    return (
-      prevProps.user?.user?.avatar === nextProps.user?.user?.avatar &&
-      prevProps.user?.user?.nickname === nextProps.user?.user?.nickname &&
-      prevProps.user?.user?._id === nextProps.user?.user?._id
-    );
-  });
+  
+  const userInfo = useMemo(() => ({
+    avatar: user?.user?.avatar || '',
+    nickname: user?.user?.nickname || '',
+    _id: user?.user?._id || '',
+  }), [
+    user?.user?.avatar,
+    user?.user?.nickname,
+    user?.user?._id
+  ]);
 
   // 使用React.memo优化BioAndStats组件
   const BioAndStats = React.memo(({ user, onEditProfile }: { 
@@ -427,7 +456,7 @@ const ProfileScreen = () => {
         >
         <View style={styles.scrollableTopContentWrapper}>
           <UserInfoSection 
-            user={user} 
+            userInfo={userInfo}
             onUpdateAvatar={updateavatar}
           />
           <BioAndStats 
