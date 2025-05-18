@@ -163,10 +163,10 @@ router.get('/review/notes', async (req, res) => {
 // 创建游记
 router.post('/', auth, async (req, res) => {
     try {
-        const { title, content, images, video } = req.body;
+        const { title, content, images, video, location,when, days, money, who} = req.body;
         const note = new TravelNote({
             title,
-            content,
+            content,location,when, days, money, who,
             images: images ? images : [''],
             video: video ? video : '',
             author: req.user._id,

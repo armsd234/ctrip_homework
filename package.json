@@ -1,10 +1,13 @@
 {
   "dependencies": {
-    "@antv/g2": "^5.3.2",
+    "@antv/g2": "^5.0.11",
+    "@expo/webpack-config": "^0.12.52",
     "@react-native-clipboard/clipboard": "^1.16.2",
+    "@react-native-picker/picker": "^2.11.0",
     "antd": "^5.25.0",
     "expo-clipboard": "~7.1.4",
     "react-native-masonry-list": "^2.16.2",
+    "react-native-picker": "^4.3.7",
     "react-native-reanimated": "^3.17.5",
     "react-native-toast-message": "^2.3.0"
   }
