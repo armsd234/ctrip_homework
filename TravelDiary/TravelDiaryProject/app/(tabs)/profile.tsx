@@ -233,6 +233,7 @@ const ProfileScreen = () => {
         await checkToken();
         alert('头像上传成功');
       }
+      loadAllData();
     } catch (error: any) {
       console.error('保存失败:', error);
       alert(error.response?.data?.message || '保存失败，请重试');
