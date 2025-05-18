@@ -102,7 +102,7 @@ export const authService = {
   },
 
   async isAuthenticated() {
-    try {
+    // try {
       const response = await api.get<ApiResponse<UserInfo>>(`${API_URL}/api/auth/me`);
       
       if(response.data.data?.user){
@@ -116,9 +116,9 @@ export const authService = {
         await AsyncStorage.removeItem('userToken');
         return false;
       }
-    } catch (error) {
-      console.error('Error getting user info:', error);
-    }
+    // } catch (error) {
+    //   console.error('Error getting user info:', error);
+    // }
   },
 
   async sendVerificationCode(email: string) {

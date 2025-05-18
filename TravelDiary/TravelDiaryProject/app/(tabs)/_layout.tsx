@@ -1,15 +1,8 @@
 import React, { Suspense, useState } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { router, Tabs, useRouter } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { StyleSheet, View, Text, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-// import { useNavigation } from '@react-navigation/native';
-// import { StackNavigationProp } from '@react-navigation/stack';
-
-type RootStackParamList = {
-  createImage: undefined;
-  createVideo: undefined;
-};
 
 // 加载中组件
 function LoadingScreen() {
@@ -20,14 +13,14 @@ function LoadingScreen() {
   );
 }
 
-// 自定义发布按钮组件
+// 发布按钮组件
 function PublishButton({ onPress }: { onPress: () => void }) {
   return (
     <TouchableOpacity style={styles.createButton}
-    onPress={(e) => {
-      e.preventDefault(); // 阻止默认行为
-      onPress();
-    }}>
+      onPress={(e) => {
+        e.preventDefault();  // 阻止默认行为
+        onPress();
+      }}>
       <FontAwesome style={styles.icon} name="plus" color="white" />
     </TouchableOpacity>
   );
@@ -35,7 +28,6 @@ function PublishButton({ onPress }: { onPress: () => void }) {
 
 export default function TabLayout() {
   const [modalVisible, setModalVisible] = useState(false);
-  // const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const router = useRouter();
   return (
     <>
@@ -48,9 +40,9 @@ export default function TabLayout() {
           <Tabs.Screen
             name="index"
             options={{
-              title: '游记列表',
+              title: '首页',
               tabBarIcon: ({ color }) => (
-                <FontAwesome style={styles.icon} name="compass" color={color} />
+                <FontAwesome style={styles.icon} name="globe" color={color} />
               )
             }}
           />
@@ -59,11 +51,11 @@ export default function TabLayout() {
             options={{
               title: '热门',
               tabBarIcon: ({ color }) => (
-                <FontAwesome style={styles.icon} name="camera" color={color} />
+                <FontAwesome style={styles.icon} name="camera-retro" color={color} />
               )
             }}
           />
-          
+
           <Tabs.Screen
             name="create"
             options={{
@@ -77,7 +69,7 @@ export default function TabLayout() {
           <Tabs.Screen
             name="mydiary"
             options={{
-              title: '我的游记',
+              title: '游记',
               tabBarIcon: ({ color }) => (
                 <FontAwesome style={styles.icon} name="book" color={color} />
               )
@@ -86,9 +78,9 @@ export default function TabLayout() {
           <Tabs.Screen
             name="profile"
             options={{
-              title: '我',
+              title: '我的',
               tabBarIcon: ({ color }) => (
-                <FontAwesome style={styles.icon} name="user" color={color} />
+                <FontAwesome style={styles.icon} name="user-circle-o" color={color} />
               )
             }}
           />
@@ -104,9 +96,8 @@ export default function TabLayout() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>发布内容</Text>
+            <Text style={styles.modalTitle}>发布新内容</Text>
             <View style={styles.contentContainer}>
-
               <View style={styles.cardLeft}>
                 <TouchableOpacity
                   style={styles.optionButton}
@@ -115,11 +106,9 @@ export default function TabLayout() {
                     router.push('/createImage');
                   }}
                 >
-                  <FontAwesome name="picture-o" size={24} color="#1e95d4" />
-                  {/* <Text style={styles.optionText}>上传图片</Text> */}
-                  <Text style={styles.title}>上传图片</Text>
+                  <FontAwesome name="image" size={24} color="#1e95d4" />
+                  <Text style={styles.title}>图文游记</Text>
                 </TouchableOpacity>
-                
                 {/* <Text style={styles.subtitle}>记录旅行足迹</Text> */}
               </View>
               <View style={styles.cardRight}>
@@ -128,32 +117,19 @@ export default function TabLayout() {
                   onPress={() => {
                     setModalVisible(false);
                     router.push('/createVideo');
-                    // navigation.navigate('createVideo');
                   }}
                 >
-                  <FontAwesome name="video-camera" size={24} color="#ee3862" />
-                  {/* <Text style={styles.optionText}>上传视频</Text> */}
-                  <Text style={styles.title}>上传视频</Text>
+                  <FontAwesome name="film" size={24} color="#ee3862" />
+                  <Text style={styles.title}>视频游记</Text>
                 </TouchableOpacity>
-                
                 {/* <Text style={styles.subtitle}>分享旅行感受</Text> */}
               </View>
-
             </View>
             <Pressable style={styles.buttonContainer} onPress={() => {
               setModalVisible(false);
             }}>
               <MaterialIcons name="close" size={24} color="#fff" />
             </Pressable>
-            {/* <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => {
-                setModalVisible(false);
-                // router.back();
-              }}
-            >
-              <Text style={styles.cancelText}>取消</Text>
-            </TouchableOpacity> */}
           </View>
         </View>
       </Modal>
@@ -179,8 +155,6 @@ const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: 'white',
     height: 80,
-    borderTopWidth: 0,
-    elevation: 0,
   },
   icon: {
     fontSize: 24,
@@ -203,7 +177,7 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 24,
@@ -212,28 +186,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 16,
-    // borderBottomWidth: 1,
-    // borderBottomColor: '#f0f0f0',
-  },
-  optionText: {
-    marginLeft: 16,
-    fontSize: 16,
-  },
-  cancelButton: {
-    marginTop: 24,
-    padding: 14,
-    borderRadius: 8,
-    backgroundColor: '#f5f5f5',
-    alignItems: 'center',
-  },
-  cancelText: {
-    color: '#666',
-    fontSize: 16,
   },
   contentContainer: {
-    backgroundColor: '#fff',
     borderRadius: 10,
-    padding: 20,
     marginBottom: 80,
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -247,18 +202,20 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   cardLeft: {
+    width: '45%',
     backgroundColor: '#d1eaf2',
     borderRadius: 10,
-    padding: 20,
     alignItems: 'center',
-    marginRight: 10,
+    paddingBottom: 10,
+    paddingTop: 10,
   },
   cardRight: {
+    width: '45%',
     backgroundColor: '#eddfed',
     borderRadius: 10,
-    padding: 20,
     alignItems: 'center',
-    marginRight: 10,
+    paddingBottom: 10,
+    paddingTop: 10,
   },
   title: {
     fontSize: 18,

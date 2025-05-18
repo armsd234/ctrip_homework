@@ -5,7 +5,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { AuthProvider } from '@/contexts/AuthContext';
-// import Toast from 'react-native-toast-message';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -44,7 +43,6 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <RootLayoutNav />
-      {/* <Toast /> */}
     </AuthProvider>
   );
 }
@@ -62,16 +60,12 @@ function RootLayoutNav() {
   }, [router, segments]);
 
   return (
-    <Stack screenOptions={{
-      headerShown: false
-    }}>
-
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="diary/[id]" />
       <Stack.Screen name="diary-list/[id]" />
       <Stack.Screen name="editinfo" />
       <Stack.Screen name="authscreen" />
-      {/* <Stack.Screen name="editInfo" /> */}
       <Stack.Screen name="createImage" />
       <Stack.Screen name="createVideo" />
     </Stack>

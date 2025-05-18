@@ -56,7 +56,7 @@ export default function TravelPublishScreen() {
 
                 {/* // 在PostScreen组件中替换图片上传部分 */}
                 <View>
-                    <MultiImageUpload />
+                    {/* <MultiImageUpload /> */}
                 </View>
 
                 {/* <View>
