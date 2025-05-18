@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { StyleSheet, View, Image, Text, TouchableOpacity, Dimensions, Pressable, Modal, KeyboardAvoidingView, TextInput, Platform, FlatList, Share } from 'react-native';
+import { StyleSheet, View, Image, Text, TouchableOpacity, Dimensions, Pressable, Modal, KeyboardAvoidingView, TextInput, Platform, FlatList, Share, RefreshControl } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -121,15 +121,17 @@ interface VideoItem {
   user: User;
 }
 
-const mockComments: Comment[] = [
-  { id: '1', user: '用户A', content: '这个视频太棒了！', time: '10分钟前' },
-  { id: '2', user: '用户B', content: '我也喜欢这个内容', time: '30分钟前' },
-  { id: '3', user: '用户C', content: '感谢分享，学到了很多', time: '1小时前' },
-];
+// const mockComments: Comment[] = [
+//   { id: '1', user: '用户A', content: '这个视频太棒了！', time: '10分钟前' },
+//   { id: '2', user: '用户B', content: '我也喜欢这个内容', time: '30分钟前' },
+//   { id: '3', user: '用户C', content: '感谢分享，学到了很多', time: '1小时前' },
+// ];
+const mockComments: Comment[] = [];
 
 const VideoDetailScreen = () => {
   // 获取视频列表
   const [diaries, setDiaries] = useState<TravelDiary[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadInitialData = async () => {
     try {
@@ -166,9 +168,9 @@ const VideoDetailScreen = () => {
   // 当前视频
   const currentVideo = videoList[currentIndex];
   // console.log('当前视频:', currentIndex);
-  
 
-  const player = useVideoPlayer(currentVideo?.uri||'', player => {
+
+  const player = useVideoPlayer(currentVideo?.uri || '', player => {
     if (!player) return;
     player.loop = true;
     player.play();
@@ -322,6 +324,17 @@ const VideoDetailScreen = () => {
     </View>
   );
 
+  const onRefresh = useCallback(async () => {
+    try {
+      const response = await api.get(`/api/travel-notes/node-all`);
+      const travelsData = convertToTravelDiaries(response.data);
+      setDiaries(travelsData);
+      console.log('获取初始数据成功:', travelsData);
+    } catch (error) {
+      console.error('获取初始数据失败:', error);
+    }
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <FlatList
@@ -348,6 +361,14 @@ const VideoDetailScreen = () => {
           offset: height * index,
           index,
         })}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#2196F3']} // Android
+            tintColor="#2196F3" // iOS
+          />
+        }
       />
     </SafeAreaView>
   );

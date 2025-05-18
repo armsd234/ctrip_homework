@@ -1,4 +1,4 @@
-import { StyleSheet, TextInput, TouchableOpacity, View,Image, RefreshControl } from 'react-native';
+import { StyleSheet, TextInput, TouchableOpacity, View, Image, RefreshControl } from 'react-native';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Text } from '@/components/Themed';
 import TravelDiaryMasonry from '@/components/TravelDiaryMasonry';
@@ -50,6 +50,44 @@ interface BackendResponse {
   limit: number;
 }
 
+interface BackendResponse_All {
+  data: {
+    id: string;
+    title: string;
+    content: string;
+    coverImage: string[];
+    user: {
+      id: string;
+      nickname: string;
+      avatar: string;
+    };
+    status: 'pending' | 'approved' | 'rejected';
+    createdAt: string;
+    video?: string;
+    duration?: number;
+    location?: string;
+    when?: string;
+    days?: string;
+    money?: string;
+    who?: string;
+    tags?: Array<{
+      id: string;
+      name: string;
+      image: string;
+      suggestion?: string;
+      url: string;
+    }>;
+    views?: number;
+    commentCount?: number;
+    likesCount?: number;
+    favoriteCount?: number;
+    rejectReason?: string;
+  }[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 // 转换后端数据为前端TravelDiary格式
 const convertToTravelDiaries = (responseData: BackendResponse): TravelDiary[] => {
   if (!responseData?.data || !Array.isArray(responseData.data)) {
@@ -60,7 +98,7 @@ const convertToTravelDiaries = (responseData: BackendResponse): TravelDiary[] =>
     id: item._id,
     title: item.title || '',
     content: item.content || '',
-    coverImage: item.images?.map(image => 
+    coverImage: item.images?.map(image =>
       `http://localhost:5001/api/images/image?filename=${image}`
     ) || [],
     video: item.video ? `http://localhost:5001/api/images/video?filename=${item.video}` : undefined,
@@ -92,7 +130,54 @@ const convertToTravelDiaries = (responseData: BackendResponse): TravelDiary[] =>
   }));
 };
 
+const convertToFiltered = (responseData: BackendResponse_All): TravelDiary[] => {
+  if (!responseData?.data || !Array.isArray(responseData.data)) {
+    return [];
+  }
+  console.log('转换后的数据:', responseData.data);
+  const diariesWithImage = responseData.data.filter(diary =>
+    diary.coverImage && diary.coverImage.length > 0 && diary.video === ""
+  );
+  console.log('筛选出图文游记:', diariesWithImage);
+
+  return diariesWithImage.map(item => ({
+    id: item.id,
+    title: item.title || '',
+    content: item.content || '',
+    coverImage: item.coverImage?.map(image =>
+      `http://localhost:5001/api/images/image?filename=${image}`
+    ) || [],
+    video: item.video ? `http://localhost:5001/api/images/video?filename=${item.video}` : undefined,
+    duration: item.duration || 0,
+    type: item.video ? 'video' : 'image',
+    tags: item.tags?.map(tag => ({
+      name: tag.name || '',
+      image: tag.image || '',
+      suggestion: tag.suggestion || '',
+      url: tag.url || ''
+    })) || [],
+    When: item.when || '',
+    Who: item.who || '',
+    Days: item.days || '',
+    Money: item.money || '',
+    user: {
+      id: item.user.id,
+      nickname: item.user.nickname || '未知用户',
+      avatar: `http://localhost:5001/api/images/image?filename=${item.user.avatar}`
+    },
+    likes: item.likesCount || 0,
+    collects: item.favoriteCount || 0,
+    comments: item.commentCount || 0,
+    views: item.views || 0,
+    location: item.location || '',
+    createTime: item.createdAt || new Date().toISOString(),
+    status: item.status || 'pending',
+    rejectReason: item.rejectReason
+  }));
+};
+
 export default function TabOneScreen() {
+  const [alldiaries, setAllDiaries] = useState<TravelDiary[]>([]);
   const router = useRouter();
 
   const [searchText, setSearchText] = useState('');
@@ -104,7 +189,6 @@ export default function TabOneScreen() {
   const [isSearching, setIsSearching] = useState(false);
   const { isAuthenticated, checkToken, user } = useAuth();
   const [isReady, setIsReady] = useState(false);
-  const [avatar, setavatar] = useState("https://picsum.photos/100/100?random=1");
   const [isAtBottom, setIsAtBottom] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -112,12 +196,12 @@ export default function TabOneScreen() {
   const loadInitialData = async () => {
     setLoading(true);
     try {
-      const response = await api.get(`/api/travel-notes/newVersion`, { 
-        params: { 
-          page: 1, 
+      const response = await api.get(`/api/travel-notes/newVersion`, {
+        params: {
+          page: 1,
           limit: PAGE_SIZE,
           status: 'approved'
-        } 
+        }
       });
       const travelsData = convertToTravelDiaries(response.data);
       setDiaries(travelsData);
@@ -136,22 +220,22 @@ export default function TabOneScreen() {
     if (loading || !hasMore) return;
     setLoading(true);
     try {
-      const response = await api.get(`/api/travel-notes/newVersion`, { 
-        params: { 
-          page, 
+      const response = await api.get(`/api/travel-notes/newVersion`, {
+        params: {
+          page,
           limit: PAGE_SIZE,
           status: 'approved'
-        } 
+        }
       });
       const newData = convertToTravelDiaries(response.data);
       setHasMore(newData.length === PAGE_SIZE);
-      
+
       setDiaries(prev => {
         const existingIds = new Set(prev.map(d => d.id));
         const uniqueNewData = newData.filter(item => !existingIds.has(item.id));
         return [...prev, ...uniqueNewData];
       });
-      
+
       setPage(prev => prev + 1);
     } catch (error) {
       console.error('获取更多数据失败:', error);
@@ -170,9 +254,6 @@ export default function TabOneScreen() {
       setIsReady(true);
     };
     checkAuth();
-    if (user?.user._id) {
-      setavatar(`http://localhost:5001/api/images/image?filename=${user?.user.avatar}`);
-    }
     if (isReady && !isAuthenticated) {
       router.push({
         pathname: '/authscreen',
@@ -202,23 +283,34 @@ export default function TabOneScreen() {
         return;
       }
 
-      setIsSearching(true);
       try {
-        const response = await api.get(`/api/travel-notes/newVersion`, { 
-          params: { 
-            page: 1,
-            limit: PAGE_SIZE,
-            search: text,
-            status: 'approved'
-          } 
+        const response = await api.get(`/api/travel-notes/node-all`);
+        // const travelsData = convertToTravelDiaries(response.data);
+        // setAllDiaries(travelsData);
+        const travelsData = convertToFiltered(response.data);
+        console.log('获取初始数据成功:', travelsData);
+        const searchLower = text.toLowerCase();
+        const filtered = travelsData.filter(diary => {
+          const title = diary.title?.toLowerCase() || '';
+          const content = diary.content?.toLowerCase() || '';
+          const nickname = diary.user?.nickname?.toLowerCase() || '';
+          console.log('当前搜索:', title, ',', content);
+
+          return (
+            title.includes(searchLower) ||
+            content.includes(searchLower) ||
+            nickname.includes(searchLower)
+          );
         });
-        const searchResults = convertToTravelDiaries(response.data);
-        setFilteredDiaries(searchResults);
+        console.log('筛选后的数据:', filtered);
+        setFilteredDiaries(filtered);
       } catch (error) {
-        console.error('搜索失败:', error);
-        setFilteredDiaries([]);
+        console.error('获取初始数据失败:', error);
+        // setAllDiaries([]);
+      } finally {
+        setIsSearching(true);
       }
-    }, 500),
+    }, 1000),
     [diaries]
   );
 
@@ -239,10 +331,10 @@ export default function TabOneScreen() {
   const handleScroll = useCallback((event: any) => {
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
     const paddingToBottom = 20; // 添加一些底部padding，提前触发
-    const isScrolledToBottom = 
-      layoutMeasurement.height + contentOffset.y >= 
+    const isScrolledToBottom =
+      layoutMeasurement.height + contentOffset.y >=
       contentSize.height - paddingToBottom;
-    
+
     setIsAtBottom(isScrolledToBottom);
   }, []);
 
@@ -253,12 +345,12 @@ export default function TabOneScreen() {
       // 重置页码
       setPage(1);
       // 重新加载第一页数据
-      const response = await api.get(`/api/travel-notes/newVersion`, { 
-        params: { 
-          page: 1, 
+      const response = await api.get(`/api/travel-notes/newVersion`, {
+        params: {
+          page: 1,
           limit: PAGE_SIZE,
           status: 'approved'
-        } 
+        }
       });
       const travelsData = convertToTravelDiaries(response.data);
       setDiaries(travelsData);
@@ -274,12 +366,9 @@ export default function TabOneScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.container}>
-        <View style={styles.topBar}>
-          <View style={styles.welcomeContainer}>
-            <Text style={styles.welcomeText}>用一篇游记，看遍世界。</Text>
-          </View>
+        <View style={styles.welcomeContainer}>
+          <Text style={styles.welcomeText}>用一篇游记，看遍世界。</Text>
         </View>
-        
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
           <TextInput
@@ -290,7 +379,7 @@ export default function TabOneScreen() {
             onChangeText={handleSearchChange}
           />
         </View>
-        
+
         {isSearching && filteredDiaries.length === 0 ? (
           <View style={styles.emptyResult}>
             <Text style={styles.emptyText}>没有找到相关游记</Text>
@@ -329,10 +418,10 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: 'white',
-    // marginBottom: 60
   },
   container: {
     flex: 1,
+    backgroundColor: '#f5f5f5',
   },
   noMoreContainer: {
     padding: 16,
@@ -345,11 +434,9 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 15,
+    paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: '#f5f5f5',
-    // borderBottomWidth: StyleSheet.hairlineWidth,
-    // borderBottomColor: '#eee',
+    backgroundColor: '#fff',
   },
   searchIcon: {
     marginRight: 10,
@@ -357,7 +444,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     height: 40,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
     borderRadius: 20,
     paddingHorizontal: 15,
     fontSize: 14,
@@ -370,16 +457,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#999',
   },
-  topBar: {
+  welcomeContainer: {
+    backgroundColor: '#fff',
+    height: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 12,
-  },
-  welcomeContainer: {
-    flex: 1,
   },
   welcomeText: {
     fontSize: 20,
