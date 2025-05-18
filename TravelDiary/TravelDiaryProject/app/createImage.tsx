@@ -150,8 +150,10 @@ export default function TravelPublishScreen() {
     const oldUnits = ['元', '千元', '万元'];
     const newUnits = ['', 'K', 'W'];
     const unit = newUnits[oldUnits.indexOf(moneyUnit)] || newUnits[0];
+    const moneyValue = money === '' ? '' : money + unit;
+    const whenValue = when === '' ? '' : when+'月';
 
-    const noteData = { title, content, images, location, when: when+'月', days, money:money+unit, who };
+    const noteData = { title, content, images, location, when: whenValue, days, money:moneyValue, who };
     console.log('发布内容：', noteData);
 
     try {
