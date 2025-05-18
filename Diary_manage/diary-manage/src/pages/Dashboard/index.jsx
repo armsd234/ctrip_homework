@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Table, Card, Input, Select, Space, Button, Modal, Form, message, Image, Typography, Carousel } from 'antd';
 import { SearchOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
@@ -8,7 +8,6 @@ import styles from './index.module.css';
 import DiaryCard from '../../components/diaryCard';
 import { Avatar } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
 
 const { Option } = Select;
 const { Paragraph } = Typography;
@@ -42,7 +41,75 @@ const Dashboard = () => {
     const [detailModalVisible, setDetailModalVisible] = useState(false);
     const [selectedDiaryDetail, setSelectedDiaryDetail] = useState(null);
     const [carouselRef, setCarouselRef] = useState(null);
-    const [mediaUrls, setMediaUrls] = useState({});
+    const mediaUrls = useRef({});
+    const [mediaUrlsVersion, setMediaUrlsVersion] = useState(0);
+    const [refresh, setRefresh] = useState(false);
+
+    const handleModalClose = useCallback(() => {
+        setDetailModalVisible(false);
+    }, []);
+
+    const handleApprove = useCallback(async (record) => {
+        try {
+            await approveDiary(record._id);
+            message.success('审核通过成功');
+            setRefresh(prev => !prev);
+        } catch (error) {
+            message.error('操作失败');
+        }
+    }, []);
+
+    const handleDelete = useCallback(async (record) => {
+        Modal.confirm({
+            title: '确认删除',
+            content: '确定要删除这篇游记吗？此操作不可恢复。',
+            onOk: async () => {
+                try {
+                    await deleteDiary(record._id);
+                    message.success('删除成功');
+                    setRefresh(prev => !prev);
+                } catch (error) {
+                    message.error('删除失败');
+                }
+            },
+        });
+    }, []);
+
+    const handleReject = async (values) => {
+        try {
+            await rejectDiary(selectedDiary._id, values.reason);
+            message.success('已拒绝该游记');
+            setRejectModalVisible(false);
+            rejectForm.resetFields();
+            setRefresh(prev => !prev);
+        } catch (error) {
+            message.error('操作失败');
+        }
+    };
+
+    const loadMediaUrl = useCallback(async (filename, isVideo = false) => {
+        if (!filename) return;
+        if (mediaUrls.current[filename]) return;
+
+        try {
+            const url = isVideo
+                ? await fetchAndCacheVideo(filename)
+                : await fetchAndCacheMedia(filename);
+
+            if (url) {
+                mediaUrls.current[filename] = url;
+                setMediaUrlsVersion(v => v + 1);
+            }
+        } catch (error) {
+            console.error('Error loading media:', error);
+            message.error('加载媒体文件失败');
+        }
+    }, []);
+
+    const handleViewDetail = useCallback((record) => {
+        setSelectedDiaryDetail(record);
+        setDetailModalVisible(true);
+    }, []);
 
     const fetchData = useCallback(async (params = {}) => {
         setLoading(true);
@@ -56,6 +123,16 @@ const Dashboard = () => {
                 status: status,
                 ...params,
             });
+
+            // 预加载所有媒体文件
+            response.data.forEach(record => {
+                if (record.video) {
+                    loadMediaUrl(record.video, true);
+                } else if (record.images && record.images.length > 0) {
+                    record.images.forEach(image => loadMediaUrl(image));
+                }
+            });
+
             setData(response.data);
             setPagination(prev => ({
                 ...prev,
@@ -64,15 +141,26 @@ const Dashboard = () => {
                 ...(params.pageSize ? { pageSize: params.pageSize } : {})
             }));
 
+
         } catch (error) {
             message.error('获取数据失败');
         }
         setLoading(false);
-    }, [searchText, status]);
+    }, [searchText, status, loadMediaUrl]);
+
+    const handleTableChange = useCallback((newPagination) => {
+        console.log('useEffect triggered2');
+        fetchData({
+            page: newPagination.current,
+            pageSize: newPagination.pageSize,
+        });
+    }, [fetchData]);
+
 
     useEffect(() => {
+        // console.log('useEffect triggered1:');
         fetchData();
-    }, [fetchData]);
+    }, [fetchData, refresh]);
 
     useEffect(() => {
         return () => {
@@ -80,95 +168,16 @@ const Dashboard = () => {
         };
     }, []);
 
-    const handleTableChange = (newPagination) => {
-        fetchData({
-            page: newPagination.current,
-            pageSize: newPagination.pageSize,
-        });
-    };
-
-    const handleApprove = async (record) => {
-        try {
-            await approveDiary(record._id);
-            message.success('审核通过成功');
-            fetchData();
-        } catch (error) {
-            message.error('操作失败');
-        }
-    };
-
-    const handleReject = async (values) => {
-        try {
-            await rejectDiary(selectedDiary._id, values.reason);
-            message.success('已拒绝该游记');
-            setRejectModalVisible(false);
-            rejectForm.resetFields();
-            fetchData();
-        } catch (error) {
-            message.error('操作失败');
-        }
-    };
-
-    const handleDelete = async (record) => {
-        Modal.confirm({
-            title: '确认删除',
-            content: '确定要删除这篇游记吗？此操作不可恢复。',
-            onOk: async () => {
-                try {
-                    await deleteDiary(record._id);
-                    message.success('删除成功');
-                    fetchData();
-                } catch (error) {
-                    message.error('删除失败');
-                }
-            },
-        });
-    };
-
-    const handleModalClose = () => {
-        cleanupObjectURLs();
-        setDetailModalVisible(false);
-        setMediaUrls({});
-    };
-
-    const loadMediaUrl = async (filename, isVideo = false) => {
-        if (!filename) return;
-
-        try {
-            const url = isVideo
-                ? await fetchAndCacheVideo(filename)
-                : await fetchAndCacheMedia(filename);
-
-            if (url) {
-                setMediaUrls(prev => ({ ...prev, [filename]: url }));
-            }
-        } catch (error) {
-            console.error('Error loading media:', error);
-            message.error('加载媒体文件失败');
-        }
-    };
-
-    const handleViewDetail = async (record) => {
-        setSelectedDiaryDetail(record);
-        setDetailModalVisible(true);
-
-        if (record.video) {
-            loadMediaUrl(record.video, true);
-        }
-        if (record.images && record.images.length > 0) {
-            record.images.forEach(image => loadMediaUrl(image));
-        }
-    };
-
-    const nextSlide = () => {
+    const nextSlide = useCallback(() => {
         carouselRef?.next();
-    };
+    }, [carouselRef]);
 
-    const prevSlide = () => {
+    const prevSlide = useCallback(() => {
         carouselRef?.prev();
-    };
+    }, [carouselRef]);
 
-    const columns = [
+    // Memoize columns definition
+    const columns = useMemo(() => [
         {
             title: '作者',
             dataIndex: ['author', 'nickname'],
@@ -185,18 +194,18 @@ const Dashboard = () => {
                     <span style={{ fontSize: 20 }}>{nickname}</span>
                 </div>
             )
-
         },
         {
             title: '内容预览',
             key: 'preview',
             render: (_, record) => (
                 <DiaryCard
+                    key={record._id}
                     onViewDetail={() => handleViewDetail(record)}
                     title={record.title}
-                    image={record.images && record.images.length > 0 ? record.images[0] : ''}
+                    image={record.images && record.images.length > 0 ? mediaUrls.current[record.images[0]] : ''}
                     content={record.content}
-                    video={record.video}
+                    video={record.video ? mediaUrls.current[record.video] : null}
                     status={record.status}
                     createdAt={record.createdAt}
                     onApprove={() => handleApprove(record)}
@@ -208,9 +217,8 @@ const Dashboard = () => {
                     canDelete={user?.user.user.role === 'admin'}
                     canAudit={user?.user.user.role === 'reviewer' || user?.user.user.role === 'admin'}
                 />
-            ),
+            )
         },
-
         {
             title: '状态',
             dataIndex: 'status',
@@ -226,7 +234,6 @@ const Dashboard = () => {
                 const statusObj = statusMap[status] || statusMap['pending'];
 
                 return (
-
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <div
                             style={{
@@ -249,8 +256,7 @@ const Dashboard = () => {
                 );
             },
         },
-
-    ];
+    ], [handleViewDetail, handleApprove, handleDelete, user, mediaUrlsVersion]);
 
     return (
         <div className={styles.container}>
@@ -324,8 +330,7 @@ const Dashboard = () => {
                 open={detailModalVisible}
                 onCancel={handleModalClose}
                 width={800}
-                style={{ top: 20 }}
-                bodyStyle={{ padding: 0 }}
+                style={{ top: 20, padding: 0 }}
                 footer={null}
             >
                 {selectedDiaryDetail && (
@@ -354,17 +359,17 @@ const Dashboard = () => {
                                 <span className={styles.travelInfoValue}>¥ {selectedDiaryDetail.money || '0'}</span>
                             </div>
                             <div className={styles.travelInfoItem}>
-                                <span className={styles.travelInfoLabel}>同行人数：</span>
+                                <span className={styles.travelInfoLabel}>和谁出行：</span>
                                 <span className={styles.travelInfoValue}>{selectedDiaryDetail.who || '0'} 人</span>
                             </div>
                         </div>
                         <div className={styles.imageGallery}>
                             {selectedDiaryDetail.video ? (
                                 <div style={{ display: 'block' }}>
-                                    {mediaUrls[selectedDiaryDetail.video] ? (
+                                    {mediaUrls.current[selectedDiaryDetail.video] ? (
                                         <video
-                                            key={mediaUrls[selectedDiaryDetail.video]}
-                                            src={mediaUrls[selectedDiaryDetail.video]}
+                                            key={mediaUrls.current[selectedDiaryDetail.video]}
+                                            src={mediaUrls.current[selectedDiaryDetail.video]}
                                             controls
                                             className={styles.coverVideo}
                                             onClick={e => e.stopPropagation()}
@@ -402,9 +407,9 @@ const Dashboard = () => {
                                     >
                                         {selectedDiaryDetail.images.map((image, index) => (
                                             <div key={index}>
-                                                {mediaUrls[image] ? (
+                                                {mediaUrls.current[image] ? (
                                                     <Image
-                                                        src={mediaUrls[image]}
+                                                        src={mediaUrls.current[image]}
                                                         alt={`图片 ${index + 1}`}
                                                         className={styles.carouselImage}
                                                         preview={false}

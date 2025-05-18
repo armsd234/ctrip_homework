@@ -15,7 +15,7 @@ const { Header, Sider, Content } = Layout;
 
 const MainLayout = ({ children }) => {
     const [collapsed, setCollapsed] = useState(false);
-    const [avatarIcon, setAvatarIcon] = useState(null);
+    // const [avatarIcon, setAvatarIcon] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
     const dispatch = useDispatch();
@@ -65,24 +65,26 @@ const MainLayout = ({ children }) => {
         }
     ];
 
-    useEffect(() => {
-        const fetchAvatarIcon = async () => {
-            try {
-                if (user?.user.user.avatar) {
-                    const imageUrl = `http://localhost:5001/api/images/image?filename=${user.user.user.avatar}`;
-                    setAvatarIcon(<Avatar key="user-avatar" src={imageUrl} />);
-                } else {
-                    setAvatarIcon(<Avatar key="default-avatar" icon={<UserOutlined key="default-user-icon" />} />);
-                }
-            } catch (error) {
-                console.error('获取头像图标失败:', error);
-                setAvatarIcon(<Avatar key="error-avatar" icon={<UserOutlined key="error-user-icon" />} />);
-            }
-        };
+    // useEffect(() => {
+    //     const fetchAvatarIcon = async () => {
+    //         try {
+    //             if (user?.user.user.avatar) {
+    //                 const imageUrl = `http://localhost:5001/api/images/image?filename=${user.user.user.avatar}`;
+    //                 setAvatarIcon(<Avatar key="user-avatar" src={imageUrl} />);
+    //             } else {
+    //                 setAvatarIcon(<Avatar key="default-avatar" icon={<UserOutlined key="default-user-icon" />} />);
+    //             }
+    //         } catch (error) {
+    //             console.error('获取头像图标失败:', error);
+    //             setAvatarIcon(<Avatar key="error-avatar" icon={<UserOutlined key="error-user-icon" />} />);
+    //         }
+    //     };
 
-        fetchAvatarIcon();
-    }, [user]);
-
+    //     fetchAvatarIcon();
+    // }, [user]);
+    const avatarIcon = user?.user.user.avatar ? (
+        <Avatar key="user-avatar" src={`http://localhost:5001/api/images/image?filename=${user.user.user.avatar}`} />
+    ) : (<Avatar key="default-avatar" icon={<UserOutlined key="default-user-icon" />}/> )
     return (
         <Layout className={styles.layout}>
             <Sider

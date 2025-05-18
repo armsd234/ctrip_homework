@@ -31,7 +31,7 @@
 }
 
 .imageGallery {
-  height: 510px;
+  height: auto;
   margin: 8px 0;
   position: relative;
   background: #f5f5f5;
@@ -40,8 +40,8 @@
 }
 
 .carouselContainer { 
-  max-height: 420px;
-  aspect-ratio: 9/16;
+  /* max-height: 420px; */
+  aspect-ratio: 4/3;
   margin: 0 auto;
   position: relative;
 }

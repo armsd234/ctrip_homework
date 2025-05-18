@@ -12,7 +12,9 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-      <BrowserRouter>
+      <BrowserRouter
+        // future={{ v7_relativeSplatPath: true }}
+      >
         <ConfigProvider locale={zhCN}>
           <App />
         </ConfigProvider>

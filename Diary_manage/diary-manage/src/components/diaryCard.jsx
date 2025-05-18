@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Typography, Button, Popconfirm } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import styles from './diaryCard.module.css';
@@ -17,7 +17,7 @@ function formatDate(dateStr) {
     return `${y}/${m}/${day} ${h}:${min}:${s}`;
 }
 
-const DiaryCard = ({
+const DiaryCard = React.memo(({
     id,
     title,
     image,
@@ -35,7 +35,7 @@ const DiaryCard = ({
     const [isPlaying, setIsPlaying] = useState(false);
     const [hover, setHover] = useState(false);
     const videoRef = useRef(null);
-
+    // console.log('DiaryCard rendering:', { id, title, image, video, status, createdAt });
     // 鼠标进入video或暂停按钮时都显示按钮，离开video和按钮区域才隐藏
     const handleMouseEnter = () => setHover(true);
     const handleMouseLeave = (e) => {
@@ -59,6 +59,10 @@ const DiaryCard = ({
         }
     };
 
+    useEffect(() => {
+        console.log('DiaryCard useEffect running:', { id, title, image, video, status, createdAt });
+    }, []); 
+
     const handlePlayClick = (e) => {
         e.stopPropagation();
         setIsPlaying(true);
@@ -80,8 +84,6 @@ const DiaryCard = ({
     const handleVideoPlay = () => setIsPlaying(true);
     const handleVideoPause = () => setIsPlaying(false);
 
-
-
     return (
         <div className={styles.cardWrapper} >
             <div
@@ -94,7 +96,7 @@ const DiaryCard = ({
                     <>
                         <video
                             ref={videoRef}
-                            src={`http://localhost:5001/api/images/video?filename=${video}`}
+                            src={video}
                             controls
                             className={styles.coverVideo}
                             style={{ zIndex: 2 }}
@@ -133,7 +135,7 @@ const DiaryCard = ({
                         )}
                     </>
                 ) : image ? (
-                    <img src={`http://localhost:5001/api/images/image?filename=${image}`} alt="封面图" className={styles.coverImg} />
+                    <img src={image} alt="封面图" className={styles.coverImg} />
                 ) : (
                     <div className={styles.noImg} />
                 )}
@@ -145,7 +147,7 @@ const DiaryCard = ({
                         <Paragraph className={styles.previewText} ellipsis={{ rows: 2, tooltip: true }}>{content}</Paragraph>
                         <div className={styles.timeText}>{formatDate(createdAt)}</div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: 90 }}>
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: 250 }}>
                         {canAudit && status === 'pending' && (
                             <div style={{ marginRight: 12 }}>
                                 <Button type="primary" style={{ marginRight: 8, fontSize: 22, padding: '8px 16px' }} onClick={onApprove}>通过</Button>
@@ -162,6 +164,6 @@ const DiaryCard = ({
             </div>
         </div>
     );
-};
+});
 
 export default DiaryCard;

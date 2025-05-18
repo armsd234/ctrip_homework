@@ -33,7 +33,7 @@ src/
 
 - 使用 React Router 进行路由管理
 - 基于 HOC 模式实现 `PrivateRoute` 组件进行路由保护
-- 使用JWT Token 实现持久化登录
+- 使用 JWT Token 实现持久化登录
 - 使用 Redux Toolkit 管理用户认证状态
 - 实现路由守卫功能，自动跳转未授权访问
 
