@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -116,6 +116,47 @@ const EditProfileScreen: React.FC = () => {
                       `http://localhost:5001/api/images/image?filename=${user.user.avatar}` :
                        require('../assets/images/favicon.png'),
     })
+
+    // 添加防抖定时器引用
+    const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+    // 防抖检查昵称函数
+    const debouncedCheckName = useCallback((name: string) => {
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+
+        debounceTimerRef.current = setTimeout(async () => {
+            if(name === ''){
+                setError('昵称不能为空');
+                return;
+            }
+            if(name !== user?.user.nickname){
+                console.log('Checking name:', name);
+                console.log('User nickname:', user?.user.nickname);
+                try {
+                    const response = await api.get(`/api/users/check-nickname?nickname=${name}`);
+                    if (response.data.exists) {
+                        setError('昵称已存在');
+                    } else {
+                        setError('');
+                    }
+                } catch (error) {
+                    console.error('检查昵称重复时出错:', error);
+                }
+            }
+        }, 500); // 500ms 的防抖延迟
+    }, [user?.user.nickname]);
+
+    // 清理定时器
+    useEffect(() => {
+        return () => {
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+            }
+        };
+    }, []);
+
     useEffect(() => {
         checkToken();
     },[])
@@ -262,27 +303,6 @@ const EditProfileScreen: React.FC = () => {
         }
     };
 
-    const checkNameDuplicate = async (name: string) => {
-        if(name === ''){
-            setError('昵称不能为空');
-            return;
-        }
-        if(name !== user?.user.nickname){
-            console.log('Checking name:', name);
-            console.log('User nickname:', user?.user.nickname);
-            try {
-                const response = await api.get(`/api/users/check-nickname?nickname=${name}`);
-                if (response.data.exists) {
-                    setError('昵称已存在');
-                }else{
-                    setError('');
-                }
-            } catch (error) {
-                console.error('检查昵称重复时出错:', error);
-            }
-        }
-    };
-    
     const renderListItem = (label: string, value: string, placeholder: string, fieldName: keyof ProfileData) => {
         return (
             fieldName === 'id' ? (
@@ -321,34 +341,32 @@ const EditProfileScreen: React.FC = () => {
                                 ]}
                                     value={fieldName === 'name'? profileData.name : profileData.signature}
                                     onChangeText={(text) => {
-                                            console.log(`Updating ${fieldName} to:`, text);
-                                            if (fieldName === 'name' ) {
-                                              if(text === ''){
+                                        console.log(`Updating ${fieldName} to:`, text);
+                                        if (fieldName === 'name') {
+                                            if(text === ''){
                                                 setError('昵称不能为空');
                                                 setProfileData(prev => ({...prev, [fieldName]: user?.user.nickname || ''}));
-                                              }
-                                              if(text.length > 10){
+                                            }
+                                            if(text.length > 10){
                                                 setError('昵称不能超过10个字符');
                                                 setProfileData(prev => ({...prev, [fieldName]: user?.user.nickname || ''}));
-                                              }
-                                              checkNameDuplicate(text);
-                                              if(text !== profileData.name){
+                                            }
+                                            // 使用防抖函数检查昵称
+                                            debouncedCheckName(text);
+                                            if(text !== profileData.name){
                                                 setIsEditingName(true);
                                                 setProfileData(prev => ({...prev, [fieldName]: text}));
-                                              }
-                                            }else{
-                                                setProfileData(prev => ({...prev, [fieldName]: text}));
                                             }
-                                            
+                                        } else {
+                                            setProfileData(prev => ({...prev, [fieldName]: text}));
                                         }
-                                    }
+                                    }}
                                     multiline={fieldName === 'signature'}
                                     maxLength={fieldName === 'signature' ? 500 : undefined}
                                     numberOfLines={fieldName === 'signature' ? 5 : 1}
                                     textAlignVertical={fieldName === 'signature' ? 'top' : 'center'}
                                     onBlur={() => {
                                         if(fieldName === 'name'){
-                                            checkNameDuplicate(profileData.name);
                                             if(isEditingName && profileData.name !== user?.user.nickname){
                                                 setIsEditingName(false);
                                             }
@@ -358,7 +376,6 @@ const EditProfileScreen: React.FC = () => {
                                                 setError('');
                                             }
                                         }
-                                        
                                     }}
                                 />
                             </View>

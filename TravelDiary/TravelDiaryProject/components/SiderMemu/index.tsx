@@ -49,8 +49,8 @@ export const SideMenu = ({ visible, onClose }: { visible: boolean, onClose: () =
       {visible && (
         <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose} />
       )}
-      <Animated.View style={[styles.sidebar, { left: anim, height: '110%',marginTop: 0 }]}>
-        <ScrollView style={{ marginTop: 60 }}>
+      <Animated.View style={[styles.sidebar, { left: anim }]}>
+        <ScrollView style={{ flex: 1, marginTop: 60, marginBottom: 80 }}>
           <View style={{ height: 40 }} />
           {menuList.map((item, idx) =>
             item.divider ? (
@@ -79,13 +79,13 @@ export const SideMenu = ({ visible, onClose }: { visible: boolean, onClose: () =
 
 const styles = StyleSheet.create({
   overlay: {
-    position: 'absolute',
+    position: 'fixed',
     top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.2)',
     zIndex: 10,
   },
   sidebar: {
-    position: 'absolute',
+    position: 'fixed',
     top: 0,
     bottom: 0,
     left: 0,
@@ -127,11 +127,16 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderTopWidth: 1,
     borderTopColor: '#eee',
-    marginBottom:30,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingBottom: 30,
   },
   bottomMenuItem: {
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 10,
   },
   bottomMenuText: {
     fontSize: 13,

@@ -132,6 +132,8 @@ const AuthScreen: React.FC = () => {
       if (response.success) {
         sendVerificationCode(email);
         setCurrentView('verify');
+        setResendTimer(60);
+        setIsTimerActive(true);
       }else{
         setError(response.data.message || '邮箱已存在');
       }

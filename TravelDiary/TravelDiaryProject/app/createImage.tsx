@@ -17,7 +17,7 @@ import { router } from 'expo-router';
 import MultiImageUpload from '@/components/MultiImageUpload';
 import { api } from '@/services/api';
 // import LocationPicker from '@/components/Map';
-// import LocationPicker from '@/components/Map/LocationPicker.web';
+import LocationPicker from '@/components/Map/LocationPicker.web';
 // const LocationPicker = (Platform.select({
 //   native: () => require('@/components/Map/LocationPicker.native').default,
 //   web: () => require('@/components/Map/LocationPicker.web').default,
@@ -26,15 +26,15 @@ import { api } from '@/services/api';
 //   native: () => require('../components/Map/LocationPicker.native').default as React.ComponentType<{onLocationSelected: (loc: any) => void}>,
 //   web: () => require('../components/Map/LocationPicker.web').default as React.ComponentType<{onLocationSelected: (loc: any) => void}>,
 // })?.() || (() => null);
-const LocationPicker = React.lazy(async () => {
-  try {
-    return Platform.OS === 'web' 
-      ? await import('../components/Map/LocationPicker.web')
-      : await import('../components/Map/LocationPicker.native');
-  } catch {
-    return { default: () => null };
-  }
-});
+// const LocationPicker = React.lazy(async () => {
+//   try {
+//     return Platform.OS === 'web' 
+//       ? await import('../components/Map/LocationPicker.web')
+//       : await import('../components/Map/LocationPicker.native');
+//   } catch {
+//     return { default: () => null };
+//   }
+// });
 
 
 // const LocationPicker = Platform.select({

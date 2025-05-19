@@ -1,7 +1,7 @@
 // 放在 App.tsx 或入口文件
 ;(React as any).useInsertionEffect = React.useLayoutEffect;
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo, useContext } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, Dimensions, StatusBar, Share, FlatList, ActivityIndicator, Animated, StyleSheet, TextInput, Pressable } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import styles from '../../styles/profile.styles';
@@ -17,6 +17,7 @@ import axios from 'axios';
 import TravelDiaryMasonry from '@/components/TravelDiaryMasonryCopy';
 import {TravelDiary} from '@/components/TravelDiaryMasonryCopy/types'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MenuContext } from './_layout';
 const PROFILE_SECTION_BG = '#4A4E69';
 const ACCENT_COLOR = '#F25F5C';
 
@@ -88,7 +89,7 @@ const ProfileScreen = () => {
   const router = useRouter();
   const { isAuthenticated, checkToken, user } = useAuth();
   const [isReady, setIsReady] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
+  const { setShowMenu } = useContext(MenuContext);
   const [activeTab, setActiveTab] = useState<'travels' | 'favorites' | 'likes'>('travels');
   const [loading, setLoading] = useState(false);
   const [travels, setTravels] = useState([]);
@@ -475,7 +476,6 @@ const ProfileScreen = () => {
           />
         </View>
       </View>
-      <SideMenu visible={showMenu} onClose={() => setShowMenu(false)} />
     </SafeAreaView>
 
   );

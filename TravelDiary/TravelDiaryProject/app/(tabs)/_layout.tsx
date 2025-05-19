@@ -3,6 +3,17 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs, useRouter } from 'expo-router';
 import { StyleSheet, View, Text, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { SideMenu } from '@/components/SiderMemu';
+import { createContext, useContext } from 'react';
+
+// 创建全局菜单上下文
+export const MenuContext = createContext<{
+  showMenu: boolean;
+  setShowMenu: (show: boolean) => void;
+}>({
+  showMenu: false,
+  setShowMenu: () => {},
+});
 
 // 加载中组件
 function LoadingScreen() {
@@ -28,9 +39,11 @@ function PublishButton({ onPress }: { onPress: () => void }) {
 
 export default function TabLayout() {
   const [modalVisible, setModalVisible] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const router = useRouter();
+
   return (
-    <>
+    <MenuContext.Provider value={{ showMenu, setShowMenu }}>
       <Suspense fallback={<LoadingScreen />}>
         <Tabs
           screenOptions={{
@@ -133,7 +146,10 @@ export default function TabLayout() {
           </View>
         </View>
       </Modal>
-    </>
+
+      {/* 侧边菜单 */}
+      <SideMenu visible={showMenu} onClose={() => setShowMenu(false)} />
+    </MenuContext.Provider>
   );
 }
 
