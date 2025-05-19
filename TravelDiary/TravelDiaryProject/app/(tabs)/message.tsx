@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { StyleSheet, View, Image, Text, TouchableOpacity, Dimensions, Pressable, Modal, KeyboardAvoidingView, TextInput, Platform, FlatList, Share, RefreshControl } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import travelDiaries from '@/data/videoDiaries.json';
@@ -166,6 +166,7 @@ const VideoDetailScreen = () => {
   const flatListRef = useRef<FlatList>(null);
 
   // 当前视频
+  const [isPlaying, setIsPlaying] = useState(false);
   const currentVideo = videoList[currentIndex];
   // console.log('当前视频:', currentIndex);
 
@@ -174,6 +175,7 @@ const VideoDetailScreen = () => {
     if (!player) return;
     player.loop = true;
     player.play();
+    setIsPlaying(true);
   },);
 
   const [isLiked, setIsLiked] = useState(false);
@@ -208,6 +210,29 @@ const VideoDetailScreen = () => {
     }
   };
 
+  const handleScroll = (event: any) => {
+    const contentOffsetY = event.nativeEvent.contentOffset.y;
+    const height = event.nativeEvent.layoutMeasurement.height;
+    const index = Math.floor(contentOffsetY / height);
+    setCurrentIndex(index);
+  };
+
+  const onRefresh = useCallback(async () => {
+    try {
+      const response = await api.get(`/api/travel-notes/node-all`);
+      const travelsData = convertToTravelDiaries(response.data);
+      setDiaries(travelsData);
+      console.log('获取初始数据成功:', travelsData);
+    } catch (error) {
+      console.error('获取初始数据失败:', error);
+    }
+  }, []);
+
+  const togglePlayback = () => {
+    isPlaying ? player.pause() : player.play();
+    setIsPlaying(!isPlaying);
+  };
+
   const renderCommentItem = ({ item }: { item: Comment }) => (
     <View style={styles.commentItem}>
       <Text style={styles.commentUser}>{item.user}</Text>
@@ -215,13 +240,6 @@ const VideoDetailScreen = () => {
       <Text style={styles.commentTime}>{item.time}</Text>
     </View>
   );
-
-  const handleScroll = (event: any) => {
-    const contentOffsetY = event.nativeEvent.contentOffset.y;
-    const height = event.nativeEvent.layoutMeasurement.height;
-    const index = Math.floor(contentOffsetY / height);
-    setCurrentIndex(index);
-  };
 
   const renderVideoItem = ({ item }: { item: VideoItem }) => (
     <View style={styles.container}>
@@ -231,11 +249,19 @@ const VideoDetailScreen = () => {
         style={styles.video}
         player={player}
         allowsFullscreen
-        allowsPictureInPicture
+        allowsPictureInPicture = {false}
+        nativeControls={false}
       />
+      <TouchableOpacity 
+        style={styles.controlButton} 
+        onPress={togglePlayback}
+      >
+        {!isPlaying && <FontAwesome name='play-circle-o' size={80} color='#f3f3f3' />}
+      </TouchableOpacity>
 
       {/* 底部标题和描述 */}
       <View style={styles.infoContainer}>
+         
         <View style={styles.headerContainer}>
           <View style={styles.authorContainer}>
             <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
@@ -324,17 +350,6 @@ const VideoDetailScreen = () => {
     </View>
   );
 
-  const onRefresh = useCallback(async () => {
-    try {
-      const response = await api.get(`/api/travel-notes/node-all`);
-      const travelsData = convertToTravelDiaries(response.data);
-      setDiaries(travelsData);
-      console.log('获取初始数据成功:', travelsData);
-    } catch (error) {
-      console.error('获取初始数据失败:', error);
-    }
-  }, []);
-
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <FlatList
@@ -376,7 +391,6 @@ const VideoDetailScreen = () => {
 
 export default VideoDetailScreen;
 
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -388,6 +402,18 @@ const styles = StyleSheet.create({
     width: width,
     backgroundColor: 'black',
     paddingBottom: 200,
+  },
+  controlButton: {
+    position: 'absolute',
+    top: '30%',
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0)',
+    // backgroundColor: 'white',
+    width: 300,
+    height: 300,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 50,
   },
   headerContainer: {
     flexDirection: 'row',

@@ -7,11 +7,14 @@ import StatusTag from '@/components/StatusTag';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRef, useState, useEffect } from 'react';
 import { api } from '@/services/api';
+import { useVideoPlayer, VideoView } from 'expo-video';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 interface ProcessedDiary extends TravelDiary {
+  type: 'image' | 'video';
   coverImage: string[];
+  video: string; //视频
   user: {
     id: string;
     avatar: string;
@@ -26,6 +29,13 @@ export default function DiaryDetailScreen() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const flatListRef = useRef<FlatList>(null);
+  const videoSource = diary?.type === 'video' ? { uri: diary.video } : null;
+  console.log('videoSource', videoSource);
+
+  const player = useVideoPlayer(videoSource, player => {
+    player.loop = true;
+    player.play();
+  });
 
   useEffect(() => {
     const fetchDiary = async () => {
@@ -33,11 +43,14 @@ export default function DiaryDetailScreen() {
         const response = await api.get(`/api/travel-notes/${id}`);
         if (response.data && response.data.data && response.data.data[0]) {
           const diaryData = response.data.data[0];
-          console.log('diaryData',diaryData);
+          console.log('diaryData', diaryData);
           // 转换后端数据格式为前端需要的格式
           const processedDiary: ProcessedDiary = {
             ...diaryData,
-            coverImage: Array.isArray(diaryData.coverImage) 
+            type: diaryData.video ? 'video' : 'image',
+            // video: diary?.video,
+            video: `http://localhost:5001/api/images/video?filename=${diaryData.video}` || '',
+            coverImage: Array.isArray(diaryData.coverImage)
               ? diaryData.coverImage.map((img: string) => `http://localhost:5001/api/images/image?filename=${img}`)
               : [`http://localhost:5001/api/images/image?filename=${diaryData.coverImage}`],
             user: {
@@ -47,7 +60,7 @@ export default function DiaryDetailScreen() {
             }
           };
           setDiary(processedDiary);
-          console.log('processedDiary',processedDiary);
+          console.log('processedDiary', processedDiary);
         }
       } catch (error) {
         console.error('获取游记详情失败:', error);
@@ -94,10 +107,17 @@ export default function DiaryDetailScreen() {
   };
 
   const handleEditDiary = (diary: ProcessedDiary) => {
-    router.push({
+    if(diary.type==='image'){
+      router.push({
       pathname: '/diary-edit/[id]',
       params: { id: diary.id }
     });
+    }else{
+      router.push({
+        pathname: '/diary-edit-video/[id]',
+      params: { id: diary.id }
+      });
+    }
   };
 
   const handleDeleteDiary = async (id: string) => {
@@ -128,7 +148,7 @@ export default function DiaryDetailScreen() {
 
         <ScrollView style={styles.scrollArea}>
           <View>
-            <View>
+            {diary.type === 'image' && (<View>
               <FlatList
                 data={diary.coverImage}
                 horizontal
@@ -158,15 +178,24 @@ export default function DiaryDetailScreen() {
                   ))}
                 </View>
               )}
-            </View>
+              {(diary.When||diary.Days||diary.Money||diary.Who) && (
+                <View style={styles.infoBox}>
+                  {diary.When && (<Text style={styles.infoItem}>出发时间{"\n"}<Text style={styles.infoBold}>{diary.When}</Text></Text>)}
+                  {diary.Days && (<Text style={styles.infoItem}>行程天数{"\n"}<Text style={styles.infoBold}>{diary.Days}</Text></Text>)}
+                  {diary.Money && (<Text style={styles.infoItem}>人均花费{"\n"}<Text style={styles.infoBold}>{diary.Money}</Text></Text>)}
+                  {diary.Who && (<Text style={styles.infoItem}>和谁出行{"\n"}<Text style={styles.infoBold}>{diary.Who}</Text></Text>)}
+                </View>
+              )}
+            </View>)}
 
-            {!!(diary.When) && (
-              <View style={styles.infoBox}>
-                <Text style={styles.infoItem}>出发时间{"\n"}<Text style={styles.infoBold}>{diary.When}</Text></Text>
-                <Text style={styles.infoItem}>行程天数{"\n"}<Text style={styles.infoBold}>{diary.Days}</Text></Text>
-                <Text style={styles.infoItem}>人均花费{"\n"}<Text style={styles.infoBold}>{diary.Money}</Text></Text>
-                <Text style={styles.infoItem}>和谁出行{"\n"}<Text style={styles.infoBold}>{diary.Who}</Text></Text>
-              </View>
+            {diary.type === 'video' && (
+              <VideoView
+                // ref={videoRef}
+                player={player}
+                style={styles.video}
+                allowsFullscreen
+                // nativeControls={false}
+              />
             )}
 
             <View style={styles.contentContainer}>
@@ -249,6 +278,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   coverImage: {
+    width: '100%',
+    height: 300,
+    resizeMode: 'cover',
+  },
+  video: {
     width: '100%',
     height: 300,
     resizeMode: 'cover',

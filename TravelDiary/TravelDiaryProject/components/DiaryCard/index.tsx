@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { TravelDiary } from '../TravelDiaryMasonry/types';
 import StatusTag from '../StatusTag';
 import { router } from 'expo-router';
+import { useVideoPlayer, VideoView } from 'expo-video';
 
 interface DiaryCardProps {
   diary: TravelDiary;
@@ -13,6 +14,14 @@ interface DiaryCardProps {
 }
 
 export default function DiaryCard({ diary, onPress, onEdit, onDelete }: DiaryCardProps) {
+  const videoSource = diary.type === 'video' ? { uri: diary.video } : null;
+  console.log('videoSource', videoSource);
+
+  const player = useVideoPlayer(videoSource, player => {
+    player.loop = true;
+    // player.play();
+  });  
+
   const handlePress = () => {
     if (onPress) {
       onPress(diary);
@@ -21,11 +30,11 @@ export default function DiaryCard({ diary, onPress, onEdit, onDelete }: DiaryCar
     }
   };
 
-  console.log('diary',diary);
+  // console.log('diary', diary);
 
 
   return (
-    <Pressable 
+    <Pressable
       style={styles.card}
       onPress={handlePress}
     >
@@ -34,34 +43,46 @@ export default function DiaryCard({ diary, onPress, onEdit, onDelete }: DiaryCar
         <StatusTag status={diary.status} />
       </View>
       <View style={styles.cardContent}>
-        <Image 
-          source={{ uri: diary.coverImage }} 
-          style={styles.coverImage}
-        />
+        {diary.type === 'image' && (
+          <Image
+            source={{ uri: Array.isArray(diary.coverImage) ? diary.coverImage[0] : diary.coverImage }}
+            style={styles.coverImage}
+          />
+        )}
+        {diary.type === 'video' && (
+          <VideoView
+            // ref={videoRef}
+            player={player}
+            style={styles.coverImage}
+            // style={{ backgroundColor: 'pink', width: 80, height: 80, borderRadius: 8, marginRight: 12 }}
+            allowsFullscreen = {false}
+            nativeControls={false}
+          />
+        )}
         <View style={styles.contentInfo}>
           <Text style={styles.content} numberOfLines={2}>{diary.content}</Text>
           <Text style={styles.time} numberOfLines={1}>{new Date(diary.createTime).toLocaleDateString()}</Text>
         </View>
       </View>
       <View style={styles.rejectReasonContainer}>
-          {diary.status === 'rejected' && diary.rejectReason && (
-            <View style={styles.rejectReason}>
-              <Ionicons name="alert-circle-outline" size={16} color="#F44336" />
-              <Text style={styles.rejectReasonText} numberOfLines={1}>{diary.rejectReason}</Text>
-            </View>
-          )}
-        </View>
+        {diary.status === 'rejected' && diary.rejectReason && (
+          <View style={styles.rejectReason}>
+            <Ionicons name="alert-circle-outline" size={16} color="#F44336" />
+            <Text style={styles.rejectReasonText} numberOfLines={1}>{diary.rejectReason}</Text>
+          </View>
+        )}
+      </View>
 
       <View style={styles.cardActions}>
         <View style={styles.actionButtons}>
-          <Pressable 
+          <Pressable
             style={styles.actionButton}
             onPress={() => onEdit?.(diary)}
           >
             <Ionicons name="create-outline" size={16} color="#2196F3" />
             <Text style={styles.actionText}>编辑</Text>
           </Pressable>
-          <Pressable 
+          <Pressable
             style={[styles.actionButton, styles.deleteButton]}
             onPress={() => onDelete?.(diary)}
           >

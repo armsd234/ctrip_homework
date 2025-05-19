@@ -38,7 +38,7 @@ export default function MyDiaryScreen() {
           title: note.title || '',
           content: note.content || '',
           coverImage: `http://localhost:5001/api/images/image?filename=${note.images[0]? note.images[0] :' default_avatar.jpg'}`,
-          video: `http://localhost:5001/api/images/image?filename=${note.video}` || '',
+          video: `http://localhost:5001/api/images/video?filename=${note.video}` || '',
           duration: note.duration || '00:00:00',
           type: note.video ? 'video' : 'image',
           tags: note.tags || [],
@@ -61,6 +61,7 @@ export default function MyDiaryScreen() {
         }));
         
         setDiaries(travelsData);
+        console.log('游记数据:', travelsData);
       } else {
         setError('数据格式错误');
       }
@@ -104,10 +105,18 @@ export default function MyDiaryScreen() {
   };
 
   const handleEditDiary = (diary: TravelDiary) => {
-    router.push({
+    if(diary.type==='image'){
+      router.push({
       pathname: '/diary-edit/[id]',
       params: { id: diary.id }
     });
+    }else{
+      router.push({
+        pathname: '/diary-edit-video/[id]',
+      params: { id: diary.id }
+      });
+    }
+    
   };
 
   const handleDeleteDiary = async (id: string) => {

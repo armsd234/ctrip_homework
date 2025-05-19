@@ -10,27 +10,36 @@ import { decode } from 'base-64';
 
 const { width } = Dimensions.get('window');
 
-export default function VideoUploader({
-  onUploadSuccess,
-  onUploadError,
-}: {
+interface VideoUploadProps {
+  initialVideo?: string;
   onUploadSuccess: (filename: string) => void;
   onUploadError?: (error: Error) => void;
-}) {
-  const [video, setVideo] = useState<{ uri: string } | null>(null);
+}
+
+export default function VideoUploader({
+  initialVideo = '',
+  onUploadSuccess,
+  onUploadError,
+}: VideoUploadProps) {
+  const [video, setVideo] = useState(initialVideo);
   const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
   const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-  console.log('当前上传状态:', uploading);
-}, [uploading]);
-
-  const videoSource = `http://localhost:5001/api/images/video?filename=${video?.uri}`;
+  console.log('initialVideo',initialVideo);
+  console.log('video:',video);
+  const videoSource = `http://localhost:5001/api/images/video?filename=${video}`;
+  console.log(videoSource);
+  
   const player = useVideoPlayer(videoSource, player => {
     player.loop = true;
     player.play();
   });
+
+  useEffect(()=>{
+    console.log('initialVideo:',initialVideo);
+    console.log("vcoideo:::dfd",video);
+    setVideo(initialVideo);
+  },[initialVideo]);
 
   const selectVideo = async () => {
     setUploading(true);
@@ -43,7 +52,7 @@ export default function VideoUploader({
     if (!result.canceled) {
       await uploadVideo(result.assets[0]);
     } else {
-      setUploading(false);    
+      setUploading(false);
     }
   }
 
@@ -91,7 +100,7 @@ export default function VideoUploader({
       if (response.data) {
         const filename = response.data.filename;
         onUploadSuccess(filename);
-        setVideo({ uri: filename });
+        setVideo(filename);
         setUploaded(true);
         // alert('上传成功！');
       }
@@ -139,6 +148,13 @@ export default function VideoUploader({
     // }
   };
 
+  const removeImage = () => {
+    onUploadSuccess('');
+    setVideo('');
+    setUploading(false);
+    setUploaded(false);
+  };
+
   return (
     <View style={styles.container}>
       {uploaded ? (
@@ -149,11 +165,9 @@ export default function VideoUploader({
           // useNativeControls
           // resizeMode="contain"
           />
-          {/* <TouchableOpacity
-            style={styles.button}
-            onPress={uploadVideo}
-            disabled={uploading}
-          > */}
+          <TouchableOpacity style={styles.deleteButton} onPress={() => removeImage()}>
+            <Ionicons name="close-circle" size={20} color="#ff2442" />
+          </TouchableOpacity>
 
           {/* </TouchableOpacity> */}
         </>
@@ -218,7 +232,7 @@ const styles = StyleSheet.create({
   videoContainer: {
     width: width - 32,
     height: width / 2,
-    borderRadius: 20,
+    // borderRadius: 40,
     margin: 16
   },
   button: {
@@ -230,5 +244,13 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'black',
     fontSize: 16,
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    // padding: 2,
   },
 });

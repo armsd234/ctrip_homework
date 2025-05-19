@@ -79,13 +79,13 @@ export const SideMenu = ({ visible, onClose }: { visible: boolean, onClose: () =
 
 const styles = StyleSheet.create({
   overlay: {
-    position: 'fixed',
+    position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.2)',
     zIndex: 10,
   },
   sidebar: {
-    position: 'fixed',
+    position: 'absolute',
     top: 0,
     bottom: 0,
     left: 0,

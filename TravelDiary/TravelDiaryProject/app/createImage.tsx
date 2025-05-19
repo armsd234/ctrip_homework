@@ -106,11 +106,6 @@ export default function TravelPublishScreen() {
   const [showCompanionPicker, setShowCompanionPicker] = useState(false);
   const companionOptions = ['家人', '朋友', '自己', '其他'];
   const [modalVisible, setModalVisible] = useState(false);
-
-  // 处理单位切换
-  // const toggleMoneyUnit = () => {
-  //   setMoneyUnit(prev => prev === '元' ? '千元' : prev === '千元' ? '万元' : '元');
-  // };
   const toggleMoneyUnit = () => {
     const units = ['元', '千元', '万元'];
     const nextUnit = units[units.indexOf(moneyUnit) + 1] || units[0];

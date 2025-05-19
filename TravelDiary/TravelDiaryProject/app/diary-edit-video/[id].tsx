@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -10,17 +10,45 @@ import {
     Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams, useRouter } from 'expo-router';
 import VideoUpload from '@/components/VideoUpload';
 import { api } from '@/services/api';
+import { TravelDiary } from '@/components/TravelDiaryMasonry/types';
 
 const maxTitleLength = 20;
 const maxContentLength = 100;
 
 export default function TravelPublishScreen() {
+    const { id } = useLocalSearchParams();
+    const router = useRouter();
+    const [diary, setDiary] = useState<TravelDiary | null>(null);
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [videoFilename, setVideoFilename] = useState<string>('');
+
+    useEffect(() => {
+        const fetchDiary = async () => {
+            try {
+                const response = await api.get(`/api/travel-notes/${id}`);
+                if (response.data && response.data.data && response.data.data[0]) {
+                    const diaryData = response.data.data[0];
+                    setDiary(diaryData);
+
+                    // 设置表单初始值
+                    setTitle(diaryData.title || '');
+                    setContent(diaryData.content || '');
+                    setVideoFilename(diaryData.video || '');
+                }
+            } catch (error) {
+                console.error('获取游记详情失败:', error);
+                Alert.alert('错误', '获取游记详情失败');
+            }
+        };
+
+        fetchDiary();
+    }, [id]);
+
+    console.log('videoFilename:', videoFilename);
 
     const handlePublish = async () => {
         if (videoFilename === '') {
@@ -59,6 +87,7 @@ export default function TravelPublishScreen() {
             <ScrollView>
                 <View>
                     <VideoUpload
+                        initialVideo={videoFilename}
                         onUploadSuccess={(filename) => {
                             setVideoFilename(filename);
                             if (filename) {

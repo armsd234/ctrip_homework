@@ -701,7 +701,7 @@ router.get('/user/:userId', async (req, res) => {
         const query = {
             author: req.params.userId,
             isDeleted: false,
-            video: { $in: ['', null] }
+            // video: { $in: ['', null] }
             // status: { $in: ['pending', 'approved'] },
         };
 

@@ -28,75 +28,75 @@ const { width: screenWidth } = Dimensions.get('window');
 
 export default function DiaryListDetailScreen() {
   const { id } = useLocalSearchParams();
-    const [diary, setDiary] = useState<TravelDiary | undefined>(undefined);
-    console.log('Received diary id:', id); // 添加日志查看接收到的参数
-  
-    const convertResponseToTravelDiary = (responseData: any): TravelDiary => {
-      const data = responseData.data[0];
-      console.log('data',data);
-      return {
-        id: data.id,
-        title: data.title,
-        content: data.content,
-        coverImage: data.coverImage.map((image: string) => `http://localhost:5001/api/images/image?filename=${image}`),
-        video: data.video ? `http://localhost:5001/api/images/video?filename=${data.video}` : undefined,
-        duration: data.duration ? parseInt(data.duration) : 0,
-        type: data.video ? 'video' : 'image',
-        tags: data.tags || [],
-        When: data.When,
-        Who: data.Who,
-        Days: data.Days,
-        Money: data.Money,
-        user: {
-          id: data.user.id,
-          nickname: data.user.nickname,
-          avatar: `http://localhost:5001/api/images/image?filename=${data.user.avatar}`
-        },
-        likes: data.likes,
-        collects: data.collects,
-        comments: data.comments,
-        views: data.views,
-        location: data.location,
-        createTime: data.createTime,
-        status: 'approved',
-        commentsData: data.commentsData || []
-      };
+  const [diary, setDiary] = useState<TravelDiary | undefined>(undefined);
+  console.log('Received diary id:', id); // 添加日志查看接收到的参数
+
+  const convertResponseToTravelDiary = (responseData: any): TravelDiary => {
+    const data = responseData.data[0];
+    console.log('data', data);
+    return {
+      id: data.id,
+      title: data.title,
+      content: data.content,
+      coverImage: data.coverImage.map((image: string) => `http://localhost:5001/api/images/image?filename=${image}`),
+      video: data.video ? `http://localhost:5001/api/images/video?filename=${data.video}` : undefined,
+      duration: data.duration ? parseInt(data.duration) : 0,
+      type: data.video ? 'video' : 'image',
+      tags: data.tags || [],
+      When: data.When,
+      Who: data.Who,
+      Days: data.Days,
+      Money: data.Money,
+      user: {
+        id: data.user.id,
+        nickname: data.user.nickname,
+        avatar: `http://localhost:5001/api/images/image?filename=${data.user.avatar}`
+      },
+      likes: data.likes,
+      collects: data.collects,
+      comments: data.comments,
+      views: data.views,
+      location: data.location,
+      createTime: data.createTime,
+      status: 'approved',
+      commentsData: data.commentsData || []
     };
-  
-    useEffect(() => {
-      const fetchData = async () => {
-        if (isNaN(Number(id))) {
-          try {
-            const response = await api.get(`/api/travel-notes/${id}`);
-            const convertedDiary = convertResponseToTravelDiary(response.data);
-            setDiary(convertedDiary);
-            
-            // 获取评论列表并转换数据结构
-            const commentsResponse = await api.get(`/api/comments/${id}`);
-            const formattedComments = commentsResponse.data.map((comment: any) => ({
-              id: comment._id,
-              content: comment.content,
-              createdAt: comment.createdAt,
-              likes: comment.likesCount || 0,
-              user: {
-                id: comment.author._id,
-                nickname: comment.author.nickname,
-                avatar: `http://localhost:5001/api/images/image?filename=${comment.author.avatar}`
-              }
-            }));
-            setComments(formattedComments);
-            
-          } catch (error) {
-            console.error('获取数据失败:', error);
-          }
-        } else {
-          const tmp = travelDiaries.diaries.find(d => d.id === Number(id)) as unknown as TravelDiary;
-          setDiary(tmp);
-          setComments(tmp.commentsData || []);
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (isNaN(Number(id))) {
+        try {
+          const response = await api.get(`/api/travel-notes/${id}`);
+          const convertedDiary = convertResponseToTravelDiary(response.data);
+          setDiary(convertedDiary);
+
+          // 获取评论列表并转换数据结构
+          const commentsResponse = await api.get(`/api/comments/${id}`);
+          const formattedComments = commentsResponse.data.map((comment: any) => ({
+            id: comment._id,
+            content: comment.content,
+            createdAt: comment.createdAt,
+            likes: comment.likesCount || 0,
+            user: {
+              id: comment.author._id,
+              nickname: comment.author.nickname,
+              avatar: `http://localhost:5001/api/images/image?filename=${comment.author.avatar}`
+            }
+          }));
+          setComments(formattedComments);
+
+        } catch (error) {
+          console.error('获取数据失败:', error);
         }
-      };
-      fetchData();
-    }, [id]);
+      } else {
+        const tmp = travelDiaries.diaries.find(d => d.id === Number(id)) as unknown as TravelDiary;
+        setDiary(tmp);
+        setComments(tmp.commentsData || []);
+      }
+    };
+    fetchData();
+  }, [id]);
   // const { id } = useLocalSearchParams();
   // const diary = travelDiaries.diaries.find(d => d.id === Number(id)) as unknown as TravelDiary;
   const router = useRouter();
@@ -112,11 +112,11 @@ export default function DiaryListDetailScreen() {
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState<any[]>([]);
   useEffect(() => {
-      if (diary?.commentsData) {
-        setComments(diary.commentsData);
-      }
-    }, [diary]);
-  
+    if (diary?.commentsData) {
+      setComments(diary.commentsData);
+    }
+  }, [diary]);
+
   // 在获取到游记数据后更新点赞和收藏数，并检查用户交互状态
   useEffect(() => {
     const initializeInteractions = async () => {
@@ -129,7 +129,7 @@ export default function DiaryListDetailScreen() {
         // 检查点赞状态
         const likeResponse = await api.get(`/api/travel-notes/${id}/like/check`);
         setLiked(likeResponse.data.hasLiked);
-        
+
         // 检查收藏状态
         const collectResponse = await api.get(`/api/travel-notes/${id}/favorite/check`);
         setCollected(collectResponse.data.hasFavorited);
@@ -139,7 +139,7 @@ export default function DiaryListDetailScreen() {
         console.error('检查用户交互状态失败:', error);
       }
     };
-    
+
     initializeInteractions();
   }, [diary, id]);
 
@@ -159,7 +159,7 @@ export default function DiaryListDetailScreen() {
       // 如果API调用失败，恢复原状态
       setLiked(liked);
       setLikesCount(prev => prev + (liked ? 1 : -1));
-      
+
       if (error.response?.status === 401) {
         alert('请先登录');
       } else {
@@ -198,8 +198,8 @@ export default function DiaryListDetailScreen() {
   const handleShare = async () => {
     try {
       const result = await Share.share({
-        message: `快来看看这篇游记：${diary.title} 👉 ${diary.location || '未知地点'}`,
-        url: 'http://127.0.0.1:8081/diary-list/' + diary.id, // 可选：网页链接或App页
+        message: `快来看看这篇游记：${diary?.title} 👉 ${diary?.location || '未知地点'}`,
+        url: 'http://127.0.0.1:8081/diary-list/' + diary?.id, // 可选：网页链接或App页
         title: '分享游记',
       });
 
@@ -252,7 +252,7 @@ export default function DiaryListDetailScreen() {
 
         // 添加新评论到列表
         setComments(prevComments => [newComment, ...prevComments]);
-        
+
         // 清空输入框
         setComment('');
         Keyboard.dismiss();
@@ -270,15 +270,15 @@ export default function DiaryListDetailScreen() {
   if (!diary) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-              <Pressable style={styles.backButton} onPress={() => router.back()}>
-                <Ionicons name="chevron-back-outline" size={30} color="black" />
-              </Pressable>
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <Text>未找到该游记</Text>
-                
-              </View>
-      
-            </SafeAreaView>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back-outline" size={30} color="black" />
+        </Pressable>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text>未找到该游记</Text>
+
+        </View>
+
+      </SafeAreaView>
     );
   }
 
@@ -355,12 +355,14 @@ export default function DiaryListDetailScreen() {
             </TouchableOpacity>}
 
             {/*游记标签*/}
-            {!!(diary.When) && <View style={styles.infoBox}>
-              <Text style={styles.infoItem}>出发时间{"\n"}<Text style={styles.infoBold}>{diary.When}</Text></Text>
-              <Text style={styles.infoItem}>行程天数{"\n"}<Text style={styles.infoBold}>{diary.Days}</Text></Text>
-              <Text style={styles.infoItem}>人均花费{"\n"}<Text style={styles.infoBold}>{diary.Money}</Text></Text>
-              <Text style={styles.infoItem}>和谁出行{"\n"}<Text style={styles.infoBold}>{diary.Who}</Text></Text>
-            </View>}
+            {(diary.When || diary.Days || diary.Money || diary.Who) && (
+              <View style={styles.infoBox}>
+                {diary.When && (<Text style={styles.infoItem}>出发时间{"\n"}<Text style={styles.infoBold}>{diary.When}</Text></Text>)}
+                {diary.Days && (<Text style={styles.infoItem}>行程天数{"\n"}<Text style={styles.infoBold}>{diary.Days}</Text></Text>)}
+                {diary.Money && (<Text style={styles.infoItem}>人均花费{"\n"}<Text style={styles.infoBold}>{diary.Money}</Text></Text>)}
+                {diary.Who && (<Text style={styles.infoItem}>和谁出行{"\n"}<Text style={styles.infoBold}>{diary.Who}</Text></Text>)}
+              </View>
+            )}
 
             {/* 游记内容 */}
             <View style={styles.contentContainer}>
@@ -469,8 +471,8 @@ export default function DiaryListDetailScreen() {
             <Ionicons name="send" size={20} color="#1E95D4" />
           </TouchableOpacity>
 
-          <Pressable 
-            style={[styles.statItem, liked && styles.likedItem]} 
+          <Pressable
+            style={[styles.statItem, liked && styles.likedItem]}
             onPress={handleLike}
           >
             <Ionicons
@@ -483,8 +485,8 @@ export default function DiaryListDetailScreen() {
             </Text>
           </Pressable>
 
-          <Pressable 
-            style={[styles.statItem, collected && styles.collectedItem]} 
+          <Pressable
+            style={[styles.statItem, collected && styles.collectedItem]}
             onPress={handleCollect}
           >
             <Ionicons
