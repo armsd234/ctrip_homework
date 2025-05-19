@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import MultiImageUpload from '@/components/MultiImageUpload';
+import MultiImageUpload from '@/components/MultiImageUploadcopy';
 import { api } from '@/services/api';
 // import LocationPicker from '@/components/Map';
 import LocationPicker from '@/components/Map/LocationPicker.web';

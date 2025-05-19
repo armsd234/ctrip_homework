@@ -185,17 +185,17 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                             source={getImageSource()}
                             style={[styles.image, imageStyle]}
                         />
-                        {!disabled && !isLoading && iscameraIcon && (
+                        {/* {!disabled && (
                             <View style={styles.editOverlay} >
                                 <Ionicons name="camera" size={24} color="#fff" />
                             </View>
-                        )}
+                        )} */}
 
-                        {!disabled && !isLoading && !iscameraIcon && (
+                        {/* {!disabled && !isLoading && !iscameraIcon && (
                             <TouchableOpacity style={styles.addAvatarButton} onPress={handlePress} disabled={disabled || isLoading}>
                                 <Ionicons name="add" size={18} color="white" />
                             </TouchableOpacity>
-                        )}
+                        )} */}
                     </>
                 )}
             </TouchableOpacity>

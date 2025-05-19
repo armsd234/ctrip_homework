@@ -421,10 +421,17 @@ const ProfileScreen = () => {
     }, [activeTab, page, loading, hasMore]);
 
     const handlePressItem = useCallback((diary: TravelDiary) => {
-      router.push({
-        pathname: '/diary-listCopy/[id]',
-        params: { id: diary.id }
-      });
+      if (diary.type === 'video') {
+        router.push({
+          pathname: '/diary/[id]',
+          params: { id: diary.id }
+        });
+      }else{
+        router.push({
+          pathname: '/diary-listCopy/[id]',
+          params: { id: diary.id }
+        });
+      }
     }, []);
 
     return (

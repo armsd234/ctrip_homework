@@ -46,7 +46,7 @@ const ImageGridUploader = ({
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
-        allowsMultipleSelection: Platform.OS === 'web',  // 仅在 web 平台启用多选
+        allowsMultipleSelection: true,  // 仅在 web 平台启用多选
         selectionLimit: remainingSlots,
         quality: 0.7,
         base64: Platform.OS === 'web',  // 在 web 平台获取 base64 数据

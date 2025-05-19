@@ -1,22 +1,148 @@
-import { StyleSheet, View, ScrollView, Dimensions, Image, Pressable } from 'react-native';
+import { StyleSheet, View, ScrollView, Dimensions, Image, Pressable, Platform } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { TravelDiary, TravelDiaryMasonryProps } from './types';
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { getTravelDiaries } from '@/services/travelDiaryService';
 import HomeBanner from '../HomeBanner';
 import { useEvent } from 'expo';
+import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 
 // 根据屏幕宽度计算每列宽度
 const { width } = Dimensions.get('window');
 const CARD_MARGIN = 8;
 const COLUMN_WIDTH = (width - CARD_MARGIN * 5) / 2;
 
+// 创建一个缓存对象来存储已加载的图片
+const imageCache = new Map();
+
 const formatDuration = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 };
+
+// 创建一个缓存的图片组件
+const CachedImage = React.memo(({ uri, style }: { uri: string | undefined, style: any }) => {
+  const [isLoaded, setIsLoaded] = useState(imageCache.has(uri));
+
+  useEffect(() => {
+    if (uri && !imageCache.has(uri)) {
+      Image.prefetch(uri).then(() => {
+        imageCache.set(uri, true);
+        setIsLoaded(true);
+      });
+    }
+  }, [uri]);
+
+  if (!uri) return null;
+
+  return (
+    <Image
+      source={{ uri }}
+      style={[style, !isLoaded && { opacity: 0 }]}
+      resizeMode="cover"
+      fadeDuration={0}
+    />
+  );
+});
+
+// 创建一个视频组件
+const VideoThumbnail = React.memo(({ uri, style }: { uri: string | undefined, style: any }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = React.useRef<Video>(null);
+  const webVideoRef = React.useRef<HTMLVideoElement>(null);
+
+  if (!uri) return null;
+
+  const handlePlayPause = async () => {
+    if (Platform.OS === 'web') {
+      // Web 平台使用原生 HTML5 video 元素
+      if (webVideoRef.current) {
+        if (isPlaying) {
+          webVideoRef.current.pause();
+        } else {
+          await webVideoRef.current.play();
+        }
+        setIsPlaying(!isPlaying);
+      }
+    } else {
+      // Native 平台使用 expo-av
+      try {
+        if (videoRef.current) {
+          if (isPlaying) {
+            await videoRef.current.pauseAsync();
+          } else {
+            await videoRef.current.playAsync();
+          }
+          setIsPlaying(!isPlaying);
+        }
+      } catch (error) {
+        console.error('Error playing/pausing video:', error);
+      }
+    }
+  };
+
+  if (Platform.OS === 'web') {
+    return (
+      <View style={[style, { backgroundColor: '#000' }]}>
+        <video
+          ref={webVideoRef}
+          src={uri}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+          muted
+          playsInline
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+        />
+        <Pressable 
+          style={styles.playButton} 
+          onPress={handlePlayPause}
+        >
+          <Ionicons 
+            name={isPlaying ? "pause" : "play"} 
+            size={24} 
+            color="white" 
+          />
+        </Pressable>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[style, { backgroundColor: '#000' }]}>
+      <Video
+        ref={videoRef}
+        source={{ uri }}
+        style={style}
+        resizeMode={ResizeMode.COVER}
+        shouldPlay={false}
+        isMuted={true}
+        onLoad={() => setIsLoaded(true)}
+        onPlaybackStatusUpdate={(status: AVPlaybackStatus) => {
+          if (status.isLoaded) {
+            setIsPlaying(status.isPlaying);
+          }
+        }}
+      />
+      <Pressable 
+        style={styles.playButton} 
+        onPress={handlePlayPause}
+      >
+        <Ionicons 
+          name={isPlaying ? "pause" : "play"} 
+          size={24} 
+          color="white" 
+        />
+      </Pressable>
+    </View>
+  );
+});
 
 const TravelDiaryMasonry = ({
   diaries = [],
@@ -49,19 +175,23 @@ const TravelDiaryMasonry = ({
   // 使用useCallback优化渲染函数
   const renderItem = useCallback((item: TravelDiary) => (
     <Pressable style={styles.card} onPress={() => onPressItem?.(item)}>
-      <Image
-        source={Array.isArray(item.coverImage) ? { uri: item.coverImage[0] } : { uri: item.coverImage }}
-        style={styles.coverImage}
-        resizeMode="cover"
-        fadeDuration={0}
-      />
+      {item.type === 'video' ? (
+        <VideoThumbnail
+          uri={item.video}
+          style={styles.coverImage}
+        />
+      ) : (
+        <CachedImage
+          uri={Array.isArray(item.coverImage) ? item.coverImage[0] : item.coverImage}
+          style={styles.coverImage}
+        />
+      )}
       <View style={styles.cardContent}>
         <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
         <View style={styles.userInfo}>
-          <Image
-            source={{ uri: item.user.avatar }}
+          <CachedImage
+            uri={item.user.avatar}
             style={styles.avatar}
-            fadeDuration={0}
           />
           <Text style={styles.nickname} numberOfLines={1}>{item.user.nickname}</Text>
           <View style={styles.statItem}>
