@@ -158,14 +158,15 @@ const TravelDiaryMasonry = ({
 
     let leftHeight = 0;
     let rightHeight = 0;
+    const CARD_HEIGHT = 300; // 固定卡片高度
 
     diaries.forEach((diary) => {
       if (leftHeight <= rightHeight) {
         left.push(diary);
-        leftHeight += 250 + Math.random() * 100;
+        leftHeight += CARD_HEIGHT;
       } else {
         right.push(diary);
-        rightHeight += 250 + Math.random() * 100;
+        rightHeight += CARD_HEIGHT;
       }
     });
 
@@ -368,4 +369,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#999',
   },
-}); 
+});

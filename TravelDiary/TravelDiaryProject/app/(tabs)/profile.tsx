@@ -2,7 +2,7 @@
 ;(React as any).useInsertionEffect = React.useLayoutEffect;
 
 import React, { useState, useRef, useEffect, useCallback, useMemo, useContext } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity, Dimensions, StatusBar, Share, FlatList, ActivityIndicator, Animated, StyleSheet, TextInput, Pressable } from 'react-native';
+import { Easing, View, Text, Image, ScrollView, TouchableOpacity, Dimensions, StatusBar, Share, FlatList, ActivityIndicator, Animated, StyleSheet, TextInput, Pressable } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import styles from '../../styles/profile.styles';
 import { useAuth } from '../../contexts/AuthContext';
@@ -306,10 +306,10 @@ const ProfileScreen = () => {
     const screenWidth = Dimensions.get('window').width;
     setIsAnimating(true);
 
-    // 滑出当前 tab
-    Animated.timing(slideAnim, {
+  Animated.timing(slideAnim, {
       toValue: direction * screenWidth,
-      duration: 200,
+      duration: 300,
+      easing: Easing.ease,
       useNativeDriver: true,
     }).start(() => {
       // 切换 tab
@@ -321,7 +321,8 @@ const ProfileScreen = () => {
       // 滑入新 tab
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 200,
+        duration: 300,
+        easing: Easing.ease,
         useNativeDriver: true,
       }).start(() => {
         setIsAnimating(false); // 解锁
