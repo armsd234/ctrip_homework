@@ -433,6 +433,18 @@ const ProfileScreen = () => {
         });
       }
     }, []);
+    console.log('data:', data);
+    if(activeTab === 'travels' && data.length === 0){
+      return (
+        <View style={styles.emptycontentContainer}>
+          <Ionicons name="camera-outline" size={80} color="#D3D3D3" />
+          <Text style={styles.contentText}>一张照片, 交换春天 🍃</Text>
+          <TouchableOpacity style={styles.publishButton}>
+            <Text style={styles.publishButtonText}>去发布</Text>
+          </TouchableOpacity>
+        </View>)
+    }
+    
 
     return (
       <Animated.View style={[styles.contentContainer, animatedStyle]}>

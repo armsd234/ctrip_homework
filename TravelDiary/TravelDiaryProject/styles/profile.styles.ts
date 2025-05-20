@@ -265,7 +265,17 @@ const styles = StyleSheet.create({
       flex: 1,
       width: Dimensions.get('window').width,
     },
-  
+    
+    emptycontentContainer: {
+      // zIndex: 1,
+      // position:'relative', // Needed for absolute positioning of icon
+      // flex: 1, // <-- Allows this container to take up available vertical space in ContentSection
+      justifyContent: 'center', // <-- Centers content vertically within itself
+      alignItems: 'center', // <-- Centers content horizontally within itself
+      paddingVertical: 50, // Add some padding around the content
+      flex: 1,
+      width: Dimensions.get('window').width,
+    },
     tabItem: {
       paddingHorizontal: 10,
       paddingBottom: 10,
