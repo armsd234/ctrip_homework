@@ -15,12 +15,12 @@ interface DiaryCardProps {
 
 export default function DiaryCard({ diary, onPress, onEdit, onDelete }: DiaryCardProps) {
   const videoSource = diary.type === 'video' ? { uri: diary.video } : null;
-  console.log('videoSource', videoSource);
+  // console.log('videoSource', videoSource);
 
   const player = useVideoPlayer(videoSource, player => {
     player.loop = true;
     // player.play();
-  });  
+  });
 
   const handlePress = () => {
     if (onPress) {
@@ -55,7 +55,7 @@ export default function DiaryCard({ diary, onPress, onEdit, onDelete }: DiaryCar
             player={player}
             style={styles.coverImage}
             // style={{ backgroundColor: 'pink', width: 80, height: 80, borderRadius: 8, marginRight: 12 }}
-            allowsFullscreen = {false}
+            allowsFullscreen={false}
             nativeControls={false}
           />
         )}
@@ -65,10 +65,16 @@ export default function DiaryCard({ diary, onPress, onEdit, onDelete }: DiaryCar
         </View>
       </View>
       <View style={styles.rejectReasonContainer}>
-        {diary.status === 'rejected' && diary.rejectReason && (
+        {/* {diary.status === 'rejected' && diary.rejectReason && (
           <View style={styles.rejectReason}>
             <Ionicons name="alert-circle-outline" size={16} color="#F44336" />
             <Text style={styles.rejectReasonText} numberOfLines={1}>{diary.rejectReason}</Text>
+          </View>
+        )} */}
+        {diary.rejectReason && (
+          <View style={styles.rejectionContainer}>
+            <Text style={styles.rejectionTitle}>审核未通过</Text>
+            <Text style={styles.rejectionReason}>{diary.rejectReason}</Text>
           </View>
         )}
       </View>
@@ -193,5 +199,22 @@ const styles = StyleSheet.create({
   },
   deleteText: {
     color: '#F44336',
+  },
+  rejectionContainer: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: '#fff5f5',
+    borderRadius: 8,
+  },
+  rejectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ff4d4f',
+    marginBottom: 8,
+  },
+  rejectionReason: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
   },
 }); 

@@ -42,6 +42,8 @@ export default function DiaryDetailScreen() {
       try {
         const response = await api.get(`/api/travel-notes/${id}`);
         if (response.data && response.data.data && response.data.data[0]) {
+          console.log('response:',response.data);
+          
           const diaryData = response.data.data[0];
           console.log('diaryData', diaryData);
           // 转换后端数据格式为前端需要的格式
@@ -57,7 +59,9 @@ export default function DiaryDetailScreen() {
               id: diaryData.user.id,
               avatar: `http://localhost:5001/api/images/image?filename=${diaryData.user.avatar}`,
               nickname: diaryData.user.nickname
-            }
+            },
+            status: diaryData.status as 'pending' | 'approved' | 'rejected',
+            rejectReason: diaryData.rejectionReason
           };
           setDiary(processedDiary);
           console.log('processedDiary', processedDiary);
@@ -205,6 +209,12 @@ export default function DiaryDetailScreen() {
                 <Text style={styles.time}>{new Date(diary.createTime).toLocaleDateString()}</Text>
                 <Text style={styles.location}>{diary.location}</Text>
               </View>
+              {diary.rejectReason && (
+                <View style={styles.rejectionContainer}>
+                  <Text style={styles.rejectionTitle}>审核未通过</Text>
+                  <Text style={styles.rejectionReason}>{diary.rejectReason}</Text>
+                </View>
+              )}
             </View>
           </View>
         </ScrollView>
@@ -244,7 +254,7 @@ const styles = StyleSheet.create({
   },
   scrollArea: {
     flex: 1,
-    // backgroundColor: 'white',
+    backgroundColor: 'white',
     marginBottom: 60
   },
   headerContainer: {

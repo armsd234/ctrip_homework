@@ -330,7 +330,9 @@ router.get('/:id', async (req, res) => {
                 createTime: note.createdAt,
                 commentsData: commentsData,
                 video: note.video,
-                duration: '00:00:00'
+                duration: '00:00:00',
+                status: note.status,
+                rejectionReason: note.rejectionReason
             }]
         };
 

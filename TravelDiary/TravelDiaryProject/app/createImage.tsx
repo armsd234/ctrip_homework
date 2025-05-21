@@ -14,14 +14,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import MultiImageUpload from '@/components/MultiImageUploadcopy';
+import MultiImageUpload from '@/components/MultiImageUpload';
 import { api } from '@/services/api';
 // import LocationPicker from '@/components/Map';
-import LocationPicker from '@/components/Map/LocationPicker.web';
-// const LocationPicker = (Platform.select({
-//   native: () => require('@/components/Map/LocationPicker.native').default,
-//   web: () => require('@/components/Map/LocationPicker.web').default,
-// }) || (() => null))();
+// import LocationPicker from '@/components/Map/LocationPicker.web';
+const LocationPicker = (Platform.select({
+  native: () => require('@/components/Map/LocationPicker.native').default,
+  web: () => require('@/components/Map/LocationPicker.web').default,
+}) || (() => null))();
 // const LocationPicker = Platform.select({
 //   native: () => require('../components/Map/LocationPicker.native').default as React.ComponentType<{onLocationSelected: (loc: any) => void}>,
 //   web: () => require('../components/Map/LocationPicker.web').default as React.ComponentType<{onLocationSelected: (loc: any) => void}>,

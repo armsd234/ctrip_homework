@@ -132,14 +132,14 @@ router.get('/statistics', async (req, res) => {
                 {
                     $project: {
                         title: 1,
-                        likesCount: 1,
+                        likes: 1,
                         views: 1,
                         createdAt: 1,
                         'author.nickname': '$authorInfo.nickname',
                         'author.avatar': '$authorInfo.avatar'
                     }
                 },
-                { $sort: { likesCount: -1, views: -1 } },
+                { $sort: { likes: -1, views: -1 } },
                 { $limit: 10 }
             ]).exec()
         ]);

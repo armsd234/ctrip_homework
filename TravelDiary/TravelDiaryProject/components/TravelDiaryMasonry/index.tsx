@@ -1,38 +1,22 @@
-import { StyleSheet, View, ScrollView, Dimensions, Image, Pressable } from 'react-native';
+import { StyleSheet, View, ScrollView, Image, Pressable } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { TravelDiary, TravelDiaryMasonryProps } from './types';
-import { useMemo, useState, useEffect } from 'react';
-import { getTravelDiaries } from '@/services/travelDiaryService';
+import { useMemo } from 'react';
 import HomeBanner from '../HomeBanner';
-import { useEvent } from 'expo';
 
-// 根据屏幕宽度计算每列宽度
-const { width } = Dimensions.get('window');
 const CARD_MARGIN = 8;
-const COLUMN_WIDTH = (width - CARD_MARGIN * 5) / 2;
-
-const formatDuration = (seconds: number) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-};
 
 export default function TravelDiaryMasonry({
   diaries = [],
   loading = false,
+  searching = false,
   onPressItem,
   onLoadMore,
-  searching = false,
   onScroll,
   refreshControl
 }: TravelDiaryMasonryProps) {
-  // const [diaries, setDiaries] = useState<TravelDiary[]>([]);
-  // const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const pageSize = 10;
-
-  console.log('diaries',diaries);
+  console.log('diaries', diaries);
 
   // 将数据分为左右两列
   const { leftColumn, rightColumn } = useMemo(() => {
@@ -60,15 +44,12 @@ export default function TravelDiaryMasonry({
 
   // 渲染单个游记卡片
   const renderItem = (item: TravelDiary) => (
-    
     <Pressable style={styles.card} onPress={() => onPressItem?.(item)} >
-
       <Image
         source={Array.isArray(item.coverImage) ? { uri: item.coverImage[0] } : { uri: item.coverImage }}
         style={styles.coverImage}
         resizeMode="cover"
       />
-
       <View style={styles.cardContent}>
         <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
         <View style={styles.userInfo}>
@@ -92,7 +73,6 @@ export default function TravelDiaryMasonry({
       onScroll={(event) => {
         // 调用外部传入的onScroll
         onScroll?.(event);
-        
         // 保持原有的加载更多逻辑
         const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
         const paddingToBottom = 20;

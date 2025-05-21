@@ -30,6 +30,8 @@ export default function MyDiaryScreen() {
     try {
       const userId = user.user._id;
       const response = await api.get(`/api/travel-notes/user/${userId}`);
+      console.log("response.data",response.data);
+      
       
       // 确保响应数据符合预期格式
       if (response.data && response.data.data) {
@@ -57,7 +59,8 @@ export default function MyDiaryScreen() {
           views: note.views || 0,
           location: note.location || '',
           createTime: note.createdAt || new Date(),
-          status: note.status || 'pending'
+          status: note.status || 'pending',
+          rejectReason: note.rejectionReason
         }));
         
         setDiaries(travelsData);

@@ -144,13 +144,6 @@ const ImageGridUploader = ({
             <Text style={styles.uploadText}>({images.length}/9)</Text>
           </TouchableOpacity>
         </View>
-        // <TouchableOpacity style={styles.gridItem} onPress={pickImages}>
-        //   <View style={styles.uploadContent}>
-        //     <Ionicons name="add" size={32} color="#666" />
-        //     <Text style={styles.uploadText}>添加图片</Text>
-        //     <Text style={styles.countText}>{images.length}/9</Text>
-        //   </View>
-        // </TouchableOpacity>
       );
     }
 

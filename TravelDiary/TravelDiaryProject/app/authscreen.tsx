@@ -61,7 +61,7 @@ const AuthScreen: React.FC = () => {
 
   // --- Validation Functions ---
   const validateEmail = (email: string): boolean => {
-    const re = /\S+@\S+\.\S+/;
+    const re = /\S+@\S+\.com/;
     return re.test(String(email).toLowerCase());
   };
 
@@ -176,19 +176,20 @@ const AuthScreen: React.FC = () => {
   const handleResendCode = async (): Promise<void> => {
     if (isTimerActive) return;
 
-    setIsLoading(true);
+    // setIsLoading(true);
     setError('');
     try {
+      setResendTimer(60);
+      setIsTimerActive(true);
       const response = await sendVerificationCode(email);
       if (response.success) {
         Alert.alert('验证码已重新发送', '请查收你的邮箱');
-        setResendTimer(60);
-        setIsTimerActive(true);
+        
       }
     } catch (error: any) {
       setError(error.response?.data?.message || '发送验证码失败，请重试');
     } finally {
-      setIsLoading(false);
+      // setIsLoading(false);
     }
   };
 

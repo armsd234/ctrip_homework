@@ -172,8 +172,8 @@ const Mainindex = () => {
         },
         {
             title: '点赞数',
-            dataIndex: 'likesCount',
-            key: 'likesCount',
+            dataIndex: 'likes',
+            key: 'likes',
             width: 100,
             render: (likes) => (
                 <span>

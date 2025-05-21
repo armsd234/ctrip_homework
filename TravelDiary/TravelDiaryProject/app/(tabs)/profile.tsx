@@ -155,7 +155,7 @@ const ProfileScreen = () => {
 
   // 加载更多数据
   const loadMoreData = async (type: 'travels' | 'favorites' | 'likes') => {
-    if (loading || !hasMore) return;
+    if (loading ) return;
     setLoading(true);
     try {
       const userId = user?.user._id;
@@ -206,6 +206,7 @@ const ProfileScreen = () => {
       setPage(1);
       setHasMore(true);
       loadMoreData(activeTab);
+      // loadAllData();
     }
   }, [activeTab]);
 
@@ -446,6 +447,19 @@ const ProfileScreen = () => {
         </View>)
     }
     
+
+    if(activeTab === 'travels' && data.length === 0){
+      return (
+        <View style={styles.emptycontentContainer}>
+          <Ionicons name="camera-outline" size={80} color="#D3D3D3" />
+          <Text style={styles.contentText}>一张照片, 交换春天 🍃</Text>
+          <TouchableOpacity style={styles.publishButton} onPress={() => {
+            
+          }}>
+            <Text style={styles.publishButtonText}>去发布</Text>
+          </TouchableOpacity>
+        </View>)
+    }
 
     return (
       <Animated.View style={[styles.contentContainer, animatedStyle]}>

@@ -282,11 +282,8 @@ export default function TabOneScreen() {
         setIsSearching(false);
         return;
       }
-
       try {
         const response = await api.get(`/api/travel-notes/node-all`);
-        // const travelsData = convertToTravelDiaries(response.data);
-        // setAllDiaries(travelsData);
         const travelsData = convertToFiltered(response.data);
         console.log('获取初始数据成功:', travelsData);
         const searchLower = text.toLowerCase();
@@ -306,7 +303,6 @@ export default function TabOneScreen() {
         setFilteredDiaries(filtered);
       } catch (error) {
         console.error('获取初始数据失败:', error);
-        // setAllDiaries([]);
       } finally {
         setIsSearching(true);
       }

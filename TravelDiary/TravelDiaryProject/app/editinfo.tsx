@@ -118,11 +118,11 @@ const EditProfileScreen: React.FC = () => {
     })
 
     // 添加防抖定时器引用
-    const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
+    const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // 防抖检查昵称函数
     const debouncedCheckName = useCallback((name: string) => {
-        if (debounceTimerRef.current) {
+        if (debounceTimerRef.current !== null) {
             clearTimeout(debounceTimerRef.current);
         }
 
@@ -180,7 +180,7 @@ const EditProfileScreen: React.FC = () => {
     console.log('EditProfileScreen profileData',profileData);
     
     const handleBackPress = () => {
-        router.replace('/profile'); 
+        router.back(); 
     };
 
     const handleSavePress = async () => {
